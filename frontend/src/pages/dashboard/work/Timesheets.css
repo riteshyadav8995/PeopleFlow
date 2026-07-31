@@ -1,0 +1,226 @@
+/* Timesheets.css */
+
+.timesheets-container {
+  display: flex;
+  flex-direction: column;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.timesheets-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .timesheets-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.timesheets-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.timesheets-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.timesheets-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.control-input {
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  outline: none;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.control-input.select {
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.control-input:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--brand-600);
+  color: #fff;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-700);
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+/* Table Area */
+.timesheets-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.timesheets-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.timesheets-table th {
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.th-wide {
+  padding: 1rem 1.5rem;
+  min-width: 200px;
+}
+
+.th-day {
+  padding: 1rem 0.5rem;
+  text-align: center;
+}
+
+.th-total {
+  padding: 1rem 1rem;
+  text-align: center;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.timesheets-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.td-wide {
+  padding: 1rem 1.5rem;
+}
+
+.td-day {
+  padding: 1rem 0.5rem;
+}
+
+.td-total {
+  padding: 1rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cell-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  outline: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.cell-input:focus {
+  border-color: var(--brand-500);
+}
+
+.cell-input.number {
+  padding: 0.5rem;
+  text-align: center;
+  background: var(--gray-50);
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--danger);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+}
+
+/* Footer */
+.timesheets-table tfoot tr {
+  background: var(--gray-50);
+  border-top: 2px solid var(--border-color);
+}
+
+.tf-label {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+.tf-day-total {
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.tf-grand-total {
+  padding: 1rem 1rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+}

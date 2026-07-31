@@ -1,0 +1,251 @@
+/* SalaryStructure.css */
+
+.salary-structure-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Header */
+.structure-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .structure-header {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.structure-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.structure-subtitle {
+  color: var(--text-secondary);
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+/* Layout */
+.structure-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .structure-layout {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Table Card */
+.structure-table-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-header-row {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-header-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table-header-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.structure-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.structure-table th {
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.th-left { text-align: left; }
+.th-right { text-align: right; }
+
+.structure-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.td-label {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.td-amount {
+  text-align: right;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.row-subtotal {
+  background: var(--gray-50);
+}
+
+.row-subtotal .td-label {
+  font-weight: 600;
+}
+
+.row-subtotal .td-amount {
+  font-weight: 600;
+}
+
+.amount-success { color: var(--success-600); }
+.amount-danger { color: var(--danger-600); }
+
+.row-total {
+  background: var(--brand-50);
+  border-top: 2px solid var(--brand-200);
+}
+
+.row-total .td-label, .row-total .td-amount {
+  padding: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-700);
+  font-size: 1.125rem;
+}
+
+/* Sidebar Widgets */
+.sidebar-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chart-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-title-icon {
+  color: var(--brand-500);
+}
+
+.chart-wrapper {
+  height: 200px;
+  margin-bottom: 1rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.legend-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.legend-value {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.info-card {
+  background: var(--gray-50);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+
+.info-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}

@@ -1,0 +1,234 @@
+/* AttendanceHistory.css */
+
+.attendance-history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Header */
+.history-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .history-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.history-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.history-subtitle {
+  color: var(--text-secondary);
+}
+
+.history-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.month-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.month-picker-wrapper:focus-within {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.month-input {
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-weight: 500;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-export:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.val-present { color: var(--success); }
+.val-absent { color: var(--danger); }
+.val-late { color: var(--warning); }
+.val-avg { color: var(--brand-600); }
+
+/* Table */
+.history-table-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.history-table th {
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.history-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table tr:hover td {
+  background-color: var(--gray-50);
+}
+
+.td-date {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.td-time-in {
+  color: var(--brand-600);
+  font-weight: 500;
+}
+
+.td-time-in.empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.td-time-out {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.td-time-out.empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.td-hours {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.td-notes {
+  color: var(--text-secondary);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: var(--danger-glow);
+  color: var(--danger);
+}
+
+.badge-secondary {
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}

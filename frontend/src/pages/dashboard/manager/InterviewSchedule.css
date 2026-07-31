@@ -1,0 +1,10 @@
+/* InterviewSchedule.css */
+.is-container { padding: 2rem; max-width: 1200px; margin: 0 auto; animation: tgFade 0.3s ease-out; }
+
+.is-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; transition: border-color 0.2s; }
+.is-card:hover { border-color: #a5b4fc; }
+
+.is-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+
+.is-card-details { display: flex; gap: 1rem; flex-wrap: wrap; }
+.is-detail { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: #6b7280; background: #f9fafb; padding: 0.25rem 0.5rem; border-radius: 6px; }

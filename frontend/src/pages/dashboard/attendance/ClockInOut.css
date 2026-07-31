@@ -1,0 +1,179 @@
+/* ClockInOut.css */
+
+.clock-in-out-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.clock-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.clock-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.clock-date {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.clock-card {
+  width: 100%;
+  max-width: 600px;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.clock-time-display {
+  font-size: 4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: monospace;
+  margin-bottom: 1rem;
+  letter-spacing: -0.05em;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  margin-bottom: 2.5rem;
+}
+
+.status-badge.clocked-in {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.status-badge.on-break {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+.status-badge.clocked-out {
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.location-validation {
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+}
+
+.validation-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.validation-status.checking {
+  color: var(--text-secondary);
+}
+
+.validation-status.valid {
+  color: var(--success);
+}
+
+.validation-status.invalid {
+  color: var(--danger);
+}
+
+.test-mode-controls {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.test-mode-label {
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+}
+
+.test-mode-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-clock-action {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.btn-clock-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-clock-in {
+  background: var(--brand-600);
+  color: #fff;
+}
+
+.btn-clock-in:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+.btn-clock-out {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-clock-out:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+.btn-break {
+  border: 1px solid var(--border-color);
+  background: #fff;
+  color: var(--text-primary);
+}
+
+.btn-break:not(:disabled):hover {
+  background: var(--gray-50);
+}
+
+.btn-break.active {
+  background: var(--brand-50);
+  color: var(--brand-600);
+  border-color: var(--brand-200);
+}

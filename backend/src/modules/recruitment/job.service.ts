@@ -1,0 +1,84 @@
+import { ServiceContext } from '../../core/interfaces/service-context.interface';
+import { AppError } from '../../core/errors/app.error';
+import { prisma } from '../../core/base/base.model';
+
+export class JobService {
+  async createJob(context: ServiceContext, data: any) {
+    const orgId = context.organizationId || data.organizationId;
+    if (!orgId) {
+      throw new AppError('Organization ID is required', 400);
+    }
+
+    const jobCode = data.jobCode || `JOB-${Math.floor(Math.random() * 10000)}`;
+
+    const job = await prisma.jobPosting.create({
+      data: {
+        tenantId: context.tenantId,
+        organizationId: orgId,
+        jobCode: jobCode,
+        title: data.title,
+        positions: data.positions || 1,
+        employmentType: data.employmentType || 'FULL_TIME',
+        workMode: data.workMode || 'ONSITE',
+        experienceMin: data.experienceMin || 0,
+        experienceMax: data.experienceMax || 0,
+        publicDescription: data.publicDescription,
+        applicationDeadline: data.applicationDeadline ? new Date(data.applicationDeadline) : null,
+        status: data.status || 'DRAFT'
+      }
+    });
+
+    return job;
+  }
+
+  async getJobs(context: ServiceContext, organizationId: string) {
+    return await prisma.jobPosting.findMany({
+      where: {
+        tenantId: context.tenantId,
+        organizationId: organizationId
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async getPublicJobs(tenantId: string, organizationId: string) {
+    return await prisma.jobOpening.findMany({
+      where: {
+        tenantId,
+        organizationId,
+        status: 'PUBLISHED'
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        jobCode: true,
+        title: true,
+        employmentType: true,
+        workMode: true,
+        experienceMin: true,
+        experienceMax: true,
+        publicDescription: true,
+        applicationDeadline: true,
+        createdAt: true
+      }
+    });
+  }
+
+  async updateJobStatus(context: ServiceContext, id: string, status: string) {
+    const job = await prisma.jobOpening.findUnique({ where: { id } });
+    if (!job || job.tenantId !== context.tenantId) {
+      throw new AppError('Job not found', 404);
+    }
+
+    if ((context.highestScope === 'TEAM' || context.highestScope === 'SELF') && job.recruiterId !== context.employeeId) {
+      throw new AppError('Unauthorized to update this job', 403);
+    }
+
+    const updated = await prisma.jobOpening.update({
+      where: { id },
+      data: { status }
+    });
+
+    return updated;
+  }
+}

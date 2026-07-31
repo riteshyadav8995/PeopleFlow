@@ -1,0 +1,198 @@
+.time-overview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.overview-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.overview-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.explore-ui-badge {
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.request-btn {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.overview-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.overview-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Card Base */
+.time-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-card-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Pending Requests */
+.pending-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  gap: 1rem;
+}
+
+.pending-empty img {
+  height: 120px;
+  opacity: 0.8;
+}
+
+/* Clock Widget styling from reference */
+.clock-widget-card {
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+}
+
+.clock-btn {
+  background-color: #1e293b;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Leave Balances Grid */
+.leave-balances-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.leave-balance-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.leave-balance-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.leave-balance-label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Upcoming Time Off */
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.upcoming-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.upcoming-date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.upcoming-date-main {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.upcoming-date-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.upcoming-event {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.upcoming-event-main {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.upcoming-event-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}

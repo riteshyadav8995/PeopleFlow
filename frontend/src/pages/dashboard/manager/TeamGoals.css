@@ -1,0 +1,70 @@
+/* TeamGoals.css - Refreshed */
+.team-goals-container { padding: 2rem; max-width: 1200px; margin: 0 auto; animation: tgFade 0.3s ease-out; }
+@keyframes tgFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.goals-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.goals-title { font-size: 1.5rem; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+.goals-subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; }
+.goals-add-btn { display: flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.goals-add-btn:hover { background: #4338ca; }
+
+.goals-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.goals-filter-btn { padding: 0.375rem 0.875rem; border: 1px solid #e5e7eb; background: #fff; border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s; }
+.goals-filter-btn:hover { border-color: #a5b4fc; color: #4f46e5; }
+.goals-filter-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+
+.goals-list { display: flex; flex-direction: column; gap: 1rem; }
+.goals-empty { text-align: center; padding: 3rem; color: #9ca3af; }
+.goals-empty p { margin-top: 0.5rem; }
+
+.goal-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; transition: border-color 0.2s; }
+.goal-card:hover { border-color: #a5b4fc; }
+
+.goal-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+.goal-card-title { font-size: 1rem; font-weight: 700; color: #111827; margin: 0; }
+
+.goal-status-badge { display: flex; align-items: center; gap: 0.25rem; font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 999px; text-transform: uppercase; white-space: nowrap; }
+.goal-status-on_track { background: #ecfdf5; color: #065f46; }
+.goal-status-at_risk { background: #fef3c7; color: #92400e; }
+.goal-status-completed { background: #eff6ff; color: #1e40af; }
+.goal-status-not_started { background: #f3f4f6; color: #6b7280; }
+
+.goal-card-meta { display: flex; gap: 1rem; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.goal-priority { font-weight: 700; text-transform: uppercase; }
+.goal-priority-high { color: #dc2626; }
+.goal-priority-medium { color: #d97706; }
+.goal-priority-low { color: #2563eb; }
+
+.goal-progress-bar { height: 6px; background: #f3f4f6; border-radius: 999px; overflow: hidden; margin-bottom: 0.75rem; }
+.goal-progress-fill { height: 100%; background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 999px; transition: width 0.4s ease; }
+
+.goal-card-actions { display: flex; justify-content: space-between; align-items: center; }
+.goal-progress-label { font-size: 0.8125rem; font-weight: 700; color: #4f46e5; }
+.goal-btn-group { display: flex; gap: 0.375rem; }
+.goal-action-btn { padding: 0.25rem 0.625rem; border: 1px solid #e5e7eb; background: #fff; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: #374151; transition: all 0.15s; }
+.goal-action-btn:hover { border-color: #a5b4fc; }
+.goal-action-primary { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+.goal-action-primary:hover { background: #4f46e5; color: #fff; }
+.goal-action-danger { color: #ef4444; border-color: #fecaca; }
+.goal-action-danger:hover { background: #ef4444; color: #fff; }
+
+/* Toast */
+.tg-success-toast { position: fixed; top: 1.5rem; right: 1.5rem; background: #065f46; color: #fff; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; z-index: 9999; animation: tgSlide 0.3s ease-out; }
+@keyframes tgSlide { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+/* Modal */
+.tg-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.tg-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.tg-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f3f4f6; }
+.tg-modal-header h2 { margin: 0; font-size: 1.125rem; font-weight: 700; color: #111827; }
+.tg-modal-close { background: none; border: none; cursor: pointer; color: #9ca3af; padding: 0.25rem; }
+.tg-modal-close:hover { color: #111827; }
+.tg-modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.tg-label { font-size: 0.8125rem; font-weight: 600; color: #374151; }
+.tg-input { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; color: #111827; background: #fff; }
+.tg-input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+.tg-modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 1px solid #f3f4f6; }
+.tg-btn-cancel { padding: 0.5rem 1rem; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; color: #374151; }
+.tg-btn-submit { padding: 0.5rem 1rem; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.tg-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.tg-btn-submit:hover:not(:disabled) { background: #4338ca; }

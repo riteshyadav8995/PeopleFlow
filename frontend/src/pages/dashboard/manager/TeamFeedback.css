@@ -1,0 +1,17 @@
+/* TeamFeedback.css */
+.tf-container { padding: 2rem; max-width: 1200px; margin: 0 auto; animation: tgFade 0.3s ease-out; }
+
+.tf-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem 1.25rem; transition: border-color 0.2s; }
+.tf-card:hover { border-color: #a5b4fc; }
+.tf-card-praise { border-left: 3px solid #10b981; }
+.tf-card-constructive { border-left: 3px solid #f59e0b; }
+
+.tf-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.tf-card-header { display: flex; align-items: center; gap: 1rem; }
+.tf-type-badge { display: flex; align-items: center; gap: 0.25rem; font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 999px; text-transform: uppercase; }
+.tf-type-praise { background: #ecfdf5; color: #065f46; }
+.tf-type-constructive { background: #fffbeb; color: #92400e; }
+.tf-card-date { font-size: 0.75rem; color: #9ca3af; }
+
+.tf-card-recipient { font-size: 0.875rem; font-weight: 600; color: #374151; margin: 0 0 0.375rem; }
+.tf-card-message { font-size: 0.8125rem; color: #6b7280; line-height: 1.6; margin: 0; }

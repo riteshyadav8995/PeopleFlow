@@ -1,0 +1,24 @@
+/* OneOnOneMeetings.css */
+.oon-container { padding: 2rem; max-width: 1200px; margin: 0 auto; animation: tgFade 0.3s ease-out; }
+.oon-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.oon-title { font-size: 1.5rem; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+.oon-subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; }
+
+.oon-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.oon-tab { display: flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border: 1px solid #e5e7eb; background: #fff; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; color: #6b7280; transition: all 0.15s; }
+.oon-tab:hover { border-color: #a5b4fc; color: #4f46e5; }
+.oon-tab.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+
+.oon-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.oon-card { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem 1.25rem; gap: 1rem; flex-wrap: wrap; transition: border-color 0.2s; }
+.oon-card:hover { border-color: #a5b4fc; }
+
+.oon-card-left { display: flex; align-items: center; gap: 0.75rem; }
+.oon-card-name { font-size: 0.9375rem; font-weight: 700; color: #111827; margin: 0; }
+.oon-card-type { font-size: 0.75rem; color: #6b7280; margin: 0; }
+
+.oon-card-center { display: flex; align-items: center; gap: 1rem; }
+.oon-card-date, .oon-card-time { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: #6b7280; }
+
+.oon-card-right { display: flex; align-items: center; gap: 0.5rem; }

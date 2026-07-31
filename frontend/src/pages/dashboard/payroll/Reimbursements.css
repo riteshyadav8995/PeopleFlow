@@ -1,0 +1,230 @@
+/* Reimbursements.css */
+
+.reimbursements-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Header */
+.reimb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .reimb-header {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.reimb-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.reimb-subtitle {
+  color: var(--text-secondary);
+}
+
+.btn-primary {
+  background: var(--brand-600);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background: var(--brand-700);
+}
+
+/* Toolbar */
+.reimb-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  background: var(--bg-surface);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.625rem 0.625rem 0.625rem 2.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  outline: none;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.search-input:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.btn-filter {
+  background: var(--gray-50);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.btn-filter:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+/* Table Card */
+.reimb-table-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.reimb-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.reimb-table th {
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.reimb-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.reimb-table tr:last-child td {
+  border-bottom: none;
+}
+
+.reimb-table tr:hover td {
+  background-color: var(--gray-50);
+}
+
+.td-id {
+  color: var(--brand-600);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.td-category {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.td-amount {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.td-date {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.success {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.status-badge.pending {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+.status-badge.danger {
+  background: var(--danger-glow);
+  color: var(--danger);
+}
+
+.td-paid-on {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.td-action {
+  text-align: right;
+}
+
+.btn-receipt {
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.btn-receipt:hover {
+  color: var(--text-primary);
+}

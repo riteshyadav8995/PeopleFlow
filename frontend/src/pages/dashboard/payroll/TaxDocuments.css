@@ -1,0 +1,280 @@
+/* TaxDocuments.css */
+
+.tax-documents-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Header */
+.tax-header {
+  margin-bottom: 0.5rem;
+}
+
+.tax-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.tax-subtitle {
+  color: var(--text-secondary);
+}
+
+/* Tabs */
+.tax-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tax-tab {
+  padding: 1rem 2rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.tax-tab:hover {
+  color: var(--text-primary);
+}
+
+.tax-tab.active {
+  border-bottom-color: var(--brand-600);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* Declarations Section */
+.declarations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.announcement-banner {
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .announcement-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.announcement-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--brand-700);
+  margin-bottom: 0.25rem;
+}
+
+.announcement-text {
+  color: var(--brand-600);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.btn-primary {
+  background: var(--brand-600);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background: var(--brand-700);
+}
+
+.declarations-table-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.declarations-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.declarations-table th {
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.th-action {
+  text-align: right;
+}
+
+.declarations-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.declarations-table tr:last-child td {
+  border-bottom: none;
+}
+
+.declarations-table tr:hover td {
+  background-color: var(--gray-50);
+}
+
+.td-section {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.td-limit {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.td-declared {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.status-badge.verified {
+  color: var(--success);
+  background: var(--success-glow);
+}
+
+.status-badge.pending {
+  color: var(--warning);
+  background: var(--warning-glow);
+}
+
+.status-badge.none {
+  color: var(--text-secondary);
+  background: var(--gray-100);
+}
+
+.td-action {
+  text-align: right;
+}
+
+.btn-link {
+  color: var(--brand-600);
+  background: none;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.btn-link:hover {
+  color: var(--brand-700);
+  text-decoration: underline;
+}
+
+/* Form 16 Section */
+.form16-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.form16-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.form16-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.form16-icon {
+  background: var(--danger-glow);
+  color: var(--danger);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form16-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.125rem;
+}
+
+.form16-year {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.btn-download-full {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-download-full:hover {
+  background: var(--gray-100);
+  color: var(--brand-600);
+  border-color: var(--gray-300);
+}

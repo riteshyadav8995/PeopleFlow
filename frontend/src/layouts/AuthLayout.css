@@ -1,0 +1,105 @@
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.auth-brand-side {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .auth-brand-side {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
+    color: white;
+    padding: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 10;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.auth-logo-large {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+
+.auth-tagline {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.auth-description {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: #c7d2fe;
+  margin-bottom: 3rem;
+  font-weight: 400;
+}
+
+.auth-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.125rem;
+  color: #e0e7ff;
+  font-weight: 500;
+}
+
+.feature-icon {
+  color: #10b981;
+}
+
+.auth-brand-bg-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+  background-size: 32px 32px;
+  z-index: 1;
+}
+
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f8fafc;
+}
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem;
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  border: 1px solid #f1f5f9;
+}

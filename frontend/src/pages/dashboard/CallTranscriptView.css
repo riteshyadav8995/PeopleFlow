@@ -1,0 +1,292 @@
+/* CallTranscriptView.css */
+
+.call-transcript-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  height: calc(100vh - 100px);
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Header */
+.call-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: linear-gradient(to right, rgba(15, 23, 42, 0.8), rgba(99, 102, 241, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-xl);
+}
+
+.call-header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-back-icon {
+  background: rgba(255,255,255,0.05);
+  padding: 0.75rem;
+  border-radius: 50%;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-back-icon:hover {
+  background: var(--brand-500);
+  color: white;
+}
+
+.call-header-title {
+  font-size: 1.5rem;
+  margin: 0 0 0.2rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.call-header-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Sound Wave Status */
+.sound-wave-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-text-listening { color: var(--danger); font-weight: 500; animation: pulse 2s infinite; }
+.status-text-speaking { color: var(--brand-500); font-weight: 500; animation: pulse 2s infinite; }
+
+.wave-bars {
+  display: flex;
+  gap: 4px;
+  height: 24px;
+  align-items: center;
+}
+
+.wave-bar {
+  width: 4px;
+  border-radius: 2px;
+  transition: height 0.1s ease;
+}
+
+/* Main Chat Area */
+.call-chat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  border: 1px solid var(--border-color);
+}
+
+.chat-mesh-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  z-index: 1;
+  scroll-behavior: smooth;
+  padding-bottom: 120px; /* Space for controls */
+}
+
+.secure-badge-wrapper {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--gray-50);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.empty-chat {
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-chat-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--brand-100);
+  color: var(--brand-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chat Messages */
+.chat-msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.chat-msg-row.user { flex-direction: row-reverse; }
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.chat-avatar.user { background: var(--brand-600); box-shadow: 0 4px 10px var(--brand-glow); }
+.chat-avatar.ai { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+
+.chat-bubble {
+  padding: 1rem 1.25rem;
+  max-width: 75%;
+  font-size: 1rem;
+  line-height: 1.5;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.chat-bubble.user {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--text-primary);
+  border-radius: 1.5rem 1.5rem 0 1.5rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.chat-bubble.ai {
+  background: var(--gray-50);
+  color: var(--text-primary);
+  border-radius: 1.5rem 1.5rem 1.5rem 0;
+  border: 1px solid var(--border-color);
+}
+
+/* Typing indicator */
+.typing-dots {
+  display: flex;
+  gap: 4px;
+}
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* Controls */
+.call-controls-overlay {
+  padding: 2rem;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95), transparent);
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  z-index: 2;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+/* For dark mode */
+@media (prefers-color-scheme: dark) {
+  .call-controls-overlay {
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95), transparent);
+  }
+}
+
+.btn-end-call {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+.btn-end-call:hover { background: rgba(239, 68, 68, 0.1); }
+
+.btn-mic-toggle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  z-index: 10;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-mic-toggle.listening {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 0 30px var(--danger-glow);
+  transform: scale(1.1);
+  animation: pulse-danger 2s infinite;
+}
+
+.btn-mic-toggle.idle {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+  box-shadow: 0 0 30px var(--brand-glow);
+  transform: scale(1);
+}
+
+@keyframes pulse-danger {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
