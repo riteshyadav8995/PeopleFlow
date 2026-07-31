@@ -43,8 +43,8 @@ export function TeamAssets() {
     updateStatusMutation.mutate({ id, status: action });
   };
 
-  const pending = requests.filter(r => r.status === 'pending');
-  const history = requests.filter(r => r.status !== 'pending');
+  const pending = requests.filter((r: any) => r.status === 'pending');
+  const history = requests.filter((r: any) => r.status !== 'pending');
   const displayed = activeTab === 'pending' ? pending : history;
 
   return (
@@ -72,7 +72,7 @@ export function TeamAssets() {
         {displayed.length === 0 && (
           <div className="goals-empty"><Laptop size={40} strokeWidth={1} /><p>No {activeTab} requests.</p></div>
         )}
-        {displayed.map(r => (
+        {displayed.map((r: any) => (
           <div key={r.id} className="ta-card">
             <div className="ta-card-header">
               <div className="ta-card-info">

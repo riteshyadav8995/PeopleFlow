@@ -108,7 +108,7 @@ export function CreateLeavePolicyModal({ orgId, onClose }: { orgId: string, onCl
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? <Spinner size="sm" /> : 'Create Policy'}
+              {mutation.isPending ? <Spinner /> : 'Create Policy'}
             </button>
           </div>
         </form>

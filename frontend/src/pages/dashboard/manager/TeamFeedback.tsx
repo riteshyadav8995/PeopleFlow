@@ -77,7 +77,7 @@ export function TeamFeedback() {
   };
 
   const teamNames = teamMembers?.map((m: any) => `${m.firstName} ${m.lastName}`) || [];
-  const filtered = feedbacks.filter(f => activeTab === 'all' || f.type === activeTab);
+  const filtered = feedbacks.filter((f: any) => activeTab === 'all' || f.type === activeTab);
 
   return (
     <div className="tf-container">
@@ -97,7 +97,7 @@ export function TeamFeedback() {
         {(['all', 'praise', 'constructive'] as const).map(tab => (
           <button key={tab} className={`oon-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
             {tab === 'praise' ? <ThumbsUp size={14} /> : tab === 'constructive' ? <TrendingUp size={14} /> : <MessageSquare size={14} />}
-            {tab.charAt(0).toUpperCase() + tab.slice(1)} ({feedbacks.filter(f => tab === 'all' || f.type === tab).length})
+            {tab.charAt(0).toUpperCase() + tab.slice(1)} ({feedbacks.filter((f: any) => tab === 'all' || f.type === tab).length})
           </button>
         ))}
       </div>
@@ -106,7 +106,7 @@ export function TeamFeedback() {
         {filtered.length === 0 && (
           <div className="goals-empty"><MessageSquare size={40} strokeWidth={1} /><p>No feedback yet.</p></div>
         )}
-        {filtered.map(f => (
+        {filtered.map((f: any) => (
           <div key={f.id} className={`tf-card tf-card-${f.type}`}>
             <div className="tf-card-top">
               <div className="tf-card-header">

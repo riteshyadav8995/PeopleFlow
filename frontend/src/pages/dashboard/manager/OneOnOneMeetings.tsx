@@ -78,12 +78,11 @@ export function OneOnOneMeetings() {
   };
 
   const cancelMeeting = (id: string) => {
-    setMeetings(prev => prev.filter(m => m.id !== id));
-    showSuccess('Meeting cancelled.');
+    showSuccess('Meeting cancelled (UI mock).');
   };
 
   const teamNames = teamMembers?.map((m: any) => `${m.firstName} ${m.lastName}`) || [];
-  const filtered = meetings.filter(m => activeTab === 'upcoming' ? m.status === 'upcoming' : m.status === 'completed');
+  const filtered = meetings.filter((m: any) => activeTab === 'upcoming' ? m.status === 'upcoming' : m.status === 'completed');
 
   return (
     <div className="oon-container">
@@ -101,10 +100,10 @@ export function OneOnOneMeetings() {
 
       <div className="oon-tabs">
         <button className={`oon-tab ${activeTab === 'upcoming' ? 'active' : ''}`} onClick={() => setActiveTab('upcoming')}>
-          <CalendarIcon size={14} /> Upcoming ({meetings.filter(m => m.status === 'upcoming').length})
+          <CalendarIcon size={14} /> Upcoming ({meetings.filter((m: any) => m.status === 'upcoming').length})
         </button>
         <button className={`oon-tab ${activeTab === 'past' ? 'active' : ''}`} onClick={() => setActiveTab('past')}>
-          <CheckCircle size={14} /> Past ({meetings.filter(m => m.status === 'completed').length})
+          <CheckCircle size={14} /> Past ({meetings.filter((m: any) => m.status === 'completed').length})
         </button>
       </div>
 
@@ -112,7 +111,7 @@ export function OneOnOneMeetings() {
         {filtered.length === 0 && (
           <div className="goals-empty"><CalendarIcon size={40} strokeWidth={1} /><p>No {activeTab} meetings.</p></div>
         )}
-        {filtered.map(m => (
+        {filtered.map((m: any) => (
           <div key={m.id} className="oon-card">
             <div className="oon-card-left">
               <div className="pr-avatar">{m.employee.charAt(0)}</div>

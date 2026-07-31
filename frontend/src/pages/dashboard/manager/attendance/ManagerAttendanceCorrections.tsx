@@ -100,7 +100,7 @@ export function ManagerAttendanceCorrections() {
                         {corr.status === 'pending' && (
                           <div className="flex items-center justify-end gap-2">
                             <Button 
-                              variant="outline" 
+                              variant="secondary" 
                               size="sm"
                               className="!text-danger border-danger hover:bg-danger-50"
                               onClick={() => rejectMutation.mutate(corr.id)}

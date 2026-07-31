@@ -115,7 +115,7 @@ export function EditTaskModal({ isOpen, onClose, onSubmit, task, projectMembers,
         </div>
 
         <div className="modal-footer">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={() => onSubmit(formData)} isLoading={isSubmitting}>
             Save Changes
           </Button>

@@ -216,7 +216,7 @@ export function CreateProjectModal({ onClose, onSubmit, isSubmitting }: CreatePr
             disabled={isSubmitting || !name || !code || !selectedManager}
             className="project-btn-submit"
           >
-            {isSubmitting ? <Spinner size="sm" /> : 'Create Project'}
+            {isSubmitting ? <Spinner /> : 'Create Project'}
           </button>
         </div>
       </div>

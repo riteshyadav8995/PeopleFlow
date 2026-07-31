@@ -48,7 +48,7 @@ export function PerformanceReviews() {
 
   const submitReview = () => {
     if (!reviewModal || reviewScore === 0) return;
-    setReviews(prev => prev.map(r =>
+    setReviews((prev: any[]) => prev.map((r: any) =>
       r.id === reviewModal.id ? { ...r, status: 'completed', score: reviewScore, feedback: reviewFeedback } : r
     ));
     setReviewModal(null);
@@ -88,21 +88,21 @@ export function PerformanceReviews() {
 
       <div className="pr-stats-row">
         <div className="pr-stat-card">
-          <div className="pr-stat-value">{reviews.filter(r => r.status === 'completed').length}</div>
+          <div className="pr-stat-value">{reviews.filter((r: any) => r.status === 'completed').length}</div>
           <div className="pr-stat-label">Completed</div>
         </div>
         <div className="pr-stat-card pr-stat-warning">
-          <div className="pr-stat-value">{reviews.filter(r => r.status === 'manager_review').length}</div>
+          <div className="pr-stat-value">{reviews.filter((r: any) => r.status === 'manager_review').length}</div>
           <div className="pr-stat-label">Awaiting Review</div>
         </div>
         <div className="pr-stat-card">
-          <div className="pr-stat-value">{reviews.filter(r => r.status === 'self_review_pending').length}</div>
+          <div className="pr-stat-value">{reviews.filter((r: any) => r.status === 'self_review_pending').length}</div>
           <div className="pr-stat-label">Pending Self-Review</div>
         </div>
       </div>
 
       <div className="pr-list">
-        {reviews.map(review => (
+        {reviews.map((review: any) => (
           <div key={review.id} className="pr-card">
             <div className="pr-card-left">
               <div className="pr-avatar">{review.name.charAt(0)}</div>

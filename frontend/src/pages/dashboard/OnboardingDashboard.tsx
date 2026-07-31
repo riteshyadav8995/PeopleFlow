@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { Rocket, BookOpen, Zap, Clock, ShieldCheck, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
+import { onboardingService } from '@/services/onboarding.service';
 import './OnboardingDashboard.css';
 
 interface OnboardingTemplate {
@@ -261,7 +262,7 @@ export function OnboardingDashboard() {
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{workflows.length} active</span>
             </div>
             <div className="content-card-body">
-              {workflows.map((wf, idx) => {
+              {workflows.map((wf: any, idx: number) => {
                 const progressColor = wf.progress >= 80 ? 'var(--success)' : wf.progress >= 50 ? '#3b82f6' : 'var(--warning)';
                 return (
                   <div key={idx} className="workflow-item">

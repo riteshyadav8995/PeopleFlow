@@ -23,12 +23,12 @@ export function PayslipViewer({ payslip, onClose, companyName = 'PeopleFlow Inc.
     const opt = {
       margin:       0.5,
       filename:     `Payslip_${months[payslip.month - 1]}_${payslip.year}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
+      image:        { type: 'jpeg' as const, quality: 0.98 },
       html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' as const }
     };
     
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(element!).save();
   };
 
   const allowances = payslip.breakdown?.allowances || [];

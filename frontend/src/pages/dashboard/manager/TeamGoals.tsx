@@ -95,7 +95,7 @@ export function TeamGoals() {
 
   const getStatusLabel = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-  const filtered = goals.filter(g => activeFilter === 'all' || g.status === activeFilter);
+  const filtered = goals.filter((g: any) => activeFilter === 'all' || g.status === activeFilter);
 
   // Populate assignee names from team
   const teamNames = teamMembers?.map((m: any) => `${m.firstName} ${m.lastName}`) || [];
@@ -126,7 +126,7 @@ export function TeamGoals() {
         {filtered.length === 0 && (
           <div className="goals-empty"><Target size={40} strokeWidth={1} /><p>No goals match this filter.</p></div>
         )}
-        {filtered.map(goal => (
+        {filtered.map((goal: any) => (
           <div key={goal.id} className="goal-card">
             <div className="goal-card-header">
               <h3 className="goal-card-title">{goal.title}</h3>

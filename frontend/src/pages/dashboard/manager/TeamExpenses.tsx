@@ -27,7 +27,7 @@ export function TeamExpenses() {
   })) : [];
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string, status: string }) => reimbursementService.updateClaimStatus(id, status.toUpperCase()),
+    mutationFn: ({ id, status }: { id: string, status: string }) => reimbursementService.updateClaimStatus(organizationId as string, id, status.toUpperCase()),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['teamExpenses', organizationId] });
       showSuccess(`Expense ${variables.status}!`);
@@ -46,8 +46,8 @@ export function TeamExpenses() {
     updateStatusMutation.mutate({ id, status: action });
   };
 
-  const pending = expenses.filter(e => e.status === 'pending');
-  const history = expenses.filter(e => e.status !== 'pending');
+  const pending = expenses.filter((e: any) => e.status === 'pending');
+  const history = expenses.filter((e: any) => e.status !== 'pending');
   const displayed = activeTab === 'pending' ? pending : history;
 
   return (
@@ -93,7 +93,7 @@ export function TeamExpenses() {
             <p>No {activeTab} expenses found.</p>
           </div>
         )}
-        {displayed.map(e => (
+        {displayed.map((e: any) => (
           <div key={e.id} className="te-card">
             <div className="te-card-header">
               <div className="te-user-info">

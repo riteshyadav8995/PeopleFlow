@@ -146,7 +146,7 @@ export function AddProjectMemberModal({ onClose, onSubmit, isSubmitting }: AddPr
             disabled={isSubmitting || !selectedEmployee}
             className="project-btn-submit"
           >
-            {isSubmitting ? <Spinner size="sm" /> : 'Add Member'}
+            {isSubmitting ? <Spinner /> : 'Add Member'}
           </button>
         </div>
       </div>

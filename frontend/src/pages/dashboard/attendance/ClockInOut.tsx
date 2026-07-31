@@ -24,7 +24,7 @@ export function ClockInOut() {
   const [status, setStatus] = useState<'Clocked Out' | 'Clocked In' | 'On Break'>('Clocked Out');
   const [locationStatus, setLocationStatus] = useState<'checking' | 'valid' | 'invalid'>('checking');
   const [distance, setDistance] = useState<number | null>(null);
-  
+  const [mockLocation, setMockLocation] = useState<'office' | 'home'>('office');
   const { user } = useAuthStore();
   const organizationId = user?.organizationId;
   const queryClient = useQueryClient();

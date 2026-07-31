@@ -34,7 +34,8 @@ export function SalaryStructure() {
   
   // Real data comes as an array of components from API or we can just parse it
   // Assuming the API returns components array: { type: 'ALLOWANCE' | 'DEDUCTION', name: string, amount: number }
-  const components = structure?.components || [];
+  const structureAny = structure as any;
+  const components = structureAny?.components || [];
   const allowances = components.filter((c: any) => c.type === 'ALLOWANCE').map((c: any) => ({ name: c.name, amount: Number(c.amount) }));
   const deductions = components.filter((c: any) => c.type === 'DEDUCTION').map((c: any) => ({ name: c.name, amount: Number(c.amount) }));
 
@@ -42,7 +43,7 @@ export function SalaryStructure() {
   const totalDeductions = deductions.reduce((sum: number, item: any) => sum + item.amount, 0);
   const grossEarnings = baseSalary + totalAllowances;
   const netSalary = grossEarnings - totalDeductions;
-  const ctc = (structure?.ctc) ? Number(structure.ctc) : netSalary * 12;
+  const ctc = (structureAny?.ctc) ? Number(structureAny.ctc) : netSalary * 12;
 
   const chartData = [
     { name: 'Net Salary', value: netSalary, color: '#16a34a' },
@@ -93,7 +94,7 @@ export function SalaryStructure() {
                 <td className="td-label">Basic Salary</td>
                 <td className="td-amount">{formatCurrency(baseSalary)}</td>
               </tr>
-              {allowances.map((item, idx) => (
+              {allowances.map((item: any, idx: number) => (
                 <tr key={idx}>
                   <td className="td-label">{item.name}</td>
                   <td className="td-amount">{formatCurrency(item.amount)}</td>
@@ -108,7 +109,7 @@ export function SalaryStructure() {
                 <th className="th-left">Deductions</th>
                 <th className="th-right"></th>
               </tr>
-              {deductions.map((item, idx) => (
+              {deductions.map((item: any, idx: number) => (
                 <tr key={idx}>
                   <td className="td-label">{item.name}</td>
                   <td className="td-amount">{formatCurrency(item.amount)}</td>

@@ -154,7 +154,7 @@ export function ProjectDetails() {
           </div>
         </div>
         <div className="project-header-actions">
-          <Button variant="outline" leftIcon={<Users size={18} />} onClick={() => setIsAddMemberModalOpen(true)} style={{ borderRadius: '2rem' }}>
+          <Button variant="secondary" leftIcon={<Users size={18} />} onClick={() => setIsAddMemberModalOpen(true)} style={{ borderRadius: '2rem' }}>
             Add Member
           </Button>
           <Button variant="primary" leftIcon={<Plus size={18} />} onClick={createTask} style={{ borderRadius: '2rem' }}>
@@ -250,7 +250,7 @@ export function ProjectDetails() {
           onClose={() => setIsEditTaskModalOpen(false)}
           onSubmit={handleUpdateTask}
           task={selectedTask}
-          projectMembers={project?.members || []}
+          projectMembers={(project as any)?.members || []}
           isSubmitting={isUpdatingTask}
         />
       )}

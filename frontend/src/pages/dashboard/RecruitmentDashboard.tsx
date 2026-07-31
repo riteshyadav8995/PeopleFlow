@@ -468,20 +468,20 @@ export function RecruitmentDashboard() {
                 </div>
               </div>
 
-              {selectedApp.resumeUrl && (
+              {(selectedApp as any).resumeUrl && (
                 <div>
                   <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>Resume</h4>
-                  <a href={selectedApp.resumeUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand)', textDecoration: 'none', fontWeight: 500 }}>
+                  <a href={(selectedApp as any).resumeUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand)', textDecoration: 'none', fontWeight: 500 }}>
                     View Resume Document
                   </a>
                 </div>
               )}
 
-              {selectedApp.coverLetter && (
+              {(selectedApp as any).coverLetter && (
                 <div>
                   <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>Cover Letter</h4>
                   <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '0.875rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
-                    {selectedApp.coverLetter}
+                    {(selectedApp as any).coverLetter}
                   </div>
                 </div>
               )}

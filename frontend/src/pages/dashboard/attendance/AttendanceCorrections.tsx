@@ -164,7 +164,7 @@ export function AttendanceCorrections() {
             </div>
 
             <div className="p-6 border-t border-border flex justify-end gap-3 bg-background/50">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button 
                 variant="primary" 
                 onClick={() => createCorrection.mutate(formData)}

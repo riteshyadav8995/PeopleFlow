@@ -46,7 +46,7 @@ export function CandidateFeedback() {
 
   const submitFeedback = () => {
     if (!feedbackModal || rating === 0) return;
-    setDisplayCandidates(prev => prev.map((c: any) =>
+    setDisplayCandidates((prev: any[]) => prev.map((c: any) =>
       c.id === feedbackModal.id ? { ...c, status: 'completed', rating } : c
     ));
     setFeedbackModal(null);
