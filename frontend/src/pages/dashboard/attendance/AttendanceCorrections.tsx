@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Clock, Plus, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import './AttendanceCorrections.css';
 
 export function AttendanceCorrections() {
   const { user } = useAuthStore();
@@ -110,50 +111,50 @@ export function AttendanceCorrections() {
       </Card>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-surface rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-border flex justify-between items-center">
-              <h2 className="text-xl font-bold text-heading">Raise Correction</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-subtle hover:text-body">
-                <XCircle size={24} />
+        <div className="ac-modal-overlay">
+          <div className="ac-modal-content">
+            <div className="ac-modal-header">
+              <h2 className="ac-modal-title">Raise Correction</h2>
+              <button onClick={() => setIsModalOpen(false)} className="ac-modal-close">
+                <XCircle size={22} />
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-body mb-1">Date</label>
+            <div className="ac-modal-body">
+              <div className="ac-form-group">
+                <label className="ac-form-label">Date <span>*</span></label>
                 <input 
                   type="date" 
-                  className="w-full p-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  className="ac-form-input"
                   value={formData.date}
                   onChange={e => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-body mb-1">Clock In Time <span className="text-danger">*</span></label>
+              <div className="ac-grid-2">
+                <div className="ac-form-group">
+                  <label className="ac-form-label">Clock In Time <span>*</span></label>
                   <input 
                     type="time" 
-                    className="w-full p-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className="ac-form-input"
                     value={formData.requestedClockIn}
                     onChange={e => setFormData({ ...formData, requestedClockIn: e.target.value })}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-body mb-1">Clock Out Time</label>
+                <div className="ac-form-group">
+                  <label className="ac-form-label">Clock Out Time</label>
                   <input 
                     type="time" 
-                    className="w-full p-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className="ac-form-input"
                     value={formData.requestedClockOut}
                     onChange={e => setFormData({ ...formData, requestedClockOut: e.target.value })}
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-body mb-1">Reason <span className="text-danger">*</span></label>
+              <div className="ac-form-group">
+                <label className="ac-form-label">Reason <span>*</span></label>
                 <textarea 
-                  className="w-full p-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  className="ac-form-textarea"
                   rows={3}
                   value={formData.reason}
                   onChange={e => setFormData({ ...formData, reason: e.target.value })}
@@ -163,7 +164,7 @@ export function AttendanceCorrections() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-border flex justify-end gap-3 bg-background/50">
+            <div className="ac-modal-footer">
               <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button 
                 variant="primary" 
