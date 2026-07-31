@@ -57,7 +57,7 @@ export function LeaveRequestsTable({ requests, loading }: { requests: any[]; loa
               </tr>
             </thead>
             <tbody>
-              {requests.slice(0, 5).map((req) => (
+              {requests.map((req) => (
                 <tr key={req.id}>
                   <td>
                     <div className="leave-employee-cell">

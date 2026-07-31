@@ -12,9 +12,7 @@ export function LeaveApprovalQueue({ requests, loading }: { requests: any[]; loa
       queryClient.invalidateQueries({ queryKey: ['orgLeaveRequests'] });
     }
   });
-
-  const pendingRequests = requests?.filter(r => r.status?.toLowerCase() === 'pending').slice(0, 5) || [];
-
+  const pendingRequests = requests?.filter(r => r.status?.toLowerCase() === 'pending') || [];
   return (
     <div className="leave-card">
       <div className="leave-card-header">
