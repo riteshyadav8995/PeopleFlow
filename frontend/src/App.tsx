@@ -5,6 +5,8 @@ import { SuperAdminLayout } from './layouts/SuperAdminLayout';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { ActivateAccount } from './pages/auth/ActivateAccount';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
 import { Overview } from './pages/dashboard/Overview';
 import { Employees } from './pages/dashboard/Employees';
 import { EmployeeProfile } from './pages/dashboard/EmployeeProfile';
@@ -151,6 +153,8 @@ export default function App() {
         <Route element={<PublicRoute><AuthLayout /></PublicRoute>}>
           <Route path="/login" element={<Login />} />
           <Route path="/activate" element={<ActivateAccount />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* Unauthenticated Public Pages */}

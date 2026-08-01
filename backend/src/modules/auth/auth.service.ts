@@ -11,6 +11,7 @@ import { SYSTEM_ROLES } from '../../core/constants/role.constant';
 import { prisma } from '../../core/base/base.model';
 import { logger } from '../../shared/logger/logger';
 import crypto from 'crypto';
+import * as mailer from '../../shared/utils/mailer';
 
 export class AuthService {
   private authRepository: AuthRepository;
@@ -448,6 +449,52 @@ export class AuthService {
 
   async logoutAll(userId: string): Promise<void> {
     await this.authRepository.revokeAllUserTokens(userId);
+  }
+
+  // ─── FORGOT & RESET PASSWORD ────────────────
+  
+  async forgotPassword(email: string): Promise<void> {
+    const user = await prisma.user.findFirst({ where: { email } });
+    if (!user) {
+      // Return success to avoid email enumeration
+      return;
+    }
+
+    const resetToken = tokenUtil.generatePasswordResetToken(user.id);
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://people-flow-rose.vercel.app'}/reset-password?token=${resetToken}`;
+
+    await mailer.sendPasswordResetEmail(user.email, resetUrl);
+    logger.info(`Password reset email sent to ${email}`);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      const decoded = tokenUtil.verifyPasswordResetToken(token);
+      
+      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+      if (!user) {
+        throw new BadRequestError('Invalid or expired password reset token');
+      }
+
+      const passwordHash = await passwordUtil.hash(newPassword);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      });
+
+      // Optionally revoke all tokens so they must log in again
+      await this.authRepository.revokeAllUserTokens(user.id);
+      logger.info(`Password reset successfully for user ${user.id}`);
+    } catch (error: any) {
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestError('Password reset token has expired');
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new BadRequestError('Invalid password reset token');
+      }
+      throw error;
+    }
   }
 
   // ─── HELPERS ──────────────────────────────

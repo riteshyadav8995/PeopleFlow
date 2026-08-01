@@ -285,3 +285,58 @@ export const sendOrganizationReportEmail = async (to: string, userName: string, 
     return false;
   }
 };
+
+export const sendPasswordResetEmail = async (to: string, resetUrl: string) => {
+  let apiKey = env.BREVO_API_KEY || process.env.BREVO_API_KEY;
+  if (!apiKey && (env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY)) {
+    try {
+      const decoded = Buffer.from((env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY) as string, 'base64').toString();
+      apiKey = JSON.parse(decoded).api_key;
+    } catch (e) {
+      logger.error('Failed to parse BREVO_MCP_API_KEY', { error: e });
+    }
+  }
+  const senderEmail = env.SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || 'noreply@peopleflow.com';
+
+  if (!apiKey) {
+    logger.warn(`[MAIL_MOCK] Password Reset Email to ${to} with URL ${resetUrl}`);
+    return true;
+  }
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey as string
+      },
+      body: JSON.stringify({
+        sender: { email: senderEmail, name: 'PeopleFlow' },
+        to: [{ email: to }],
+        subject: 'Password Reset Request',
+        htmlContent: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #1e293b; margin-top: 0;">Reset Your Password</h2>
+            <p style="color: #475569; font-size: 16px;">We received a request to reset your password for your PeopleFlow account.</p>
+            <div style="margin: 32px 0;">
+              <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 16px;">Reset Password</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">If you didn't request a password reset, you can safely ignore this email.</p>
+            <p style="color: #64748b; font-size: 14px; margin-top: 24px;">Best regards,<br/>The PeopleFlow Team</p>
+          </div>
+        `
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Failed to send password reset email via Brevo API', { status: response.status, errorText });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    logger.error('Failed to send password reset email', { error, to });
+    return false;
+  }
+};

@@ -44,4 +44,14 @@ export const tokenUtil = {
   verifyActivationToken(token: string): { userId: string } {
     return jwt.verify(token, jwtConfig.accessSecret) as { userId: string };
   },
+
+  generatePasswordResetToken(userId: string): string {
+    return jwt.sign({ userId }, jwtConfig.accessSecret, {
+      expiresIn: '15m',
+    });
+  },
+
+  verifyPasswordResetToken(token: string): { userId: string } {
+    return jwt.verify(token, jwtConfig.accessSecret) as { userId: string };
+  },
 };

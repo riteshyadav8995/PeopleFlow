@@ -100,4 +100,30 @@ export class AuthController {
       next(error);
     }
   };
+
+  /**
+   * POST /api/v1/auth/forgot-password
+   */
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { email } = req.body;
+      await this.authService.forgotPassword(email);
+      ApiResponse.success(res, null, 'If an account with that email exists, a password reset link has been sent.');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /api/v1/auth/reset-password
+   */
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { token, password } = req.body;
+      await this.authService.resetPassword(token, password);
+      ApiResponse.success(res, null, 'Password has been reset successfully.');
+    } catch (error) {
+      next(error);
+    }
+  };
 }

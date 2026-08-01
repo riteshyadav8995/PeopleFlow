@@ -92,13 +92,26 @@ export class EmployeeService extends BaseService {
 
       // 6. Generate Activation Token
       const activationToken = tokenUtil.generateActivationToken(user.id);
-      const activationUrl = `http://localhost:5173/activate?token=${activationToken}`;
+      const activationUrl = `${process.env.FRONTEND_URL || 'https://people-flow-rose.vercel.app'}/activate?token=${activationToken}`;
 
       // 7. Fetch Organization to get org name for the email
       const org = await tx.organization.findUnique({ where: { id: input.organizationId } });
 
       // 8. Send the invitation email
       await emailUtil.sendActivationEmail(input.email, activationUrl, org?.name || 'Your Organization', role || 'Employee');
+
+      // 9. Create Welcome Notification
+      await tx.notification.create({
+        data: {
+          tenantId,
+          organizationId: input.organizationId,
+          userId: user.id,
+          title: 'Welcome to PeopleFlow!',
+          message: `Your account has been successfully created for ${org?.name || 'Your Organization'}. Please set up your profile.`,
+          type: 'INFO',
+          link: '/employee/profile'
+        }
+      });
 
       return newEmployee;
     });

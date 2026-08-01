@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/auth.store';
@@ -76,9 +76,9 @@ export function Login() {
             <input type="checkbox" className="login-checkbox" />
             <span>Remember me</span>
           </label>
-          <a href="#" className="login-forgot-link">
+          <Link to="/forgot-password" className="login-forgot-link">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         <Button 

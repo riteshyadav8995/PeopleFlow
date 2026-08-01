@@ -205,7 +205,7 @@ export class SuperAdminService extends BaseService {
 
     // Generate activation token and send email
     const activationToken = tokenUtil.generateActivationToken(user.id);
-    const activationUrl = `http://localhost:5173/activate?token=${activationToken}`;
+    const activationUrl = `${process.env.FRONTEND_URL || 'https://people-flow-rose.vercel.app'}/activate?token=${activationToken}`;
     
     await emailUtil.sendActivationEmail(adminEmail, activationUrl);
 
