@@ -130,20 +130,20 @@ export function Reimbursements() {
       </div>
 
       {isModalOpen && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
-            <div className="modal-header">
-              <h2 className="text-xl font-bold">New Reimbursement Claim</h2>
-              <button className="text-gray-400 hover:text-gray-600" onClick={() => setIsModalOpen(false)}>
+        <div className="reimb-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+          <div className="reimb-modal-content">
+            <div className="reimb-modal-header">
+              <h2 className="reimb-modal-title">New Reimbursement Claim</h2>
+              <button onClick={() => setIsModalOpen(false)} className="reimb-modal-close">
                 <X size={20} />
               </button>
             </div>
             
-            <form onSubmit={(e) => { e.preventDefault(); submitMutation.mutate(formData); }} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <form onSubmit={(e) => { e.preventDefault(); submitMutation.mutate(formData); }} className="reimb-modal-body">
+              <div className="reimb-form-group">
+                <label className="reimb-form-label">Category</label>
                 <select 
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="reimb-form-control"
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value })}
                   required
@@ -156,11 +156,11 @@ export function Reimbursements() {
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+              <div className="reimb-form-group">
+                <label className="reimb-form-label">Amount (₹)</label>
                 <input 
                   type="number" 
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="reimb-form-control"
                   placeholder="e.g. 1500"
                   value={formData.amount}
                   onChange={e => setFormData({ ...formData, amount: e.target.value })}
@@ -169,38 +169,38 @@ export function Reimbursements() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Expense Date</label>
+              <div className="reimb-form-group">
+                <label className="reimb-form-label">Expense Date</label>
                 <input 
                   type="date" 
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="reimb-form-control"
                   value={formData.date}
                   onChange={e => setFormData({ ...formData, date: e.target.value })}
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes / Description</label>
+              <div className="reimb-form-group">
+                <label className="reimb-form-label">Notes / Description</label>
                 <textarea 
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="reimb-form-control"
                   rows={3}
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
                 ></textarea>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="reimb-modal-footer">
                 <button 
                   type="button" 
-                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="btn-secondary"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="btn-primary"
                   disabled={submitMutation.isPending}
                 >
                   {submitMutation.isPending ? 'Submitting...' : 'Submit Claim'}

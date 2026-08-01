@@ -15,7 +15,7 @@ export class ReimbursementController extends BaseController {
   submitClaim = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    const claim = await this.service.submitClaim(context, req.query.organizationId as string, req.body);
+    const claim = await this.service.submitClaim(context, req.body.organizationId as string, req.body);
     ApiResponse.created(res, claim, 'Reimbursement claim submitted successfully');
   });
 
