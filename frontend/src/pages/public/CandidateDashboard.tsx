@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { PUBLIC_API_URL } from '@/lib/api';
 import { format } from 'date-fns';
 import { Briefcase, Building2, Calendar, FileText } from 'lucide-react';
 
@@ -34,7 +35,7 @@ export default function CandidateDashboard() {
         window.location.href = '/candidate/login';
         return;
       }
-      const res = await axios.get('http://localhost:3000/api/public/candidate/applications', {
+      const res = await axios.get(`${PUBLIC_API_URL}/candidate/applications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApplications(res.data.data);

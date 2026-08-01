@@ -28,6 +28,25 @@ export class JobService {
       }
     });
 
+    if (job.status === 'PUBLISHED') {
+      const candidates = await prisma.candidate.findMany({
+        where: { tenantId: context.tenantId, organizationId: orgId, userId: { not: null } }
+      });
+
+      if (candidates.length > 0) {
+        const notifications = candidates.map(c => ({
+          tenantId: context.tenantId,
+          organizationId: orgId,
+          userId: c.userId as string,
+          title: 'New Job Posted!',
+          message: `A new job "${job.title}" has been posted. Apply now!`,
+          type: 'INFO',
+          link: `/jobs/${job.id}`
+        }));
+        await prisma.notification.createMany({ data: notifications });
+      }
+    }
+
     return job;
   }
 

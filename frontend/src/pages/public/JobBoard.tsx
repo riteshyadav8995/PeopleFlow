@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, Clock, Briefcase } from 'lucide-react';
 import axios from 'axios';
-
+import { PUBLIC_API_URL } from '@/lib/api';
 interface PublicJob {
   id: string;
   title: string;
@@ -25,7 +25,7 @@ export default function JobBoard() {
 
   const fetchJobs = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/public/jobs');
+      const res = await axios.get(`${PUBLIC_API_URL}/jobs`);
       setJobs(res.data.data);
     } catch (error) {
       console.error('Failed to fetch jobs', error);

@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/auth.store';
 
 // We use a relative path to fallback or environment variable
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+export const PUBLIC_API_URL = API_URL.replace('/api/v1', '/api/public');
 
 export const api = axios.create({
   baseURL: API_URL,

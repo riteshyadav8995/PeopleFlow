@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import { PUBLIC_API_URL } from '@/lib/api';
 
 export default function CandidateAuth() {
   const [searchParams] = useSearchParams();
@@ -20,7 +21,7 @@ export default function CandidateAuth() {
 
     if (authMode === 'LOGIN') {
       try {
-        const res = await axios.post('http://localhost:3000/api/public/auth/login', { email, password });
+        const res = await axios.post(`${PUBLIC_API_URL}/auth/login`, { email, password });
         localStorage.setItem('candidateToken', res.data.token);
         
         const redirectUrl = searchParams.get('redirect') || '/jobs';
@@ -34,7 +35,7 @@ export default function CandidateAuth() {
     }
 
     try {
-      await axios.post('http://localhost:3000/api/public/auth/send-otp', { email, firstName, lastName });
+      await axios.post(`${PUBLIC_API_URL}/auth/send-otp`, { email, firstName, lastName });
       setStep('OTP');
     } catch (error: any) {
       alert(error.response?.data?.message || 'Failed to send OTP');
@@ -47,7 +48,7 @@ export default function CandidateAuth() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:3000/api/public/auth/verify-otp', { email, otp, firstName, lastName, password });
+      const res = await axios.post(`${PUBLIC_API_URL}/auth/verify-otp`, { email, otp, firstName, lastName, password });
       localStorage.setItem('candidateToken', res.data.token);
       
       const redirectUrl = searchParams.get('redirect') || '/jobs';

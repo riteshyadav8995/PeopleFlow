@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Clock, Briefcase, ChevronLeft, Building2 } from 'lucide-react';
 import axios from 'axios';
+import { PUBLIC_API_URL } from '@/lib/api';
 
 interface PublicJob {
   id: string;
@@ -37,7 +38,7 @@ export default function JobDetails() {
 
   const fetchJob = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/public/jobs/${id}`);
+      const res = await axios.get(`${PUBLIC_API_URL}/jobs/${id}`);
       setJob(res.data.data);
     } catch (error) {
       console.error('Failed to fetch job', error);
@@ -64,7 +65,7 @@ export default function JobDetails() {
       
       const candidateId = JSON.parse(atob(token.split('.')[1])).id; // Quick decode
 
-      await axios.post(`http://localhost:3000/api/public/jobs/${id}/apply`, {
+      await axios.post(`${PUBLIC_API_URL}/jobs/${id}/apply`, {
         candidateId,
         resumeUrl,
         coverLetter
