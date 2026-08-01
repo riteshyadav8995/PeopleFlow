@@ -12,6 +12,7 @@ interface PublicJob {
   experienceMin: number;
   experienceMax: number;
   publicDescription: string;
+  applicationDeadline?: string;
   createdAt: string;
   tenant: { name: string };
 }
@@ -81,6 +82,8 @@ export default function JobDetails() {
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center' }}>Loading job details...</div>;
   if (!job) return <div style={{ padding: '3rem', textAlign: 'center' }}>Job not found.</div>;
 
+  const isExpired = job.applicationDeadline && new Date(job.applicationDeadline).setHours(23, 59, 59, 999) < new Date().getTime();
+
   return (
     <div style={{ background: '#fff', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '3rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
       <Link to="/jobs" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b', textDecoration: 'none', marginBottom: '2rem', fontWeight: 500 }}>
@@ -89,7 +92,10 @@ export default function JobDetails() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem' }}>{job.title}</h1>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            {job.title}
+            {isExpired && <span style={{ fontSize: '1rem', fontWeight: 600, color: '#ef4444', backgroundColor: '#fef2f2', padding: '0.25rem 0.75rem', borderRadius: '9999px', border: '1px solid #fecaca' }}>Expired</span>}
+          </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', color: '#475569', fontSize: '1rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} /> {job.tenant?.name || 'Company'}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Briefcase size={18} /> {job.employmentType.replace('_', ' ')}</span>
@@ -98,7 +104,7 @@ export default function JobDetails() {
           </div>
         </div>
         <div>
-          {!applyMode && !applied && (
+          {!applyMode && !applied && !isExpired && (
             <button onClick={handleApplyClick} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '0.5rem', padding: '1rem 2rem', fontSize: '1.125rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.3)' }}>
               Apply for this role
             </button>
@@ -117,6 +123,12 @@ export default function JobDetails() {
           <h2 style={{ color: '#059669', marginBottom: '1rem' }}>Application Submitted!</h2>
           <p style={{ color: '#047857' }}>Thank you for applying. Our team will review your application and get back to you soon.</p>
           <button onClick={() => window.location.href = '/jobs'} style={{ marginTop: '2rem', padding: '0.75rem 1.5rem', background: '#fff', border: '1px solid #059669', color: '#059669', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 600 }}>Back to Jobs</button>
+        </div>
+      ) : isExpired ? (
+        <div style={{ textAlign: 'center', padding: '3rem', background: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fecaca' }}>
+          <h2 style={{ color: '#dc2626', marginBottom: '1rem' }}>Job Expired</h2>
+          <p style={{ color: '#991b1b' }}>The application deadline for this position has passed.</p>
+          <button onClick={() => window.location.href = '/jobs'} style={{ marginTop: '2rem', padding: '0.75rem 1.5rem', background: '#fff', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 600 }}>Back to Jobs</button>
         </div>
       ) : (
         <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>

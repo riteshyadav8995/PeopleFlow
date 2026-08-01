@@ -11,6 +11,7 @@ interface PublicJob {
   experienceMin: number;
   experienceMax: number;
   publicDescription: string;
+  applicationDeadline?: string;
   createdAt: string;
 }
 
@@ -68,10 +69,15 @@ export default function JobBoard() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {filteredJobs.map(job => (
-              <div key={job.id} style={{ background: '#fff', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }} className="job-card" onClick={() => window.location.href = `/jobs/${job.id}`}>
+            {filteredJobs.map(job => {
+              const isExpired = job.applicationDeadline && new Date(job.applicationDeadline).setHours(23, 59, 59, 999) < new Date().getTime();
+              return (
+              <div key={job.id} style={{ background: '#fff', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer', opacity: isExpired ? 0.75 : 1 }} className="job-card" onClick={() => window.location.href = `/jobs/${job.id}`}>
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>{job.title}</h3>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {job.title}
+                    {isExpired && <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#ef4444', backgroundColor: '#fef2f2', padding: '0.25rem 0.5rem', borderRadius: '9999px', border: '1px solid #fecaca' }}>Expired</span>}
+                  </h3>
                   <div style={{ display: 'flex', gap: '1.5rem', color: '#64748b', fontSize: '0.875rem' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><Briefcase size={16} /> {job.employmentType.replace('_', ' ')}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><MapPin size={16} /> {job.workMode}</span>
@@ -82,7 +88,7 @@ export default function JobBoard() {
                   <Link to={`/jobs/${job.id}`} style={{ padding: '0.625rem 1.25rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '0.5rem', color: '#0f172a', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s' }}>View Role</Link>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
