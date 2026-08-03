@@ -8,19 +8,22 @@ export class TemplateService {
       throw new AppError('Unauthorized to create templates', 403);
     }
 
-    if (!context.organizationId) {
+    // organizationId can come from context (JWT) or from the request body
+    const orgId = context.organizationId || data.organizationId;
+
+    if (!orgId) {
       throw new AppError('Organization ID is required', 400);
     }
 
     return await prisma.onboardingTemplate.create({
       data: {
         tenantId: context.tenantId,
-        organizationId: context.organizationId,
+        organizationId: orgId,
         name: data.name,
         description: data.description,
         isActive: data.isActive ?? true,
         tasks: {
-          create: data.tasks.map((task: any) => ({
+          create: (data.tasks || []).map((task: any) => ({
             title: task.title,
             category: task.category, // EMPLOYEE, HR, MANAGER, IT
             isMandatory: task.isMandatory ?? true,

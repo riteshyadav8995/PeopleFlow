@@ -1,6 +1,9 @@
 import { ServiceContext } from '../../core/interfaces/service-context.interface';
 import { AppError } from '../../core/errors/app.error';
 import { prisma } from '../../core/base/base.model';
+import { sendOnboardingWelcomeEmail } from '../../shared/utils/mailer';
+import { env } from '../../config/env.validation';
+import { logger } from '../../shared/logger/logger';
 
 export class WorkflowService {
   async assignWorkflow(context: ServiceContext, data: { employeeId: string, templateId: string }) {
@@ -22,8 +25,10 @@ export class WorkflowService {
       throw new AppError('Template not found', 404);
     }
 
-    return await prisma.$transaction(async (tx) => {
-      const workflow = await tx.onboardingWorkflow.create({
+    const createdTasks: { title: string; category: string; dueDate: Date }[] = [];
+
+    const workflow = await prisma.$transaction(async (tx) => {
+      const wf = await tx.onboardingWorkflow.create({
         data: {
           tenantId: context.tenantId,
           organizationId: employee.organizationId,
@@ -44,7 +49,7 @@ export class WorkflowService {
 
         await tx.onboardingTask.create({
           data: {
-            workflowId: workflow.id,
+            workflowId: wf.id,
             title: t.title,
             category: t.category,
             isMandatory: t.isMandatory,
@@ -53,10 +58,36 @@ export class WorkflowService {
             status: 'PENDING'
           }
         });
+
+        createdTasks.push({ title: t.title, category: t.category, dueDate });
       }
 
-      return workflow;
+      return wf;
     });
+
+    // Send onboarding welcome email to the employee
+    try {
+      const employeeName = `${employee.firstName} ${employee.lastName}`;
+      const frontendUrl = env.FRONTEND_URL;
+      const dashboardUrl = `${frontendUrl}/organization/onboarding`;
+
+      if (employee.email) {
+        await sendOnboardingWelcomeEmail(
+          employee.email,
+          employeeName,
+          template.name,
+          createdTasks,
+          dashboardUrl
+        );
+      } else {
+        logger.warn(`No email found for employee ${employee.id}, skipping onboarding email`);
+      }
+    } catch (emailError) {
+      // Don't fail the workflow creation if email sending fails
+      logger.error('Failed to send onboarding welcome email', { error: emailError });
+    }
+
+    return workflow;
   }
 
   async getMyTasks(context: ServiceContext) {

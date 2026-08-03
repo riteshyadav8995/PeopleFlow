@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { OnboardingController } from './onboarding.controller';
+import { authenticationMiddleware } from '../../middleware/authentication.middleware';
+import { tenantMiddleware } from '../../middleware/tenant.middleware';
 import { authorize } from '../../middleware/authorization.middleware';
 
 const router = Router();
 const controller = new OnboardingController();
+
+// Apply auth + tenant middleware to all onboarding routes
+router.use(authenticationMiddleware, tenantMiddleware);
 
 // Templates
 router.post('/templates', authorize('onboarding.template.create'), controller.createTemplate);

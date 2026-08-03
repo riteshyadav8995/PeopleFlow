@@ -340,3 +340,109 @@ export const sendPasswordResetEmail = async (to: string, resetUrl: string) => {
     return false;
   }
 };
+
+export const sendOnboardingWelcomeEmail = async (
+  to: string,
+  employeeName: string,
+  templateName: string,
+  tasks: { title: string; category: string; dueDate: Date }[],
+  dashboardUrl: string
+) => {
+  let apiKey = env.BREVO_API_KEY || process.env.BREVO_API_KEY;
+  if (!apiKey && (env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY)) {
+    try {
+      const decoded = Buffer.from((env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY) as string, 'base64').toString();
+      apiKey = JSON.parse(decoded).api_key;
+    } catch (e) {
+      logger.error('Failed to parse BREVO_MCP_API_KEY', { error: e });
+    }
+  }
+  const senderEmail = env.SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || 'noreply@peopleflow.com';
+
+  if (!apiKey) {
+    logger.warn(`[MAIL_MOCK] Onboarding Welcome Email to ${to} (${employeeName})`);
+    return true;
+  }
+
+  const taskRows = tasks.map(t => `
+    <tr>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-size: 14px;">${t.title}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px; text-align: center;">${t.category}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px; text-align: center;">${new Date(t.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+    </tr>
+  `).join('');
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey as string
+      },
+      body: JSON.stringify({
+        sender: { email: senderEmail, name: 'PeopleFlow HR' },
+        to: [{ email: to }],
+        subject: `🚀 Your Onboarding Journey Has Begun – Welcome Aboard!`,
+        htmlContent: `
+          <div style="font-family: 'Segoe UI', sans-serif; max-width: 620px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0 0 8px; font-size: 26px; font-weight: 700;">Welcome to the Team, ${employeeName}! 🎉</h1>
+              <p style="color: #c7d2fe; margin: 0; font-size: 15px;">Your onboarding journey has officially started.</p>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 32px;">
+              <p style="color: #334155; font-size: 15px; line-height: 1.6; margin-top: 0;">
+                We're thrilled to have you on board. Your onboarding plan <strong>"${templateName}"</strong> has been created and is ready for you.
+                Below are the tasks assigned to you as part of your first steps:
+              </p>
+
+              <!-- Task Table -->
+              <table style="width: 100%; border-collapse: collapse; margin: 24px 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <thead>
+                  <tr style="background-color: #f8fafc;">
+                    <th style="padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0;">Task</th>
+                    <th style="padding: 10px 12px; text-align: center; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0;">Assigned To</th>
+                    <th style="padding: 10px 12px; text-align: center; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0;">Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${taskRows}
+                </tbody>
+              </table>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 28px 0 16px;">
+                <a href="${dashboardUrl}" style="background-color: #4f46e5; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">
+                  View My Onboarding Dashboard →
+                </a>
+              </div>
+
+              <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 0;">
+                If you have any questions, reach out to your HR team. We're here to help!
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f8fafc; padding: 20px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #94a3b8; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} PeopleFlow. All rights reserved.</p>
+            </div>
+          </div>
+        `
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Failed to send onboarding welcome email via Brevo API', { status: response.status, errorText });
+      return false;
+    }
+    logger.info(`Onboarding welcome email sent to ${to}`);
+    return true;
+  } catch (error) {
+    logger.error('Failed to send onboarding welcome email', { error, to });
+    return false;
+  }
+};
