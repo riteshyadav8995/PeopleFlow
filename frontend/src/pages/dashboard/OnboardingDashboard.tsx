@@ -157,7 +157,9 @@ export function OnboardingDashboard() {
 
   const { data: workflowsData, isLoading: loadingWorkflows } = useQuery({
     queryKey: ['orgWorkflows', organizationId],
-    queryFn: () => onboardingService.getWorkflows(organizationId)
+    queryFn: () => onboardingService.getWorkflows(organizationId),
+    retry: false,
+    enabled: !!organizationId,
   });
 
   const workflows = (workflowsData || []).map((wf: any) => {

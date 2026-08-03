@@ -91,8 +91,9 @@ export class WorkflowService {
   }
 
   async getMyTasks(context: ServiceContext) {
+    // Admins/HR may not have an employeeId — return empty array gracefully
     if (!context.employeeId) {
-      throw new AppError('Employee ID is required to fetch tasks', 400);
+      return [];
     }
 
     return await prisma.onboardingTask.findMany({
@@ -165,7 +166,14 @@ export class WorkflowService {
         ...(organizationId && { organizationId })
       },
       include: {
-        employee: { select: { firstName: true, lastName: true, employeeCode: true, department: true } },
+        employee: {
+          select: {
+            firstName: true,
+            lastName: true,
+            employeeCode: true,
+            department: { select: { name: true } }
+          }
+        },
         template: { select: { name: true } },
         tasks: {
           select: { status: true }
