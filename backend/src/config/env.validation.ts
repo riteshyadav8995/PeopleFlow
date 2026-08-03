@@ -48,6 +48,14 @@ const envSchema = z.object({
 
   // Frontend URL
   FRONTEND_URL: z.string().default('https://people-flow-rose.vercel.app'),
+
+  // Exotel
+  EXOTEL_API_KEY: z.string().optional(),
+  EXOTEL_API_TOKEN: z.string().optional(),
+  EXOTEL_ACCOUNT_SID: z.string().optional(),
+
+  // Deepgram
+  DEEPGRAM_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

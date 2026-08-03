@@ -446,3 +446,59 @@ export const sendOnboardingWelcomeEmail = async (
     return false;
   }
 };
+
+export const sendInterviewScheduledByAIEmail = async (
+  to: string,
+  candidateName: string,
+  jobTitle: string,
+  scheduledTime: string
+) => {
+  let apiKey = env.BREVO_API_KEY || process.env.BREVO_API_KEY;
+  if (!apiKey && (env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY)) {
+    try {
+      const decoded = Buffer.from((env.BREVO_MCP_API_KEY || process.env.BREVO_MCP_API_KEY) as string, 'base64').toString();
+      apiKey = JSON.parse(decoded).api_key;
+    } catch (e) {
+      logger.error('Failed to parse BREVO_MCP_API_KEY', { error: e });
+    }
+  }
+  const senderEmail = env.SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || 'noreply@peopleflow.com';
+
+  if (!apiKey) {
+    logger.warn(`[MAIL_MOCK] AI Interview Scheduled Email to Admin ${to} for candidate ${candidateName}`);
+    return true;
+  }
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey as string
+      },
+      body: JSON.stringify({
+        sender: { email: senderEmail, name: 'PeopleFlow AI Agent' },
+        to: [{ email: to }],
+        subject: `🤖 AI Action: Interview Scheduled for ${candidateName}`,
+        htmlContent: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #1e293b; margin-top: 0;">AI Agent Action Summary</h2>
+            <p style="color: #475569; font-size: 16px;">Hello Admin,</p>
+            <p style="color: #475569; font-size: 16px;">Your AI Calling Agent has successfully completed a phone screening with <strong>${candidateName}</strong> for the <strong>${jobTitle}</strong> position.</p>
+            <div style="background-color: #f1f5f9; padding: 16px; border-radius: 6px; margin: 24px 0;">
+              <p style="margin: 0; color: #334155;"><strong>Status:</strong> Suitable - Interview Scheduled</p>
+              <p style="margin: 8px 0 0 0; color: #334155;"><strong>Tentative Date:</strong> ${scheduledTime}</p>
+            </div>
+            <p style="color: #475569; font-size: 16px;">Please log in to the PeopleFlow dashboard to review the transcript and send the final confirmation email with the meeting link to the candidate and interviewer.</p>
+          </div>
+        `
+      })
+    });
+    return response.ok;
+  } catch (error) {
+    logger.error('Failed to send AI interview scheduled email', { error, to });
+    return false;
+  }
+};
+

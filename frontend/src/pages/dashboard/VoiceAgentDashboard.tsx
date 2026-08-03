@@ -55,15 +55,20 @@ export function VoiceAgentDashboard() {
     }
   };
 
-  const startTestCall = async (campaignId: string, phoneNumber?: string) => {
+  const startTestCall = async (campaignId: string) => {
     try {
-      const res = await api.post('/voice-agent/calls', { campaignId, phoneNumber });
+      const phoneNumber = window.prompt("Enter phone number to call (with country code, e.g. +919876543210). Leave blank to test in browser:");
       
-      if (!phoneNumber) {
+      const res = await api.post('/voice-agent/calls', { 
+        campaignId, 
+        phoneNumber: phoneNumber ? phoneNumber.trim() : undefined 
+      });
+      
+      if (!phoneNumber || phoneNumber.trim() === '') {
         // If testing in browser, route to browser interface
         navigate(`/organization/voice-agent/${res.data.data.id}`);
       } else {
-        alert('Call initiated successfully via Vapi!');
+        alert('Call initiated successfully via Exotel! Your phone should ring shortly.');
       }
     } catch (error) {
       console.error('Failed to start call', error);

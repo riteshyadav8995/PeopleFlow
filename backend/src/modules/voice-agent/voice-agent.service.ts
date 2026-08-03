@@ -53,39 +53,47 @@ export class VoiceAgentService extends BaseService {
       include: { campaign: { include: { configurations: true } } }
     });
 
-    // If phoneNumber is provided, dial out via Vapi
+    // If phoneNumber is provided, dial out via Exotel
     if (data.phoneNumber) {
       try {
-        const vapiKey = process.env.VAPI_PRIVATE_KEY;
-        const vapiAssistantId = process.env.VAPI_ASSISTANT_ID;
-        const vapiPhoneNumberId = process.env.VAPI_PHONE_NUMBER_ID;
+        const exotelApiKey = process.env.EXOTEL_API_KEY;
+        const exotelApiToken = process.env.EXOTEL_API_TOKEN;
+        const exotelAccountSid = process.env.EXOTEL_ACCOUNT_SID;
+        const exotelVirtualNumber = process.env.EXOTEL_VIRTUAL_NUMBER || '09513886363';
+        // IMPORTANT: This must be the BACKEND public URL (not frontend)
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
 
-        if (!vapiKey || !vapiAssistantId || !vapiPhoneNumberId) {
-          throw new Error('Vapi credentials not configured in .env');
+        if (!exotelApiKey || !exotelApiToken || !exotelAccountSid) {
+          throw new Error('Exotel credentials not configured in .env');
         }
 
-        const vapiRes = await fetch('https://api.vapi.ai/call/phone', {
+        const authHeader = Buffer.from(`${exotelApiKey}:${exotelApiToken}`).toString('base64');
+        const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelAccountSid}/Calls/connect.json`;
+
+        // The webhook where Exotel gets instructions to connect to our WebSocket Stream
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/exotel/webhook?callLogId=${callLog.id}`;
+
+        const formData = new URLSearchParams();
+        formData.append('From', exotelVirtualNumber);
+        formData.append('To', data.phoneNumber);
+        formData.append('Url', webhookUrl);
+
+        const exotelRes = await fetch(exotelUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${vapiKey}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Basic ${authHeader}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({
-            assistantId: vapiAssistantId,
-            phoneNumberId: vapiPhoneNumberId,
-            customer: {
-              number: data.phoneNumber
-            }
-          })
+          body: formData.toString()
         });
 
-        if (!vapiRes.ok) {
-          const errBody = await vapiRes.text();
-          console.error('Vapi Call Error:', errBody);
-          throw new Error('Vapi API Error: ' + errBody);
+        if (!exotelRes.ok) {
+          const errBody = await exotelRes.text();
+          console.error('Exotel Call Error:', errBody);
+          throw new Error('Exotel API Error: ' + errBody);
         }
       } catch (err) {
-        console.error('Failed to trigger Vapi:', err);
+        console.error('Failed to trigger Exotel outbound call:', err);
         // We log the error but still return the callLog to frontend
       }
     }

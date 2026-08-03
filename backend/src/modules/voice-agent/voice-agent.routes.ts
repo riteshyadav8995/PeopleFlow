@@ -7,6 +7,10 @@ import { authorize } from '../../middleware/authorization.middleware';
 const router = Router();
 const controller = new VoiceAgentController();
 
+// --- Public Webhooks ---
+// Exotel hits this to get the TwiML/SVAML to connect to our WebSocket
+router.post('/exotel/webhook', controller.exotelWebhook);
+
 router.use(authenticationMiddleware, tenantMiddleware);
 
 // Campaigns

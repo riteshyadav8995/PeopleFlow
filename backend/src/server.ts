@@ -6,6 +6,7 @@ import app from './app';
 import { appConfig } from './config';
 import { connectDatabase, disconnectDatabase } from './core/base/base.model';
 import { logger } from './shared/logger/logger';
+import { setupExotelWebSocket } from './modules/voice-agent/exotel.stream';
 
 const PORT = appConfig.port;
 
@@ -23,6 +24,9 @@ async function bootstrap(): Promise<void> {
       logger.info(`📋 Health check: http://localhost:${PORT}/health`);
       logger.info(`📡 API base:     http://localhost:${PORT}/api/v1`);
     });
+
+    // 3. Attach WebSocket for Exotel Media Streams
+    setupExotelWebSocket(server);
 
     // ─── Graceful Shutdown ────────────────────
     const shutdown = async (signal: string) => {
