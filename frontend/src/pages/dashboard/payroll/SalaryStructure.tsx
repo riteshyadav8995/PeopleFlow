@@ -69,9 +69,6 @@ export function SalaryStructure() {
               : 'Detailed breakdown of your current compensation.'}
           </p>
         </div>
-        <button className="btn-secondary" onClick={() => window.print()}>
-          <Download size={18} /> Download Structure
-        </button>
       </div>
 
       <div className="structure-layout">

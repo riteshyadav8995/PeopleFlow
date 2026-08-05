@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Download } from 'lucide-react';
+import { Calendar, Download, CheckCircle, XCircle, Clock, Briefcase } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
 import { attendanceService } from '@/services/attendance.service';
@@ -107,19 +107,23 @@ export function AttendanceHistory() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Total Present</div>
+          <div className="stat-icon icon-present"><CheckCircle size={20} /></div>
+          <div className="stat-label">Total Present: </div>
           <div className="stat-value val-present">{stats.totalPresent} Days</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Total Absent</div>
+          <div className="stat-icon icon-absent"><XCircle size={20} /></div>
+          <div className="stat-label">Total Absent: </div>
           <div className="stat-value val-absent">{stats.totalAbsent} Days</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Late Marks</div>
+          <div className="stat-icon icon-late"><Clock size={20} /></div>
+          <div className="stat-label">Late Marks: </div>
           <div className="stat-value val-late">{stats.lateMarks}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg. Working Hours</div>
+          <div className="stat-icon icon-avg"><Briefcase size={20} /></div>
+          <div className="stat-label">Avg. Working Hours: </div>
           <div className="stat-value val-avg">{stats.avgHoursStr}</div>
         </div>
       </div>

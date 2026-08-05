@@ -14,6 +14,7 @@ export function MyAssets() {
   });
 
   const [showModal, setShowModal] = React.useState(false);
+  const [selectedAsset, setSelectedAsset] = React.useState<any>(null);
   const [requestForm, setRequestForm] = React.useState({ type: 'Laptop', name: '', reason: '' });
 
   // Map string icon names to Lucide components
@@ -77,7 +78,7 @@ export function MyAssets() {
                 <div className="issue-label">{asset.status === 'Pending' ? 'Requested On' : 'Issued On'}</div>
                 <div className="issue-date">{asset.status === 'Pending' ? new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : asset.issueDate}</div>
               </div>
-              <button className="btn-details">
+              <button className="btn-details" onClick={() => setSelectedAsset(asset)}>
                 Details <ChevronRight size={14} />
               </button>
             </div>
@@ -112,6 +113,46 @@ export function MyAssets() {
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <button className="btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
               <button className="btn-primary" onClick={handleRequestSubmit}>Submit Request</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedAsset && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="" style={{ background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-xl)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div className="asset-icon-wrapper" style={{ margin: 0, width: '48px', height: '48px', background: 'var(--brand-50)', color: 'var(--brand-600)' }}>
+                  {getIcon(selectedAsset.icon)}
+                </div>
+                <div>
+                  <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem' }}>{selectedAsset.name}</h2>
+                  <div style={{ color: 'var(--gray-500)', fontSize: '0.875rem' }}>{selectedAsset.status === 'Pending' ? 'Request ID: ' : 'Asset ID: '}{selectedAsset.id}</div>
+                </div>
+              </div>
+              <span className={`status-badge ${selectedAsset.status === 'Pending' ? 'badge-warning' : ''}`} style={selectedAsset.status === 'Pending' ? { background: 'var(--warning-100)', color: 'var(--warning-700)' } : {}}>
+                {selectedAsset.status}
+              </span>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', background: 'var(--gray-50)', padding: '1rem', borderRadius: '8px' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem' }}>Category</span>
+                <span style={{ fontWeight: 500 }}>{selectedAsset.type}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem' }}>{selectedAsset.status === 'Pending' ? 'Requested On' : 'Issue Date'}</span>
+                <span style={{ fontWeight: 500 }}>{selectedAsset.status === 'Pending' ? new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : selectedAsset.issueDate}</span>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem' }}>Condition</span>
+                <span style={{ fontWeight: 500 }}>{selectedAsset.status === 'Pending' ? 'N/A' : 'Good'}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button className="btn-primary" onClick={() => setSelectedAsset(null)}>Close</button>
             </div>
           </div>
         </div>

@@ -26,7 +26,7 @@ export function authorize(...requiredPermissions: string[]) {
                           authReq.user.roles.includes('hr_manager');
 
     const hasPermission = requiredPermissions.every((perm) =>
-      authReq.user.permissions.includes(perm),
+      authReq.user.permissions.includes(perm)
     );
 
     if (!hasPermission && !isTenantAdmin) {

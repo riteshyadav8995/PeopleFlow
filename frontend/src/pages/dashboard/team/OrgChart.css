@@ -81,7 +81,7 @@
   align-items: center;
 }
 
-.org-card {
+.org-tree-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -96,11 +96,11 @@
   box-shadow: var(--shadow-sm);
 }
 
-.org-card:hover {
+.org-tree-card:hover {
   border-color: var(--brand-300);
 }
 
-.org-card.root {
+.org-tree-card.root {
   border-color: var(--brand-500);
   box-shadow: var(--shadow-md);
 }

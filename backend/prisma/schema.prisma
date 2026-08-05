@@ -313,6 +313,7 @@ model Employee {
   feedbacksGiven              Feedback[] @relation("FeedbackSender")
   assets                      Asset[]
   assetRequests               AssetRequest[] @relation("EmployeeAssetRequests")
+  onboardingWorkflows         OnboardingWorkflow[]
 
   @@unique([tenantId, employeeCode])
   @@unique([tenantId, organizationId, email])
@@ -796,6 +797,7 @@ model OnboardingWorkflow {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   template OnboardingTemplate @relation(fields: [templateId], references: [id])
+  employee Employee           @relation(fields: [employeeId], references: [id])
   tasks    OnboardingTask[]
 
   @@index([tenantId])

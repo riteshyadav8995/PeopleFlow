@@ -97,10 +97,10 @@
 
 /* Pattern Card */
 .pattern-card {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   background: var(--bg-surface);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
@@ -115,7 +115,7 @@
 }
 
 .pattern-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -148,21 +148,61 @@
 }
 
 .balances-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .balance-card {
+  flex: 1;
+  min-width: 180px;
   background: var(--bg-surface);
-  border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.balance-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-label-wrap {
+  display: contents;
+}
+
+.stat-label-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.stat-value-text {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .balance-card-header {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -170,7 +210,7 @@
 }
 
 .balance-available {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
@@ -178,7 +218,7 @@
 }
 
 .balance-type {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -218,7 +258,7 @@
 }
 
 .balance-card-body {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   background: var(--gray-50);
 }
 

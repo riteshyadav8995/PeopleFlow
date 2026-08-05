@@ -43,21 +43,13 @@ export function LeaveKPICards({ stats, loading }: { stats: any; loading: boolean
     <div className="leave-kpi-grid">
       {cards.map((card, index) => (
         <div key={index} className="leave-kpi-card">
-          <div className="leave-kpi-header">
-            <div className={`leave-kpi-icon ${card.bg}`}>
-              {card.icon}
-            </div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trend</span>
+          <div className={`leave-kpi-icon ${card.bg}`}>
+            {card.icon}
           </div>
           <div>
-            <p className="leave-kpi-value">{card.value}</p>
             <p className="leave-kpi-label">{card.label}</p>
+            <p className="leave-kpi-value">{card.value}</p>
           </div>
-          {card.trend && (
-            <div className={`leave-kpi-trend ${card.trendUp ? 'leave-trend-up' : 'leave-trend-neutral'}`}>
-              {card.trend}
-            </div>
-          )}
         </div>
       ))}
     </div>

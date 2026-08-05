@@ -182,4 +182,23 @@ export class WorkflowService {
       orderBy: { createdAt: 'desc' }
     });
   }
+  async deleteWorkflow(context: ServiceContext, id: string) {
+    if (context.highestScope !== 'PLATFORM' && context.highestScope !== 'ORGANIZATION') {
+      throw new AppError('Unauthorized to delete workflows', 403);
+    }
+
+    const workflow = await prisma.onboardingWorkflow.findUnique({
+      where: { id }
+    });
+
+    if (!workflow || workflow.tenantId !== context.tenantId) {
+      throw new AppError('Workflow not found', 404);
+    }
+
+    await prisma.onboardingWorkflow.delete({
+      where: { id }
+    });
+
+    return { message: 'Workflow deleted successfully' };
+  }
 }

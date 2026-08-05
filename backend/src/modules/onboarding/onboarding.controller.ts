@@ -70,4 +70,12 @@ export class OnboardingController extends BaseController {
     const updated = await this.workflowService.completeTask(context, id);
     ApiResponse.success(res, updated, 'Task completed successfully');
   });
+
+  deleteWorkflow = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const id = req.params.id as string;
+    await this.workflowService.deleteWorkflow(context, id);
+    ApiResponse.success(res, null, 'Workflow deleted successfully');
+  });
 }

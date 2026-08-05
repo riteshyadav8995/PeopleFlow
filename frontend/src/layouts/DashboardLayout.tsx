@@ -125,7 +125,6 @@ export function DashboardLayout() {
 
     if (hasPermission('project.dashboard.read') || hasPermission('project.record:read')) {
       items.push({ path: '/organization/projects', label: 'Projects & Tasks', icon: LayoutTemplate, group: 'Projects and Work' });
-      items.push({ path: '/organization/timesheets', label: 'Timesheets', icon: Clock, group: 'Projects and Work' });
     }
 
     if (hasPermission('payroll.dashboard.read') || hasPermission('payroll.run:calculate')) {

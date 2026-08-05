@@ -11,7 +11,7 @@ const OrgNode = ({ node, level = 0 }: { node: any, level?: number }) => {
   
   return (
     <div className="org-node-wrapper">
-      <div className={`org-card ${level === 0 ? 'root' : ''}`}>
+      <div className={`org-tree-card ${level === 0 ? 'root' : ''}`}>
         <div className="org-avatar">
           {node.firstName?.charAt(0)}{node.lastName?.charAt(0)}
         </div>

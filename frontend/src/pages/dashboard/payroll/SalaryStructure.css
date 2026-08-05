@@ -249,3 +249,54 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* Print Styles for Salary Structure */
+@media print {
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+  
+  /* Hide sidebar, navigation, and charts (recharts often break print layout) */
+  .sidebar,
+  .topbar,
+  .sidebar-nav,
+  .sidebar-header,
+  .btn-secondary,
+  .structure-header p,
+  .chart-card {
+    display: none !important;
+  }
+
+  /* Reset layout constraints for printing */
+  * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  html, body, #root, .dashboard-layout, .main-content, .page-container, .page-content, .salary-structure-container {
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    position: static !important;
+    display: block !important;
+  }
+
+  .salary-structure-container {
+    padding: 20px !important;
+  }
+
+  .structure-layout {
+    display: block !important;
+  }
+
+  .structure-table-card, .info-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 24px !important;
+  }
+}

@@ -116,7 +116,7 @@ export function MyLeaveRequests() {
                       {new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}
                     </td>
                     <td className="td-days">
-                      {req.days} days
+                      {req.days}
                     </td>
                     <td className="td-applied">
                       {new Date(req.createdAt).toLocaleDateString()}

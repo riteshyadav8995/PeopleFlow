@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, MoreVertical, Plus, Info, Loader2, X, FilePlus } from 'lucide-react';
+import { ChevronDown, MoreVertical, Plus, Info, Loader2, X, FilePlus, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/auth.store';
 import { api } from '../../../lib/api';
@@ -104,41 +104,28 @@ export function LeaveBalance() {
                   const usagePercentage = Math.min(100, Math.round((balance.usedDays / balance.totalDays) * 100)) || 0;
 
                   return (
-                    <div key={balance.id} className="balance-card" style={{ borderTop: `4px solid ${colors.progress}` }}>
-                      <div className="balance-card-header">
-                        <div>
-                          <div className="balance-available">{available}</div>
-                          <div className="balance-type">{balance.leaveType?.name}</div>
-                        </div>
-                        <div className="balance-actions">
-                          <button 
-                            className="btn-icon btn-add" 
-                            onClick={() => navigate('/employee/leave/apply', { state: { leaveTypeId: balance.leaveTypeId } })} 
-                            style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
-                          >
-                            <Plus size={16}/>
-                          </button>
-                          <button 
-                            className="btn-icon btn-more"
-                            onClick={() => setSelectedLeaveDetail(balance)}
-                          >
-                            <MoreVertical size={16}/>
-                          </button>
-                        </div>
+                    <div key={balance.id} className="balance-card stat-card-compact" style={{ borderLeft: `4px solid ${colors.progress}` }}>
+                      <div className="stat-icon" style={{ backgroundColor: colors.bg, color: colors.text }}>
+                        <Calendar size={20} />
                       </div>
-                      <div className="balance-card-body">
-                        <div className="balance-stats">
-                          <span>Used: <strong className="stat-strong">{balance.usedDays}</strong></span>
-                          <span>Total: <strong className="stat-strong">{balance.totalDays}</strong></span>
-                        </div>
-                        <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${usagePercentage}%`, backgroundColor: colors.progress }}></div>
-                        </div>
-                        {balance.pendingDays > 0 && (
-                          <div className="pending-alert">
-                            <Info size={14} /> {balance.pendingDays} days pending approval
-                          </div>
-                        )}
+                      <div className="stat-label-wrap">
+                        <span className="stat-label-text">{balance.leaveType?.name}:</span>
+                        <span className="stat-value-text">{available} Days</span>
+                      </div>
+                      <div className="balance-actions" style={{ marginLeft: 'auto' }}>
+                        <button 
+                          className="btn-icon btn-add" 
+                          onClick={() => navigate('/employee/leave/apply', { state: { leaveTypeId: balance.leaveTypeId } })} 
+                          style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+                        >
+                          <Plus size={16}/>
+                        </button>
+                        <button 
+                          className="btn-icon btn-more"
+                          onClick={() => setSelectedLeaveDetail(balance)}
+                        >
+                          <MoreVertical size={16}/>
+                        </button>
                       </div>
                     </div>
                   );

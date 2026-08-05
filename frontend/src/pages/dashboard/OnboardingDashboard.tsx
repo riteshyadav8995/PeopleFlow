@@ -91,8 +91,15 @@ export function OnboardingDashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<OnboardingTemplate | null>(null);
 
+  const [activeWorkflowMenu, setActiveWorkflowMenu] = useState<string | null>(null);
+  const [isDeleteWorkflowModalOpen, setIsDeleteWorkflowModalOpen] = useState(false);
+  const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);
+
   useEffect(() => {
-    const handleClickOutside = () => setActiveTemplateMenu(null);
+    const handleClickOutside = () => {
+      setActiveTemplateMenu(null);
+      setActiveWorkflowMenu(null);
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -194,7 +201,6 @@ export function OnboardingDashboard() {
     queryKey: ['orgWorkflows', organizationId],
     queryFn: () => onboardingService.getWorkflows(organizationId),
     retry: false,
-    enabled: !!organizationId,
   });
 
   const workflows = (workflowsData || []).map((wf: any) => {
@@ -220,6 +226,19 @@ export function OnboardingDashboard() {
       setTemplateToDelete(null);
     } catch (err: any) {
       showMessage(err.response?.data?.message || 'Failed to delete template', 'error');
+    }
+  };
+
+  const handleDeleteWorkflow = async () => {
+    if (!workflowToDelete) return;
+    try {
+      await onboardingService.deleteWorkflow(workflowToDelete);
+      showMessage('Workflow deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['orgWorkflows'] });
+      setIsDeleteWorkflowModalOpen(false);
+      setWorkflowToDelete(null);
+    } catch (err: any) {
+      showMessage(err.response?.data?.message || 'Failed to delete workflow', 'error');
     }
   };
 
@@ -316,8 +335,51 @@ export function OnboardingDashboard() {
                         </div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{wf.template}</div>
                       </div>
-                      <div className="workflow-status-badge" style={{ background: progressColor + '20', color: progressColor }}>
-                        {wf.progress}%
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="workflow-status-badge" style={{ background: progressColor + '20', color: progressColor }}>
+                          {wf.progress}%
+                        </div>
+                        {isAdmin && (
+                          <div style={{ position: 'relative' }}>
+                            <button
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--text-secondary)', borderRadius: '4px' }}
+                              onClick={(e) => { e.stopPropagation(); setActiveWorkflowMenu(activeWorkflowMenu === wf.id ? null : wf.id); }}
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            {activeWorkflowMenu === wf.id && (
+                              <div
+                                style={{
+                                  position: 'absolute', right: 0, top: '100%', marginTop: '0.25rem',
+                                  background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                                  borderRadius: 'var(--radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                                  zIndex: 9999, minWidth: '140px', overflow: 'hidden'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--text-primary)' }}
+                                  onClick={() => {
+                                    showMessage('Edit workflow functionality coming soon!', 'error');
+                                    setActiveWorkflowMenu(null);
+                                  }}
+                                >
+                                  <Edit2 size={14} /> Edit
+                                </button>
+                                <button
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--danger)' }}
+                                  onClick={() => {
+                                    setWorkflowToDelete(wf.id);
+                                    setIsDeleteWorkflowModalOpen(true);
+                                    setActiveWorkflowMenu(null);
+                                  }}
+                                >
+                                  <Trash2 size={14} /> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="progress-bar-wrapper">
@@ -562,29 +624,59 @@ export function OnboardingDashboard() {
               <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Select Employees *</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    {assignForm.employeeIds.map(empId => {
+                      const emp = employees.find(e => e.id === empId);
+                      if (!emp) return null;
+                      return (
+                        <div key={emp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                          {emp.firstName} {emp.lastName}
+                          <button type="button" onClick={() => setAssignForm(p => ({ ...p, employeeIds: p.employeeIds.filter(id => id !== emp.id) }))} style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', fontSize: '1.25rem', lineHeight: 1 }}>
+                            &times;
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Search employees..." 
+                    placeholder="Search employees to add..." 
                     value={empSearch}
                     onChange={e => setEmpSearch(e.target.value)}
                     style={{ marginBottom: '0.5rem' }}
                   />
-                  <select 
-                    className="form-select" 
-                    multiple 
-                    value={assignForm.employeeIds} 
-                    onChange={e => {
-                      const selected = Array.from(e.target.selectedOptions, option => option.value);
-                      setAssignForm(p => ({ ...p, employeeIds: selected }));
-                    }}
-                    style={{ height: '120px' }}
-                  >
-                    {employees.filter(emp => `${emp.firstName} ${emp.lastName} ${emp.employeeCode}`.toLowerCase().includes(empSearch.toLowerCase())).map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeCode})</option>
-                    ))}
-                  </select>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Hold Ctrl/Cmd to select multiple employees</p>
+                  <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    {employees.filter(emp => `${emp.firstName} ${emp.lastName} ${emp.employeeCode}`.toLowerCase().includes(empSearch.toLowerCase())).map(emp => {
+                      const isSelected = assignForm.employeeIds.includes(emp.id);
+                      return (
+                        <div 
+                          key={emp.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setAssignForm(p => ({ ...p, employeeIds: p.employeeIds.filter(id => id !== emp.id) }));
+                            } else {
+                              setAssignForm(p => ({ ...p, employeeIds: [...p.employeeIds, emp.id] }));
+                            }
+                          }}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
+                            color: isSelected ? '#7c3aed' : 'var(--text-primary)',
+                            fontWeight: isSelected ? 600 : 400,
+                            transition: 'background 0.2s',
+                          }}
+                          onMouseOver={e => !isSelected && (e.currentTarget.style.background = 'var(--gray-50)')}
+                          onMouseOut={e => !isSelected && (e.currentTarget.style.background = 'transparent')}
+                        >
+                          {emp.firstName} {emp.lastName} <span style={{ color: isSelected ? '#7c3aed' : 'var(--text-muted)', fontSize: '0.8rem' }}>({emp.employeeCode})</span>
+                        </div>
+                      );
+                    })}
+                    {employees.length === 0 && <div style={{ padding: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No employees found.</div>}
+                  </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Select Template *</label>
@@ -759,6 +851,36 @@ export function OnboardingDashboard() {
           </div>
         </div>
       )}
+
+      {/* Delete Workflow Modal */}
+      {isDeleteWorkflowModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsDeleteWorkflowModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2 className="modal-title">Delete Journey</h2>
+              <button className="modal-close" onClick={() => setIsDeleteWorkflowModalOpen(false)}>&times;</button>
+            </div>
+            <div style={{ padding: '1.5rem 2.5rem' }}>
+              <p style={{ color: 'var(--text-secondary)' }}>Are you sure you want to delete this onboarding journey? All associated tasks will be permanently removed. This action cannot be undone.</p>
+            </div>
+            <div style={{
+              padding: '1rem 2.5rem', borderTop: '1px solid var(--border-color)',
+              background: 'var(--bg-surface)', display: 'flex', justifyContent: 'flex-end', gap: '1rem'
+            }}>
+              <button onClick={() => setIsDeleteWorkflowModalOpen(false)} style={{
+                padding: '0.625rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)',
+                background: '#fff', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer'
+              }}>Cancel</button>
+              <button onClick={handleDeleteWorkflow} style={{
+                padding: '0.625rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)',
+                background: 'var(--danger)', color: '#fff', fontWeight: 600, cursor: 'pointer'
+              }}>Delete Journey</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default OnboardingDashboard;

@@ -270,51 +270,53 @@ export function MyProfile() {
     <div className="profile-container ">
 
       {/* Banner */}
-      <div className="profile-banner-card">
-        <div className="profile-banner-bg"></div>
-        <div className="profile-header-content">
-          <div
-            className="profile-avatar-wrapper"
-            onClick={() => fileInputRef.current?.click()}
-            title="Click to update profile photo"
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="profile-avatar-img" />
-            ) : (
-              <UserIcon size={48} color="var(--gray-400)" />
-            )}
-            <div className="profile-avatar-overlay">Edit</div>
-          </div>
-          <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleAvatarChange} />
-          <input type="file" ref={docInputRef} style={{ display: 'none' }} onChange={handleDocUploadChange} />
-
-          <div className="profile-info-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div className="profile-name-row">
-                  <h1 className="profile-banner-name">{user?.firstName} {user?.lastName}</h1>
-                  <span className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={12} /> Active</span>
-                </div>
-                <div className="profile-banner-role">
-                  {employee?.designation?.title || 'Employee'} {employee?.department?.name ? ` | ${employee.department.name}` : ''}
-                </div>
-              </div>
+      {activeTab === 'personal' && (
+        <div className="profile-banner-card">
+          <div className="profile-banner-bg"></div>
+          <div className="profile-header-content">
+            <div
+              className="profile-avatar-wrapper"
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to update profile photo"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="profile-avatar-img" />
+              ) : (
+                <UserIcon size={48} color="var(--gray-400)" />
+              )}
+              <div className="profile-avatar-overlay">Edit</div>
             </div>
+            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleAvatarChange} />
+            <input type="file" ref={docInputRef} style={{ display: 'none' }} onChange={handleDocUploadChange} />
 
-            <div className="profile-contact-row">
-              <div className="profile-contact-item">
-                <Mail size={16} /> {user?.email}
+            <div className="profile-info-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div className="profile-name-row">
+                    <h1 className="profile-banner-name">{user?.firstName} {user?.lastName}</h1>
+                    <span className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={12} /> Active</span>
+                  </div>
+                  <div className="profile-banner-role">
+                    {employee?.designation?.title || 'Employee'} {employee?.department?.name ? ` | ${employee.department.name}` : ''}
+                  </div>
+                </div>
               </div>
-              <div className="profile-contact-item">
-                <MapPin size={16} /> NxtWave - Hyderabad
-              </div>
-              <div className="profile-contact-item">
-                <Phone size={16} /> {employee?.phone || '+91-XXXXXXXXXX'}
+
+              <div className="profile-contact-row">
+                <div className="profile-contact-item">
+                  <Mail size={16} /> {user?.email}
+                </div>
+                <div className="profile-contact-item">
+                  <MapPin size={16} /> NxtWave - Hyderabad
+                </div>
+                <div className="profile-contact-item">
+                  <Phone size={16} /> {employee?.phone || '+91-XXXXXXXXXX'}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="profile-content-card">
 
@@ -335,47 +337,47 @@ export function MyProfile() {
 
             <div className="profile-data-grid">
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Full Name</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{user?.firstName} {user?.lastName}</span>
+                <span className="profile-data-label">Full Name</span>
+                <span className="profile-data-value">{user?.firstName} {user?.lastName}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Email Address</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{user?.email}</span>
+                <span className="profile-data-label">Email Address</span>
+                <span className="profile-data-value">{user?.email}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Phone Number</span>
+                <span className="profile-data-label">Phone Number</span>
                 {isEditingPersonal ? (
-                  <input type="text" className="form-input" value={personalForm.phone} onChange={e => setPersonalForm({ ...personalForm, phone: e.target.value })} />
+                  <input type="text" className="form-input profile-input" value={personalForm.phone} onChange={e => setPersonalForm({ ...personalForm, phone: e.target.value })} />
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{employee?.phone || 'N/A'}</span>
+                  <span className="profile-data-value">{employee?.phone || 'N/A'}</span>
                 )}
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Date of Birth</span>
+                <span className="profile-data-label">Date of Birth</span>
                 {isEditingPersonal ? (
-                  <input type="date" className="form-input" value={personalForm.dateOfBirth} onChange={e => setPersonalForm({ ...personalForm, dateOfBirth: e.target.value })} />
+                  <input type="date" className="form-input profile-input" value={personalForm.dateOfBirth} onChange={e => setPersonalForm({ ...personalForm, dateOfBirth: e.target.value })} />
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{employee?.dateOfBirth ? formatJoinDate(employee.dateOfBirth) : 'N/A'}</span>
+                  <span className="profile-data-value">{employee?.dateOfBirth ? formatJoinDate(employee.dateOfBirth) : 'N/A'}</span>
                 )}
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Gender</span>
+                <span className="profile-data-label">Gender</span>
                 {isEditingPersonal ? (
-                  <select className="form-input" value={personalForm.gender} onChange={e => setPersonalForm({ ...personalForm, gender: e.target.value })}>
+                  <select className="form-input profile-input" value={personalForm.gender} onChange={e => setPersonalForm({ ...personalForm, gender: e.target.value })}>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{employee?.gender || 'N/A'}</span>
+                  <span className="profile-data-value">{employee?.gender || 'N/A'}</span>
                 )}
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Current Address</span>
+                <span className="profile-data-label">Current Address</span>
                 {isEditingPersonal ? (
-                  <input type="text" className="form-input" value={personalForm.address} onChange={e => setPersonalForm({ ...personalForm, address: e.target.value })} />
+                  <input type="text" className="form-input profile-input" value={personalForm.address} onChange={e => setPersonalForm({ ...personalForm, address: e.target.value })} />
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{personalForm.address}</span>
+                  <span className="profile-data-value">{personalForm.address}</span>
                 )}
               </div>
             </div>
@@ -398,31 +400,31 @@ export function MyProfile() {
             </div>
             <div className="profile-data-grid">
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Employee ID</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>NXW-00{employee?.id || '42'}</span>
+                <span className="profile-data-label">Employee ID</span>
+                <span className="profile-data-value">NXW-00{employee?.id || '42'}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Date Of Joining</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{formatJoinDate(employee?.dateOfJoining)}</span>
+                <span className="profile-data-label">Date Of Joining</span>
+                <span className="profile-data-value">{formatJoinDate(employee?.dateOfJoining)}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Designation</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{employee?.designation?.title || 'N/A'}</span>
+                <span className="profile-data-label">Designation</span>
+                <span className="profile-data-value">{employee?.designation?.title || 'N/A'}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Department</span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{employee?.department?.name || 'N/A'}</span>
+                <span className="profile-data-label">Department</span>
+                <span className="profile-data-value">{employee?.department?.name || 'N/A'}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Reporting Manager</span>
+                <span className="profile-data-label">Reporting Manager</span>
                 {isEditingJob ? (
                   <input type="text" className="profile-input" placeholder="e.g. John Doe" value={jobForm.manager} onChange={e => setJobForm({...jobForm, manager: e.target.value})} />
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--brand-600)', fontWeight: 500 }}>{jobForm.manager || 'Not assigned'}</span>
+                  <span className="profile-data-value" style={{ color: 'var(--brand-600)' }}>{jobForm.manager || 'Not assigned'}</span>
                 )}
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '0.25rem' }}>Employment Type</span>
+                <span className="profile-data-label">Employment Type</span>
                 {isEditingJob ? (
                   <select className="profile-input" value={jobForm.employmentType} onChange={e => setJobForm({...jobForm, employmentType: e.target.value})}>
                     <option value="">Select Type</option>
@@ -432,7 +434,7 @@ export function MyProfile() {
                     <option value="Internship">Internship</option>
                   </select>
                 ) : (
-                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: 500 }}>{jobForm.employmentType || 'Not specified'}</span>
+                  <span className="profile-data-value">{jobForm.employmentType || 'Not specified'}</span>
                 )}
               </div>
             </div>

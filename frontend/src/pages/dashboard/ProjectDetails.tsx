@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { AddProjectMemberModal } from './components/project/AddProjectMemberModal';
 import { EditTaskModal } from './components/project/EditTaskModal';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
 import './ProjectDetails.css';
 
 interface Task {
@@ -26,6 +27,8 @@ interface Project {
 
 export function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
+  const user = useAuthStore(state => state.user);
+  const canManageTasks = user?.roles?.some(r => ['tenant_admin', 'organization_admin', 'manager', 'hr_manager'].includes(r)) || false;
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -182,12 +185,16 @@ export function ProjectDetails() {
           </div>
         </div>
         <div className="project-header-actions">
-          <Button variant="secondary" leftIcon={<Users size={18} />} onClick={() => setIsAddMemberModalOpen(true)} style={{ borderRadius: '2rem' }}>
-            Add Member
-          </Button>
-          <Button variant="primary" leftIcon={<Plus size={18} />} onClick={createTask} style={{ borderRadius: '2rem' }}>
-            New Task
-          </Button>
+          {canManageTasks && (
+            <>
+              <Button variant="secondary" leftIcon={<Users size={18} />} onClick={() => setIsAddMemberModalOpen(true)} style={{ borderRadius: '2rem' }}>
+                Add Member
+              </Button>
+              <Button variant="primary" leftIcon={<Plus size={18} />} onClick={createTask} style={{ borderRadius: '2rem' }}>
+                New Task
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -197,7 +204,7 @@ export function ProjectDetails() {
           <thead style={{ background: '#cbd5e1', color: '#475569', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>
             <tr>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>TASK NAME</th>
-              <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>ASSIGNEE</th>
+              {canManageTasks && <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>ASSIGNEE</th>}
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>PRIORITY</th>
               {columns.map(col => (
                 <th key={col} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>{col.replace('_', ' ')}</th>
@@ -212,53 +219,55 @@ export function ProjectDetails() {
                     {task.title}
                   </span>
                 </td>
-                <td style={{ padding: '1rem', color: '#475569', fontSize: '0.875rem', minWidth: '200px' }}>
-                  {editingAssigneeId === task.id ? (
-                    <div style={{ position: 'relative' }}>
-                      <input 
-                        type="text" 
-                        autoFocus
-                        placeholder="Search employee..."
-                        value={assigneeSearch}
-                        onChange={(e) => setAssigneeSearch(e.target.value)}
-                        onBlur={() => setTimeout(() => setEditingAssigneeId(null), 200)}
-                        style={{ padding: '0.375rem 0.75rem', border: '1px solid var(--brand-500)', borderRadius: '4px', outline: 'none', width: '100%', fontSize: '0.875rem' }}
-                      />
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', zIndex: 10, maxHeight: '150px', overflowY: 'auto', borderRadius: '4px', marginTop: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                        <div 
-                          style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', fontSize: '0.875rem' }}
-                          onClick={() => { updateTaskAssignee(task.id, ''); setEditingAssigneeId(null); }}
-                          onMouseOver={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          Unassigned
-                        </div>
-                        {((project as any)?.members || []).filter((m: any) => 
-                           `${m.employee?.firstName} ${m.employee?.lastName}`.toLowerCase().includes(assigneeSearch.toLowerCase())
-                        ).map((m: any) => (
+                {canManageTasks && (
+                  <td style={{ padding: '1rem', color: '#475569', fontSize: '0.875rem', minWidth: '200px' }}>
+                    {editingAssigneeId === task.id ? (
+                      <div style={{ position: 'relative' }}>
+                        <input 
+                          type="text" 
+                          autoFocus
+                          placeholder="Search employee..."
+                          value={assigneeSearch}
+                          onChange={(e) => setAssigneeSearch(e.target.value)}
+                          onBlur={() => setTimeout(() => setEditingAssigneeId(null), 200)}
+                          style={{ padding: '0.375rem 0.75rem', border: '1px solid var(--brand-500)', borderRadius: '4px', outline: 'none', width: '100%', fontSize: '0.875rem' }}
+                        />
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', zIndex: 10, maxHeight: '150px', overflowY: 'auto', borderRadius: '4px', marginTop: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                           <div 
-                            key={m.employeeId} 
                             style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', fontSize: '0.875rem' }}
-                            onClick={() => { updateTaskAssignee(task.id, m.employeeId); setEditingAssigneeId(null); }}
+                            onClick={() => { updateTaskAssignee(task.id, ''); setEditingAssigneeId(null); }}
                             onMouseOver={(e) => e.currentTarget.style.background = '#f1f5f9'}
                             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                           >
-                            {m.employee?.firstName} {m.employee?.lastName}
+                            Unassigned
                           </div>
-                        ))}
+                          {((project as any)?.members || []).filter((m: any) => 
+                             `${m.employee?.firstName} ${m.employee?.lastName}`.toLowerCase().includes(assigneeSearch.toLowerCase())
+                          ).map((m: any) => (
+                            <div 
+                              key={m.employeeId} 
+                              style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', fontSize: '0.875rem' }}
+                              onClick={() => { updateTaskAssignee(task.id, m.employeeId); setEditingAssigneeId(null); }}
+                              onMouseOver={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              {m.employee?.firstName} {m.employee?.lastName}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => { setEditingAssigneeId(task.id); setAssigneeSearch(''); }}
-                      style={{ cursor: 'pointer', color: '#3b82f6', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: 'transparent', transition: 'text-decoration-color 0.2s', padding: '0.375rem 0' }}
-                      onMouseOver={e => e.currentTarget.style.textDecorationColor = '#3b82f6'}
-                      onMouseOut={e => e.currentTarget.style.textDecorationColor = 'transparent'}
-                    >
-                      {task.assignee?.user?.firstName ? `${task.assignee.user.firstName} ${task.assignee.user.lastName}` : 'Unassigned'}
-                    </div>
-                  )}
-                </td>
+                    ) : (
+                      <div 
+                        onClick={() => { setEditingAssigneeId(task.id); setAssigneeSearch(''); }}
+                        style={{ cursor: 'pointer', color: '#3b82f6', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: 'transparent', transition: 'text-decoration-color 0.2s', padding: '0.375rem 0' }}
+                        onMouseOver={e => e.currentTarget.style.textDecorationColor = '#3b82f6'}
+                        onMouseOut={e => e.currentTarget.style.textDecorationColor = 'transparent'}
+                      >
+                        {task.assignee?.user?.firstName ? `${task.assignee.user.firstName} ${task.assignee.user.lastName}` : 'Unassigned'}
+                      </div>
+                    )}
+                  </td>
+                )}
                 <td style={{ padding: '1rem', minWidth: '100px' }}>
                   <select
                     style={{

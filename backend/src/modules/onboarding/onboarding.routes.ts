@@ -19,6 +19,7 @@ router.delete('/templates/:id', authorize('onboarding.template.delete'), control
 // Workflows
 router.post('/workflows', authorize('onboarding.workflow.assign'), controller.assignWorkflow);
 router.get('/workflows', authorize('onboarding.workflow.read'), controller.getWorkflows);
+router.delete('/workflows/:id', authorize('onboarding.workflow.delete'), controller.deleteWorkflow);
 
 // Tasks
 router.get('/tasks/me', authorize('onboarding.task.read'), controller.getMyTasks);

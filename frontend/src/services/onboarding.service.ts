@@ -15,5 +15,10 @@ export const onboardingService = {
   completeTask: async (id: string) => {
     const res = await api.patch(`/onboarding/tasks/${id}/complete`);
     return res.data.data;
+  },
+
+  deleteWorkflow: async (id: string) => {
+    const res = await api.delete(`/onboarding/workflows/${id}`);
+    return res.data.data;
   }
 };
