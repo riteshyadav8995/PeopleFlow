@@ -28,14 +28,14 @@ export class OnboardingController extends BaseController {
   updateTemplate = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    const template = await this.templateService.updateTemplate(context, req.params.id, req.body);
+    const template = await this.templateService.updateTemplate(context, req.params.id as string, req.body);
     ApiResponse.success(res, template, 'Template updated successfully');
   });
 
   deleteTemplate = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    const result = await this.templateService.deleteTemplate(context, req.params.id);
+    const result = await this.templateService.deleteTemplate(context, req.params.id as string);
     ApiResponse.success(res, result, 'Template deleted successfully');
   });
 

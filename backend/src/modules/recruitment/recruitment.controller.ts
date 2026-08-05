@@ -57,14 +57,14 @@ export class RecruitmentController extends BaseController {
   updateJob = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    const updated = await this.jobService.updateJob(context, req.params.id, req.body);
+    const updated = await this.jobService.updateJob(context, req.params.id as string, req.body);
     ApiResponse.success(res, updated, 'Job updated successfully');
   });
 
   deleteJob = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    await this.jobService.deleteJob(context, req.params.id);
+    await this.jobService.deleteJob(context, req.params.id as string);
     ApiResponse.success(res, null, 'Job deleted successfully');
   });
 

@@ -329,7 +329,10 @@ export class PayrollService extends BaseService {
           tenantId: org.tenantId,
           userId: 'system',
           highestScope: 'ORGANIZATION',
-          employeeId: 'system'
+          employeeId: 'system',
+          roles: [],
+          permissions: [],
+          requestId: 'system-job'
         };
 
         const runData = {

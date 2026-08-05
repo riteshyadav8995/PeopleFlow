@@ -191,7 +191,7 @@ export class ProjectService extends BaseService {
     return await prisma.$transaction(async (tx) => {
       await tx.projectMember.deleteMany({ where: { projectId } });
       await tx.task.deleteMany({ where: { projectId } });
-      await tx.milestone.deleteMany({ where: { projectId } });
+
       
       return await tx.project.delete({ where: { id: projectId } });
     });

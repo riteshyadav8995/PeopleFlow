@@ -1,5 +1,7 @@
 import cron from 'node-cron';
-import { payrollService } from '../modules/payroll/payroll.service';
+import { PayrollService } from '../modules/payroll/payroll.service';
+
+const payrollService = new PayrollService();
 import { logger } from '../shared/logger/logger';
 
 export function initPayrollCron() {
