@@ -40,4 +40,16 @@ router.post(
   controller.addProjectMember
 );
 
+router.put(
+  '/:id',
+  authorize('project.record.update'),
+  controller.updateProject
+);
+
+router.delete(
+  '/:id',
+  authorize('project.record.delete'),
+  controller.deleteProject
+);
+
 export default router;

@@ -152,22 +152,22 @@ export function Departments() {
 
       {/* Dept Modal */}
       {isDeptModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">Add New Department</h3>
-              <button onClick={() => setIsDeptModalOpen(false)} className="modal-close">&times;</button>
+        <div className="dept-modal-overlay">
+          <div className="dept-modal-content">
+            <div className="dept-modal-header">
+              <h3 className="dept-modal-title">Add New Department</h3>
+              <button onClick={() => setIsDeptModalOpen(false)} className="dept-modal-close">&times;</button>
             </div>
-            <form onSubmit={handleCreateDept} className="modal-form">
-              <div className="form-group">
-                <label className="form-label">Department Name *</label>
-                <input type="text" className="form-input" required value={deptForm.name} onChange={e => setDeptForm({...deptForm, name: e.target.value})} />
+            <form onSubmit={handleCreateDept} className="dept-modal-form">
+              <div className="dept-form-group">
+                <label className="dept-form-label">Department Name *</label>
+                <input type="text" className="dept-form-input" required value={deptForm.name} onChange={e => setDeptForm({...deptForm, name: e.target.value})} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Department Code *</label>
-                <input type="text" className="form-input" required value={deptForm.code} onChange={e => setDeptForm({...deptForm, code: e.target.value})} placeholder="e.g. ENG, HR, SALES" />
+              <div className="dept-form-group">
+                <label className="dept-form-label">Department Code *</label>
+                <input type="text" className="dept-form-input" required value={deptForm.code} onChange={e => setDeptForm({...deptForm, code: e.target.value})} placeholder="e.g. ENG, HR, SALES" />
               </div>
-              <div className="modal-actions">
+              <div className="dept-modal-actions">
                 <button className="btn-secondary" type="button" onClick={() => setIsDeptModalOpen(false)}>Cancel</button>
                 <button className="btn-primary" type="submit">Save</button>
               </div>
@@ -178,27 +178,27 @@ export function Departments() {
 
       {/* Designation Modal */}
       {isDesigModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">Add New Designation</h3>
-              <button onClick={() => setIsDesigModalOpen(false)} className="modal-close">&times;</button>
+        <div className="dept-modal-overlay">
+          <div className="dept-modal-content">
+            <div className="dept-modal-header">
+              <h3 className="dept-modal-title">Add New Designation</h3>
+              <button onClick={() => setIsDesigModalOpen(false)} className="dept-modal-close">&times;</button>
             </div>
-            <form onSubmit={handleCreateDesig} className="modal-form">
-              <div className="form-group">
-                <label className="form-label">Job Title *</label>
-                <input type="text" className="form-input" required value={desigForm.title} onChange={e => setDesigForm({...desigForm, title: e.target.value})} />
+            <form onSubmit={handleCreateDesig} className="dept-modal-form">
+              <div className="dept-form-group">
+                <label className="dept-form-label">Job Title *</label>
+                <input type="text" className="dept-form-input" required value={desigForm.title} onChange={e => setDesigForm({...desigForm, title: e.target.value})} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Department *</label>
-                <select required value={desigForm.departmentId} onChange={e => setDesigForm({...desigForm, departmentId: e.target.value})} className="form-select">
+              <div className="dept-form-group">
+                <label className="dept-form-label">Department *</label>
+                <select required value={desigForm.departmentId} onChange={e => setDesigForm({...desigForm, departmentId: e.target.value})} className="dept-form-select">
                   <option value="">Select Department...</option>
                   {departments?.map((d: any) => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
               </div>
-              <div className="modal-actions">
+              <div className="dept-modal-actions">
                 <button className="btn-secondary" type="button" onClick={() => setIsDesigModalOpen(false)}>Cancel</button>
                 <button className="btn-primary" type="submit">Save</button>
               </div>

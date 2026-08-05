@@ -4,7 +4,6 @@
   flex-direction: column;
   gap: 2rem;
   padding-bottom: 3rem;
-  animation: fade-in 0.5s ease-out forwards;
 }
 
 /* Header Row */
@@ -130,7 +129,6 @@
 
 /* Skeleton loader */
 .skeleton {
-  animation: pulse-ring 2s infinite;
   background: rgba(31, 41, 55, 0.5);
   border-radius: 0.375rem;
 }

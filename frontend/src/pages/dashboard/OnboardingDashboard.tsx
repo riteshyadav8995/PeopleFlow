@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
-import { Rocket, BookOpen, Zap, Clock, ShieldCheck, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Rocket, BookOpen, Zap, Clock, ShieldCheck, Plus, CheckCircle2, AlertCircle, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { onboardingService } from '@/services/onboarding.service';
 import './OnboardingDashboard.css';
@@ -77,10 +77,22 @@ export function OnboardingDashboard() {
   // Create template modal
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [templateForm, setTemplateForm] = useState({
+    id: '',
     name: '',
     description: '',
     tasks: [{ title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }],
   });
+
+  // Template actions
+  const [activeTemplateMenu, setActiveTemplateMenu] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<OnboardingTemplate | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveTemplateMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     setMessage(msg);
@@ -133,13 +145,18 @@ export function OnboardingDashboard() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/onboarding/templates', { ...templateForm, organizationId });
+      if (templateForm.id) {
+        await api.patch(`/onboarding/templates/${templateForm.id}`, { ...templateForm, organizationId });
+        showMessage('Template updated successfully!');
+      } else {
+        await api.post('/onboarding/templates', { ...templateForm, organizationId });
+        showMessage('Template created successfully!');
+      }
       setIsTemplateModalOpen(false);
-      showMessage('Template created successfully!');
-      setTemplateForm({ name: '', description: '', tasks: [{ title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }] });
+      setTemplateForm({ id: '', name: '', description: '', tasks: [{ title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }] });
       fetchData();
     } catch (err: any) {
-      showMessage(err.response?.data?.message || 'Failed to create template.', 'error');
+      showMessage(err.response?.data?.message || 'Failed to save template.', 'error');
     } finally {
       setSaving(false);
     }
@@ -175,6 +192,19 @@ export function OnboardingDashboard() {
   });
 
   const pendingTasks = myTasks.filter(t => t.status !== 'COMPLETED').length;
+  const handleDeleteTemplate = async () => {
+    if (!templateToDelete) return;
+    try {
+      await api.delete(`/onboarding/templates/${templateToDelete.id}`);
+      showMessage('Template deleted successfully');
+      setTemplates(templates.filter(t => t.id !== templateToDelete.id));
+      setIsDeleteModalOpen(false);
+      setTemplateToDelete(null);
+    } catch (err: any) {
+      showMessage(err.response?.data?.message || 'Failed to delete template', 'error');
+    }
+  };
+
   const completedTasks = myTasks.filter(t => t.status === 'COMPLETED').length;
 
   return (
@@ -210,34 +240,26 @@ export function OnboardingDashboard() {
       )}
 
       {/* Stats */}
-      <div className="onboarding-stats">
-        <div className="stat-card warning">
-          <div className="stat-icon warning"><Clock size={26} /></div>
-          <div>
-            <p className="stat-label">Active Journeys</p>
-            <div className="stat-value">{workflows.length}</div>
-          </div>
+      <div className="ob-stats-grid">
+        <div className="ob-stat-card ob-warning">
+          <div className="ob-stat-icon-box"><Clock size={16} /></div>
+          <span className="ob-stat-label">Active Journeys:</span>
+          <span className="ob-stat-value">{workflows.length}</span>
         </div>
-        <div className="stat-card success">
-          <div className="stat-icon success"><CheckCircle2 size={26} /></div>
-          <div>
-            <p className="stat-label">My Tasks Completed</p>
-            <div className="stat-value">{completedTasks}</div>
-          </div>
+        <div className="ob-stat-card ob-success">
+          <div className="ob-stat-icon-box"><CheckCircle2 size={16} /></div>
+          <span className="ob-stat-label">My Tasks Completed:</span>
+          <span className="ob-stat-value">{completedTasks}</span>
         </div>
-        <div className="stat-card brand">
-          <div className="stat-icon brand"><Zap size={26} /></div>
-          <div>
-            <p className="stat-label">Templates Created</p>
-            <div className="stat-value">{templates.length}</div>
-          </div>
+        <div className="ob-stat-card ob-brand">
+          <div className="ob-stat-icon-box"><Zap size={16} /></div>
+          <span className="ob-stat-label">Templates Created:</span>
+          <span className="ob-stat-value">{templates.length}</span>
         </div>
-        <div className="stat-card info">
-          <div className="stat-icon info"><ShieldCheck size={26} /></div>
-          <div>
-            <p className="stat-label">Pending My Tasks</p>
-            <div className="stat-value">{pendingTasks}</div>
-          </div>
+        <div className="ob-stat-card ob-info">
+          <div className="ob-stat-icon-box"><ShieldCheck size={16} /></div>
+          <span className="ob-stat-label">Pending My Tasks:</span>
+          <span className="ob-stat-value">{pendingTasks}</span>
         </div>
       </div>
 
@@ -299,7 +321,10 @@ export function OnboardingDashboard() {
             <div className="content-card-header">
               <span className="content-card-title">Available Templates</span>
               {isAdmin && (
-                <button className="btn-start-onboarding" style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-md)', boxShadow: 'none' }} onClick={() => setIsTemplateModalOpen(true)}>
+                <button className="btn-start-onboarding" style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-md)', boxShadow: 'none' }} onClick={() => {
+                  setTemplateForm({ id: '', name: '', description: '', tasks: [{ title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }] });
+                  setIsTemplateModalOpen(true);
+                }}>
                   <Plus size={14} /> New
                 </button>
               )}
@@ -311,7 +336,10 @@ export function OnboardingDashboard() {
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                   <BookOpen size={40} style={{ marginBottom: '1rem', opacity: 0.3 }} />
                   <p>No templates yet.</p>
-                  {isAdmin && <button className="btn-start-onboarding" style={{ margin: '0.75rem auto 0', display: 'flex', boxShadow: 'none' }} onClick={() => setIsTemplateModalOpen(true)}><Plus size={14} /> Create First Template</button>}
+                  {isAdmin && <button className="btn-start-onboarding" style={{ margin: '0.75rem auto 0', display: 'flex', boxShadow: 'none' }} onClick={() => {
+                    setTemplateForm({ id: '', name: '', description: '', tasks: [{ title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }] });
+                    setIsTemplateModalOpen(true);
+                  }}><Plus size={14} /> Create First Template</button>}
                 </div>
               ) : (
                 templates.map(tmpl => (
@@ -324,9 +352,56 @@ export function OnboardingDashboard() {
                       </div>
                     </div>
                     {isAdmin && (
-                      <button className="btn-start-onboarding" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: 'var(--radius-md)', boxShadow: 'none', whiteSpace: 'nowrap' }} onClick={() => { setAssignForm(p => ({ ...p, templateId: tmpl.id })); setIsAssignModalOpen(true); }}>
-                        Assign
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className="btn-start-onboarding" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: 'var(--radius-md)', boxShadow: 'none', whiteSpace: 'nowrap' }} onClick={() => { setAssignForm(p => ({ ...p, templateId: tmpl.id })); setIsAssignModalOpen(true); }}>
+                          Assign
+                        </button>
+                        <div style={{ position: 'relative' }}>
+                          <button
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--text-secondary)', borderRadius: '4px' }}
+                            onClick={(e) => { e.stopPropagation(); setActiveTemplateMenu(activeTemplateMenu === tmpl.id ? null : tmpl.id); }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                          {activeTemplateMenu === tmpl.id && (
+                            <div
+                              style={{
+                                position: 'absolute', right: 0, top: '100%', marginTop: '0.25rem',
+                                background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                                zIndex: 9999, minWidth: '140px', overflow: 'hidden'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--text-primary)' }}
+                                onClick={() => {
+                                  setTemplateForm({
+                                    id: tmpl.id,
+                                    name: tmpl.name,
+                                    description: tmpl.description || '',
+                                    tasks: tmpl.tasks.map(t => ({ title: t.title, category: t.category, isMandatory: t.isMandatory, dueDaysOffset: t.dueDaysOffset }))
+                                  });
+                                  setIsTemplateModalOpen(true);
+                                  setActiveTemplateMenu(null);
+                                }}
+                              >
+                                <Edit2 size={14} /> Edit
+                              </button>
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--danger)' }}
+                                onClick={() => {
+                                  setTemplateToDelete(tmpl);
+                                  setIsDeleteModalOpen(true);
+                                  setActiveTemplateMenu(null);
+                                }}
+                              >
+                                <Trash2 size={14} /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 ))
@@ -433,14 +508,40 @@ export function OnboardingDashboard() {
 
       {/* Assign Workflow Modal */}
       {isAssignModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">Start Onboarding Journey</h2>
-              <button className="modal-close" onClick={() => setIsAssignModalOpen(false)}>&times;</button>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'var(--bg-surface)',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: 'inherit'
+        }}>
+          {/* Top Bar */}
+          <div style={{
+            padding: '0.875rem 2.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.06), rgba(124,58,237,0.06))',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: 4, height: 24, borderRadius: 2, background: 'linear-gradient(180deg,#a78bfa,#7c3aed)' }} />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                Start Onboarding Journey
+              </h2>
             </div>
-            <form onSubmit={handleAssignWorkflow}>
-              <div className="modal-body">
+            <button onClick={() => setIsAssignModalOpen(false)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              width: 36, height: 36, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-muted)', fontSize: '1.5rem', transition: 'background 0.15s'
+            }}
+              onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-100)')}
+              onMouseOut={e => (e.currentTarget.style.background = 'none')}
+            >&times;</button>
+          </div>
+
+          <form onSubmit={handleAssignWorkflow} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
+              <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Select Employee *</label>
                   <select className="form-select" required value={assignForm.employeeId} onChange={e => setAssignForm(p => ({ ...p, employeeId: e.target.value }))}>
@@ -463,27 +564,62 @@ export function OnboardingDashboard() {
                   )}
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary-modal" onClick={() => setIsAssignModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-start-onboarding" style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1rem', boxShadow: 'none' }} disabled={saving || templates.length === 0}>
-                  {saving ? 'Assigning...' : 'Start Journey'}
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div style={{
+              padding: '1rem 2.5rem', borderTop: '1px solid var(--border-color)',
+              background: 'var(--bg-surface)', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: '1rem'
+            }}>
+              <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{
+                padding: '0.625rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)',
+                background: '#fff', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer'
+              }}>Cancel</button>
+              <button type="submit" disabled={saving || templates.length === 0} style={{
+                padding: '0.625rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', color: '#fff', fontWeight: 600, cursor: (saving || templates.length === 0) ? 'not-allowed' : 'pointer'
+              }}>
+                {saving ? 'Assigning...' : 'Start Journey'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
       {/* Create Template Modal */}
       {isTemplateModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh' }}>
-            <div className="modal-header">
-              <h2 className="modal-title">Create Onboarding Template</h2>
-              <button className="modal-close" onClick={() => setIsTemplateModalOpen(false)}>&times;</button>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'var(--bg-surface)',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: 'inherit'
+        }}>
+          {/* Top Bar */}
+          <div style={{
+            padding: '0.875rem 2.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.06), rgba(124,58,237,0.06))',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: 4, height: 24, borderRadius: 2, background: 'linear-gradient(180deg,#a78bfa,#7c3aed)' }} />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                {templateForm.id ? 'Edit Onboarding Template' : 'Create Onboarding Template'}
+              </h2>
             </div>
-            <form onSubmit={handleCreateTemplate}>
-              <div className="modal-body" style={{ overflowY: 'auto', maxHeight: '60vh' }}>
+            <button onClick={() => setIsTemplateModalOpen(false)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              width: 36, height: 36, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-muted)', fontSize: '1.5rem', transition: 'background 0.15s'
+            }}
+              onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-100)')}
+              onMouseOut={e => (e.currentTarget.style.background = 'none')}
+            >&times;</button>
+          </div>
+
+          <form onSubmit={handleCreateTemplate} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
+              <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Template Name *</label>
                   <input className="form-select" style={{ padding: '0.75rem' }} required placeholder="e.g. Standard Employee Onboarding" value={templateForm.name} onChange={e => setTemplateForm(p => ({ ...p, name: e.target.value }))} />
@@ -493,7 +629,7 @@ export function OnboardingDashboard() {
                   <input className="form-select" style={{ padding: '0.75rem' }} placeholder="Brief description" value={templateForm.description} onChange={e => setTemplateForm(p => ({ ...p, description: e.target.value }))} />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', marginTop: '1rem' }}>
                   <label className="form-label" style={{ margin: 0 }}>Tasks *</label>
                   <button type="button" className="btn-secondary-modal" onClick={() => setTemplateForm(p => ({ ...p, tasks: [...p.tasks, { title: '', category: 'EMPLOYEE', isMandatory: true, dueDaysOffset: 1 }] }))}>
                     + Add Task
@@ -530,13 +666,53 @@ export function OnboardingDashboard() {
                   </div>
                 ))}
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary-modal" onClick={() => setIsTemplateModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-start-onboarding" style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1rem', boxShadow: 'none' }} disabled={saving}>
-                  {saving ? 'Creating...' : 'Create Template'}
-                </button>
+            </div>
+            <div style={{
+              padding: '1rem 2.5rem', borderTop: '1px solid var(--border-color)',
+              background: 'var(--bg-surface)', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: '1rem'
+            }}>
+              <button type="button" onClick={() => setIsTemplateModalOpen(false)} style={{
+                padding: '0.625rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)',
+                background: '#fff', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer'
+              }}>Cancel</button>
+              <button type="submit" disabled={saving} style={{
+                padding: '0.625rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', color: '#fff', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer'
+              }}>
+                {saving ? 'Saving...' : templateForm.id ? 'Update Template' : 'Create Template'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && templateToDelete && (
+        <div className="modal-overlay" style={{ left: '16rem', right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', zIndex: 100, background: 'rgba(10, 15, 30, 0.55)', backdropFilter: 'blur(2px)' }}>
+          <div className="modal-content" style={{ background: 'var(--bg-surface)', maxWidth: '400px', height: 'auto', padding: '1.5rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 25px 60px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Trash2 size={24} />
               </div>
-            </form>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Delete Template</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Are you really want to delete <strong>{templateToDelete.name}</strong>? This action cannot be undone.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button 
+                type="button" 
+                style={{ flex: 1, padding: '0.625rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: 500, cursor: 'pointer' }}
+                onClick={() => { setIsDeleteModalOpen(false); setTemplateToDelete(null); }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                style={{ flex: 1, padding: '0.625rem', border: 'none', background: 'var(--danger)', borderRadius: 'var(--radius-md)', color: 'white', fontWeight: 500, cursor: 'pointer' }}
+                onClick={handleDeleteTemplate}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

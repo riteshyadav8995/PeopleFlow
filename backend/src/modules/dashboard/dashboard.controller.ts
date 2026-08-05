@@ -10,14 +10,18 @@ export class DashboardController {
       const tenantId = authReq.user.tenantId;
       const organizationId = authReq.user.organizationId || (req.query.organizationId as string);
       const userId = authReq.user.id;
-      const employeeId = authReq.user.employeeId;
+      
+      const { prisma } = require('../../core/base/base.model');
+      const employee = await prisma.employee.findFirst({
+        where: { userId, tenantId }
+      });
 
-      if (!organizationId || !employeeId) {
+      if (!organizationId || !employee) {
         ApiResponse.error(res, StatusCodes.BAD_REQUEST, 'Employee profile or Organization ID missing', 'BAD_REQUEST');
         return;
       }
 
-      const data = await dashboardService.getEmployeeDashboard(tenantId, organizationId, employeeId, userId);
+      const data = await dashboardService.getEmployeeDashboard(tenantId, organizationId, employee.id, userId);
       ApiResponse.success(res, data, 'Employee dashboard data retrieved');
     } catch (error) {
       next(error);

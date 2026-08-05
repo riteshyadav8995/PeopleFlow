@@ -108,28 +108,22 @@ export function VoiceAgentDashboard() {
       </div>
 
       {/* Stats Overview */}
-      <div className="voice-stats">
-         <div className="voice-stat-card brand">
-            <div className="voice-stat-icon brand"><Sparkles size={28} /></div>
-            <div>
-               <p className="voice-stat-label">Active Campaigns</p>
-               <h2 className="voice-stat-value">{campaigns.length}</h2>
-            </div>
-         </div>
-         <div className="voice-stat-card success">
-            <div className="voice-stat-icon success"><PhoneCall size={28} /></div>
-            <div>
-               <p className="voice-stat-label">Total Automated Calls</p>
-               <h2 className="voice-stat-value">{totalCalls}</h2>
-            </div>
-         </div>
-         <div className="voice-stat-card warning">
-            <div className="voice-stat-icon warning"><Clock size={28} /></div>
-            <div>
-               <p className="voice-stat-label">Hours Saved</p>
-               <h2 className="voice-stat-value">{Math.round(totalCalls * 0.25)}h</h2>
-            </div>
-         </div>
+      <div className="voice-stats-compact">
+        <div className="voice-stat-card-compact brand">
+          <Sparkles size={16} className="voice-stat-icon-compact brand" />
+          <span className="voice-stat-label-compact">Active Campaigns:</span>
+          <span className="voice-stat-value-compact">{campaigns.length}</span>
+        </div>
+        <div className="voice-stat-card-compact success">
+          <PhoneCall size={16} className="voice-stat-icon-compact success" />
+          <span className="voice-stat-label-compact">Total Automated Calls:</span>
+          <span className="voice-stat-value-compact">{totalCalls}</span>
+        </div>
+        <div className="voice-stat-card-compact warning">
+          <Clock size={16} className="voice-stat-icon-compact warning" />
+          <span className="voice-stat-label-compact">Hours Saved:</span>
+          <span className="voice-stat-value-compact">{Math.round(totalCalls * 0.25)}h</span>
+        </div>
       </div>
 
       {/* Campaigns Grid */}
@@ -145,9 +139,6 @@ export function VoiceAgentDashboard() {
                   <span className="campaign-type">{campaign.type}</span>
                 </div>
               </div>
-              <span className={`badge badge-${campaign.status === 'ACTIVE' ? 'success' : 'neutral'}`}>
-                {campaign.status}
-              </span>
             </div>
 
             <div className="campaign-stats-box">

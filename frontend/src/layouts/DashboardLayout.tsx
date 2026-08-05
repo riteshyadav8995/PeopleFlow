@@ -112,15 +112,15 @@ export function DashboardLayout() {
     }
 
     if (hasPermission('onboarding.dashboard.read') || hasPermission('employee.record:read')) {
-      items.push({ path: '/organization/onboarding', label: 'Onboarding', icon: UserPlus, group: 'Onboarding' });
+      items.push({ path: '/organization/onboarding', label: 'Onboarding', icon: UserPlus, group: 'Recruitment' });
     }
 
     if (hasPermission('attendance.dashboard.read') || hasPermission('attendance.record:read')) {
-      items.push({ path: '/organization/attendance', label: 'Attendance', icon: Clock, group: 'Workforce' });
+      items.push({ path: '/organization/attendance', label: 'Attendance', icon: Clock, group: 'People Management' });
     }
 
     if (hasPermission('leave.dashboard.read') || hasPermission('leave.request:read')) {
-      items.push({ path: '/organization/leaves', label: 'Leave Management', icon: Calendar, group: 'Workforce' });
+      items.push({ path: '/organization/leaves', label: 'Leave Management', icon: Calendar, group: 'People Management' });
     }
 
     if (hasPermission('project.dashboard.read') || hasPermission('project.record:read')) {
@@ -151,8 +151,7 @@ export function DashboardLayout() {
         subItems: [
           { path: '/employee/work/tasks', label: 'My Tasks' },
           { path: '/employee/work/projects', label: 'Projects' },
-          { path: '/employee/work/timesheets', label: 'Timesheets' },
-          { path: '/employee/work/calendar', label: 'Calendar' }
+          { path: '/employee/work/timesheets', label: 'Timesheets' }
         ]
       },
       {
@@ -546,6 +545,81 @@ export function DashboardLayout() {
                 </div>
               ))}
             </nav>
+
+            {/* Sidebar Footer - Profile */}
+            <div className="sidebar-footer" ref={profileRef}>
+              <button
+                className="sidebar-profile-btn"
+                onClick={() => setProfileOpen(!profileOpen)}
+              >
+                <div className="profile-avatar" style={{ overflow: 'hidden', flexShrink: 0 }}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    user?.firstName?.charAt(0) || 'U'
+                  )}
+                </div>
+                <div className="sidebar-profile-info">
+                  <div className="sidebar-profile-name">{user?.firstName} {user?.lastName}</div>
+                  <div className="sidebar-profile-role">{getDisplayRole()}</div>
+                </div>
+                <ChevronDown size={14} style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.5)', transform: profileOpen ? 'rotate(180deg)' : 'none', transition: 'all 0.2s', flexShrink: 0 }} />
+              </button>
+
+              {/* Profile Dropdown (opens upward) */}
+              {profileOpen && (
+                <div className="profile-dropdown-menu sidebar-profile-dropdown">
+                  <div className="dropdown-header">
+                    <div className="dropdown-name">{user?.firstName} {user?.lastName}</div>
+                    <div className="dropdown-email">{user?.email}</div>
+                  </div>
+
+                  {user?.hasEmployeeProfile && user?.roles?.some(r => r === 'tenant_admin' || r === 'super_admin' || r === 'hr_manager') && (
+                    <div className="dropdown-section">
+                      <div className="dropdown-section-title">Switch Workspace</div>
+
+                      <button
+                        onClick={() => handleSwitchWorkspace('organization')}
+                        disabled={switching}
+                        className={`dropdown-item ${activeContext === 'organization' ? 'active' : ''}`}
+                      >
+                        <div className="dropdown-item-content">
+                          <Building2 size={16} />
+                          Organization Admin
+                        </div>
+                        {activeContext === 'organization' && <Check size={14} />}
+                      </button>
+
+                      <button
+                        onClick={() => handleSwitchWorkspace('employee')}
+                        disabled={switching}
+                        className={`dropdown-item ${activeContext === 'employee' ? 'active' : ''}`}
+                        style={{ marginTop: '0.25rem' }}
+                      >
+                        <div className="dropdown-item-content">
+                          <Users size={16} />
+                          Employee Self-Service
+                        </div>
+                        {activeContext === 'employee' && <Check size={14} />}
+                      </button>
+                    </div>
+                  )}
+
+                  <div style={{ padding: '0.5rem' }}>
+                    <button
+                      onClick={handleLogout}
+                      className="dropdown-item dropdown-item-danger"
+                      style={{ marginTop: '0.25rem' }}
+                    >
+                      <div className="dropdown-item-content">
+                        <LogOut size={16} />
+                        Sign out
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <div className="app-drawer">
@@ -601,105 +675,8 @@ export function DashboardLayout() {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Top Header */}
+        {/* Top Header - Simplified (profile moved to sidebar) */}
         <header className="topbar">
-
-          {/* Breadcrumb / Page Title Context */}
-          <div>
-            <div className="workspace-badge">
-              {currentWorkspaceName}
-            </div>
-          </div>
-
-
-          <div className="topbar-actions">
-            <button className="notification-btn">
-              <Bell size={18} />
-              <span className="notification-dot"></span>
-            </button>
-
-            <div className="divider-vertical"></div>
-
-            {/* Profile Dropdown & Workspace Switcher */}
-            <div style={{ position: 'relative' }} ref={profileRef}>
-              <button
-                className="profile-btn"
-                onClick={() => setProfileOpen(!profileOpen)}
-              >
-                <div className="profile-avatar" style={{ overflow: 'hidden' }}>
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    user?.firstName?.charAt(0) || 'U'
-                  )}
-                </div>
-                <div className="profile-info">
-                  <div className="profile-name">
-                    {user?.firstName} {user?.lastName}
-                  </div>
-                  <div className="profile-role">
-                    {getDisplayRole()}
-                  </div>
-                </div>
-                <ChevronDown size={14} color="var(--text-muted)" style={{ transform: profileOpen ? 'rotate(180deg)' : 'none', transition: 'all 0.2s' }} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {profileOpen && (
-                <div className="profile-dropdown-menu">
-                  <div className="dropdown-header">
-                    <div className="dropdown-name">{user?.firstName} {user?.lastName}</div>
-                    <div className="dropdown-email">{user?.email}</div>
-                  </div>
-
-                  {user?.hasEmployeeProfile && user?.roles?.some(r => r === 'tenant_admin' || r === 'super_admin' || r === 'hr_manager') && (
-                    <div className="dropdown-section">
-                      <div className="dropdown-section-title">Switch Workspace</div>
-
-                      <button
-                        onClick={() => handleSwitchWorkspace('organization')}
-                        disabled={switching}
-                        className={`dropdown-item ${activeContext === 'organization' ? 'active' : ''}`}
-                      >
-                        <div className="dropdown-item-content">
-                          <Building2 size={16} />
-                          Organization Admin
-                        </div>
-                        {activeContext === 'organization' && <Check size={14} />}
-                      </button>
-
-                      <button
-                        onClick={() => handleSwitchWorkspace('employee')}
-                        disabled={switching}
-                        className={`dropdown-item ${activeContext === 'employee' ? 'active' : ''}`}
-                        style={{ marginTop: '0.25rem' }}
-                      >
-                        <div className="dropdown-item-content">
-                          <Users size={16} />
-                          Employee Self-Service
-                        </div>
-                        {activeContext === 'employee' && <Check size={14} />}
-                      </button>
-                    </div>
-                  )}
-
-                  <div style={{ padding: '0.5rem' }}>
-
-                    <button
-                      onClick={handleLogout}
-                      className="dropdown-item dropdown-item-danger"
-                      style={{ marginTop: '0.25rem' }}
-                    >
-                      <div className="dropdown-item-content">
-                        <LogOut size={16} />
-                        Sign out
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </header>
 
         {/* Page Content */}

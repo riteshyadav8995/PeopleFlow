@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutTemplate, Briefcase, Users, Activity, CheckCircle2 } from 'lucide-react';
+import { Plus, LayoutTemplate, Briefcase, Users, Activity, CheckCircle2, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { CreateProjectModal } from './components/project/CreateProjectModal';
@@ -27,6 +27,18 @@ export function Projects() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.project-menu-container')) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchProjects();
@@ -44,15 +56,40 @@ export function Projects() {
     }
   };
 
-  const handleCreateProject = async (data: any) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setActiveDropdown(null);
+    if (!confirm('Are you sure you want to delete this project?')) return;
+    try {
+      await api.delete(`/projects/${id}`);
+      fetchProjects();
+    } catch (err) {
+      console.error('Failed to delete project', err);
+      alert('Failed to delete project');
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent, project: Project) => {
+    e.stopPropagation();
+    setActiveDropdown(null);
+    setEditingProject(project);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleSaveProject = async (data: any) => {
     try {
       setIsSubmitting(true);
-      await api.post('/projects', data);
+      if (editingProject) {
+        await api.put(`/projects/${editingProject.id}`, data);
+      } else {
+        await api.post('/projects', data);
+      }
       setIsCreateModalOpen(false);
+      setEditingProject(null);
       fetchProjects();
     } catch (error) {
-      console.error('Failed to create project', error);
-      alert('Failed to create project (check console)');
+      console.error('Failed to save project', error);
+      alert('Failed to save project (check console)');
     } finally {
       setIsSubmitting(false);
     }
@@ -87,27 +124,21 @@ export function Projects() {
       </div>
 
       {/* Stats */}
-      <div className="projects-stats">
-        <div className="stat-card brand">
-          <div className="stat-icon brand"><LayoutTemplate size={28} /></div>
-          <div>
-            <div className="stat-value">{projects.length}</div>
-            <div className="stat-label">Active Projects</div>
-          </div>
+      <div className="projects-stats-row">
+        <div className="proj-stat-card p-brand">
+          <div className="proj-stat-icon-box"><LayoutTemplate size={16} /></div>
+          <p className="proj-stat-label">Active Projects:</p>
+          <span className="proj-stat-value">{projects.length}</span>
         </div>
-        <div className="stat-card warning">
-          <div className="stat-icon warning"><Briefcase size={28} /></div>
-          <div>
-            <div className="stat-value">{totalTasks}</div>
-            <div className="stat-label">Open Tasks</div>
-          </div>
+        <div className="proj-stat-card p-warning">
+          <div className="proj-stat-icon-box"><Briefcase size={16} /></div>
+          <p className="proj-stat-label">Open Tasks:</p>
+          <span className="proj-stat-value">{totalTasks}</span>
         </div>
-        <div className="stat-card success">
-          <div className="stat-icon success"><Users size={28} /></div>
-          <div>
-            <div className="stat-value">{totalMembers}</div>
-            <div className="stat-label">Team Members</div>
-          </div>
+        <div className="proj-stat-card p-success">
+          <div className="proj-stat-icon-box"><Users size={16} /></div>
+          <p className="proj-stat-label">Team Members:</p>
+          <span className="proj-stat-value">{totalMembers}</span>
         </div>
       </div>
 
@@ -119,14 +150,37 @@ export function Projects() {
             onClick={() => navigate(`/organization/projects/${project.id}`)}
           >
             <div className="project-card-header">
-              <h3 className="project-name">{project.name}</h3>
-              <span className={`status-badge ${project.status.toLowerCase()}`}>{project.status}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, flexWrap: 'wrap' }}>
+                <h3 className="project-name">{project.name}</h3>
+                <span className={`status-badge ${project.status.toLowerCase()}`}>{project.status}</span>
+              </div>
+              
+              <div className="project-menu-container">
+                <button 
+                  className="btn-icon" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveDropdown(activeDropdown === project.id ? null : project.id);
+                  }}
+                >
+                  <MoreVertical size={18} />
+                </button>
+                {activeDropdown === project.id && (
+                  <div className="dropdown-menu">
+                    <button className="dropdown-item" onClick={(e) => handleEdit(e, project)}>
+                      <Edit2 size={14} /> Edit
+                    </button>
+                    <button className="dropdown-item danger" onClick={(e) => handleDelete(e, project.id)}>
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="project-code">{project.code}</div>
-            <div className="project-meta">
-              <span>Type: {project.type}</span>
-              <span>Vis: {project.visibility}</span>
+            <div style={{ marginTop: '-0.25rem' }}>
+              <span className="project-code-badge">Proj ID: {project.code}</span>
             </div>
+
             <div className="project-metrics">
               <div className="metric">
                 <Briefcase size={14} />
@@ -154,9 +208,13 @@ export function Projects() {
 
       {isCreateModalOpen && (
         <CreateProjectModal 
-          onClose={() => setIsCreateModalOpen(false)}
-          onSubmit={handleCreateProject}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingProject(null);
+          }}
+          onSubmit={handleSaveProject}
           isSubmitting={isSubmitting}
+          initialData={editingProject}
         />
       )}
     </div>

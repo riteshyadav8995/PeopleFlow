@@ -7,6 +7,8 @@ import { appConfig } from './config';
 import { connectDatabase, disconnectDatabase } from './core/base/base.model';
 import { logger } from './shared/logger/logger';
 import { setupExotelWebSocket } from './modules/voice-agent/exotel.stream';
+import { initPayrollCron } from './cron/payroll.cron';
+import { initAttendanceCron } from './cron/attendance.cron';
 
 const PORT = appConfig.port;
 
@@ -27,6 +29,10 @@ async function bootstrap(): Promise<void> {
 
     // 3. Attach WebSocket for Exotel Media Streams
     setupExotelWebSocket(server);
+
+    // 4. Initialize Cron Jobs
+    initPayrollCron();
+    initAttendanceCron();
 
     // ─── Graceful Shutdown ────────────────────
     const shutdown = async (signal: string) => {

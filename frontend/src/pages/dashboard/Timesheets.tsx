@@ -78,7 +78,7 @@ export function Timesheets() {
   };
 
   return (
-    <div className="flex-col gap-6 animate-fade-in" style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="flex-col gap-6 " style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
       
       {/* Hero Section */}
       <div className="flex items-start justify-between" style={{ marginBottom: '2rem' }}>
@@ -104,7 +104,7 @@ export function Timesheets() {
       </div>
 
       {isLogging && (
-        <div className="card animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto 2rem auto', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9))', border: '1px solid rgba(16, 185, 129, 0.3)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+        <div className="card " style={{ maxWidth: '600px', margin: '0 auto 2rem auto', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9))', border: '1px solid rgba(16, 185, 129, 0.3)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
              <div style={{ background: 'var(--success-glow)', padding: '0.5rem', borderRadius: '50%', color: 'var(--success)' }}>
                <Clock size={24} />

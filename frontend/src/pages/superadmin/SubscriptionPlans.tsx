@@ -47,7 +47,7 @@ export function SubscriptionPlans() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="">
       <div className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem' }}>Subscription Plans</h1>

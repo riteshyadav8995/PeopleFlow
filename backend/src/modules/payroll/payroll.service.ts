@@ -100,15 +100,62 @@ export class PayrollService extends BaseService {
       where: { tenantId, organizationId: data.organizationId }
     });
 
+    const startDate = new Date(data.year, data.month - 1, 1);
+    const endDate = new Date(data.year, data.month, 0);
+    const totalDaysInMonth = endDate.getDate();
+
     for (const structure of structures) {
-      // 1. Get attendance/unpaid leaves (Simplified: assuming full attendance for now)
+      // 1. Get attendance/unpaid leaves
+      const attendanceRecords = await prisma.attendanceRecord.findMany({
+        where: {
+          employeeId: structure.employeeId,
+          date: { gte: startDate, lte: endDate }
+        }
+      });
+      
+      let absentDays = attendanceRecords.filter(r => r.status === 'absent').length;
+      let halfDays = attendanceRecords.filter(r => r.status === 'half_day').length;
+      let unpaidAbsences = absentDays + (halfDays * 0.5);
+
+      const approvedLeaves = await prisma.leaveRequest.findMany({
+        where: {
+          employeeId: structure.employeeId,
+          status: 'approved',
+          startDate: { lte: endDate },
+          endDate: { gte: startDate }
+        },
+        include: { leaveType: true }
+      });
+
+      let unpaidLeaveDays = 0;
+      for (const leave of approvedLeaves) {
+        const lStart = leave.startDate < startDate ? startDate : leave.startDate;
+        const lEnd = leave.endDate > endDate ? endDate : leave.endDate;
+        const diffTime = Math.abs(lEnd.getTime() - lStart.getTime());
+        const overlapDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        
+        let actualDays = (leave.startDate >= startDate && leave.endDate <= endDate) ? leave.totalDays : overlapDays;
+
+        if (!leave.leaveType.isPaid) {
+          unpaidLeaveDays += actualDays;
+        }
+      }
+
+      const totalUnpaidDays = unpaidAbsences + unpaidLeaveDays;
+      const payableDays = Math.max(0, totalDaysInMonth - totalUnpaidDays);
+      const prorationFactor = payableDays / totalDaysInMonth;
+
       // 2. Compute Allowances and Deductions
       const allowances = (structure.allowances as any[]) || [];
       const deductions = (structure.deductions as any[]) || [];
 
-      const totalAllowances = allowances.reduce((sum, item) => sum + item.amount, 0);
+      // Pro-rate basic salary and allowances
+      const proRatedBasic = structure.baseSalary * prorationFactor;
+      const proRatedAllowances = allowances.map(a => ({ ...a, amount: a.amount * prorationFactor }));
+      const totalAllowances = proRatedAllowances.reduce((sum, item) => sum + item.amount, 0);
+      
       const totalDeductions = deductions.reduce((sum, item) => sum + item.amount, 0);
-      const netPay = structure.baseSalary + totalAllowances - totalDeductions;
+      const netPay = proRatedBasic + totalAllowances - totalDeductions;
 
       // Exception Check
       if (netPay < 0) {
@@ -130,11 +177,17 @@ export class PayrollService extends BaseService {
           employeeId: structure.employeeId,
           month: data.month,
           year: data.year,
-          baseSalary: structure.baseSalary,
+          baseSalary: proRatedBasic,
           totalAllowances,
           totalDeductions,
           netPay,
-          breakdown: { baseSalary: structure.baseSalary, allowances, deductions } as any,
+          breakdown: { 
+            baseSalary: structure.baseSalary, 
+            proRatedBasic, 
+            allowances: proRatedAllowances, 
+            deductions,
+            attendance: { totalDaysInMonth, payableDays, unpaidAbsences, unpaidLeaveDays }
+          } as any,
           status: 'draft'
         }
       });
@@ -260,5 +313,46 @@ export class PayrollService extends BaseService {
       },
       orderBy: [{ year: 'desc' }, { month: 'desc' }]
     });
+  }
+
+  // Auto Generate for All Organizations
+  async autoGeneratePayroll(month: number, year: number) {
+    const orgs = await prisma.organization.findMany({
+      where: { status: 'active' }
+    });
+
+    for (const org of orgs) {
+      try {
+        console.log(`Starting auto-payroll for Org: ${org.id}`);
+        // Create a mock context for the system run
+        const context: ServiceContext = {
+          tenantId: org.tenantId,
+          userId: 'system',
+          highestScope: 'ORGANIZATION',
+          employeeId: 'system'
+        };
+
+        const runData = {
+          organizationId: org.id,
+          month,
+          year,
+          groupId: 'system-group',
+          periodId: 'system-period'
+        };
+
+        // 1. Generate
+        const runResult = await this.generatePayrollRun(context, runData);
+        
+        // 2. Approve
+        await this.approvePayrollRun(context, runResult.id);
+
+        // 3. Publish & Email
+        await this.publishPayrollRun(context, runResult.id);
+        
+        console.log(`Successfully completed auto-payroll for Org: ${org.id}`);
+      } catch (err: any) {
+        console.error(`Failed to auto-generate payroll for Org: ${org.id}`, err.message);
+      }
+    }
   }
 }

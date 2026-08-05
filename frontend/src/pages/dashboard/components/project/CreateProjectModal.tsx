@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X as CloseIcon, Search } from 'lucide-react';
+import { api } from '../../../../lib/api';
 import { Spinner } from '@/components/ui/Spinner';
 import { organizationService } from '@/services/organization.service';
 import { employeeService } from '@/services/employee.service';
@@ -10,13 +11,14 @@ interface CreateProjectModalProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
   isSubmitting?: boolean;
+  initialData?: any;
 }
 
-export function CreateProjectModal({ onClose, onSubmit, isSubmitting }: CreateProjectModalProps) {
+export function CreateProjectModal({ onClose, onSubmit, isSubmitting, initialData }: CreateProjectModalProps) {
   const { user } = useAuthStore();
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState(initialData?.name || '');
+  const [code, setCode] = useState(initialData?.code || '');
+  const [description, setDescription] = useState(initialData?.description || '');
   
   const [departments, setDepartments] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
@@ -32,7 +34,28 @@ export function CreateProjectModal({ onClose, onSubmit, isSubmitting }: CreatePr
 
   useEffect(() => {
     fetchData();
+    if (initialData?.id) {
+      fetchProjectDetails();
+    }
   }, [user?.organizationId]);
+
+  const fetchProjectDetails = async () => {
+    try {
+      const res = await api.get(`/projects/${initialData.id}`);
+      const proj = res.data.data;
+      if (proj) {
+        setName(proj.name || '');
+        setCode(proj.code || '');
+        setDescription(proj.description || '');
+        setSelectedManager(proj.managerId || '');
+        if (proj.members) {
+          setSelectedMembers(proj.members.map((m: any) => m.employeeId));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch project details', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -87,7 +110,7 @@ export function CreateProjectModal({ onClose, onSubmit, isSubmitting }: CreatePr
     <div className="project-modal-overlay">
       <div className="project-modal-container">
         <div className="project-modal-header">
-          <h2 className="project-modal-title">Create New Project</h2>
+          <h2 className="project-modal-title">{initialData ? 'Edit Project' : 'Create New Project'}</h2>
           <button onClick={onClose} className="project-modal-close">
             <CloseIcon size={20} />
           </button>
@@ -205,18 +228,11 @@ export function CreateProjectModal({ onClose, onSubmit, isSubmitting }: CreatePr
         )}
         
         <div className="project-modal-footer">
-          <button 
-            type="button" onClick={onClose}
-            className="project-btn-cancel"
-          >
+          <button type="button" onClick={onClose} className="btn-cancel">
             Cancel
           </button>
-          <button 
-            onClick={handleSubmit}
-            disabled={isSubmitting || !name || !code || !selectedManager}
-            className="project-btn-submit"
-          >
-            {isSubmitting ? <Spinner /> : 'Create Project'}
+          <button type="submit" onClick={handleSubmit} className="btn-submit" disabled={isSubmitting}>
+            {isSubmitting ? <Spinner /> : (initialData ? 'Save Changes' : 'Create Project')}
           </button>
         </div>
       </div>

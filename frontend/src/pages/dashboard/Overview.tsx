@@ -11,10 +11,6 @@ import {
 import { Button } from '@/components/ui/Button';
 import './Overview.css';
 
-// Mock Skeleton for loading states
-const Skeleton = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <div className={`skeleton ${className}`} style={style} />
-);
 
 export function Overview() {
   const { user } = useAuthStore();
@@ -91,16 +87,12 @@ export function Overview() {
           { label: 'Overdue Tasks', value: stats?.overdueTasks ?? 0, icon: AlertTriangle, color: '#fb923c', bg: 'rgba(249, 115, 22, 0.1)' },
         ].map((kpi, i) => (
           <Card key={i} className="kpi-card">
-            {loading ? (
-              <Skeleton className="skeleton-icon" />
-            ) : (
-              <div className="kpi-icon-wrapper" style={{ background: kpi.bg, color: kpi.color }}>
-                <kpi.icon size={20} />
-              </div>
-            )}
+            <div className="kpi-icon-wrapper" style={{ background: kpi.bg, color: kpi.color }}>
+              <kpi.icon size={20} />
+            </div>
             <div>
-              {loading ? <Skeleton className="skeleton-text-sm" /> : <p className="kpi-label">{kpi.label}</p>}
-              {loading ? <Skeleton className="skeleton-text-lg" /> : <h3 className="kpi-value">{kpi.value}</h3>}
+              <p className="kpi-label">{kpi.label}</p>
+              <h3 className="kpi-value">{loading ? '-' : kpi.value}</h3>
             </div>
           </Card>
         ))}
@@ -115,13 +107,11 @@ export function Overview() {
             </h3>
             <Button variant="secondary" size="sm">Details</Button>
           </div>
-          {loading ? <Skeleton className="skeleton-chart" /> : (
-            <div style={{ height: '12rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.5rem', padding: '0 0.5rem' }}>
-              {[40, 60, 45, 70, 65, 80, 90, 85, 100].map((h, i) => (
-                <div key={i} style={{ width: '100%', background: 'rgba(99, 102, 241, 0.2)', borderRadius: '0.125rem 0.125rem 0 0', transition: 'all 0.2s', height: `${h}%` }}></div>
-              ))}
-            </div>
-          )}
+          <div style={{ height: '12rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.5rem', padding: '0 0.5rem' }}>
+            {[40, 60, 45, 70, 65, 80, 90, 85, 100].map((h, i) => (
+              <div key={i} style={{ width: '100%', background: 'rgba(99, 102, 241, 0.2)', borderRadius: '0.125rem 0.125rem 0 0', transition: 'all 0.2s', height: `${loading ? 0 : h}%` }}></div>
+            ))}
+          </div>
         </Card>
         
         <Card>
@@ -132,22 +122,14 @@ export function Overview() {
             <span style={{ fontSize: '0.875rem', color: '#34d399', background: 'rgba(52, 211, 153, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '0.375rem' }}>{attendanceRate}% Rate</span>
           </div>
           <div>
-            {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <Skeleton className="skeleton-text-lg" style={{ width: '100%' }} />
-                <Skeleton className="skeleton-text-lg" style={{ width: '100%' }} />
-                <Skeleton className="skeleton-text-lg" style={{ width: '100%' }} />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '10rem' }}>
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  <div style={{ width: '8rem', height: '8rem', borderRadius: '50%', border: '8px solid rgba(31, 41, 55, 1)', borderTopColor: '#10b981', borderRightColor: '#10b981', margin: '0 auto 0.5rem', position: 'relative' }}>
-                     <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 700, color: '#000000' }}>{stats?.presentToday || 0}</span>
-                  </div>
-                  Present out of {stats?.activeEmployees || 0}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '10rem' }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <div style={{ width: '8rem', height: '8rem', borderRadius: '50%', border: '8px solid rgba(31, 41, 55, 1)', borderTopColor: '#10b981', borderRightColor: '#10b981', margin: '0 auto 0.5rem', position: 'relative' }}>
+                   <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 700, color: '#000000' }}>{loading ? '-' : (stats?.presentToday || 0)}</span>
                 </div>
+                Present out of {loading ? '-' : (stats?.activeEmployees || 0)}
               </div>
-            )}
+            </div>
           </div>
         </Card>
       </div>
@@ -160,7 +142,7 @@ export function Overview() {
           </h3>
           <div className="approvals-list">
             {loading ? (
-              Array(4).fill(0).map((_, i) => <Skeleton key={i} className="skeleton-text-lg" style={{ width: '100%', height: '4rem' }} />)
+              <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem 0' }}>Loading approvals...</div>
             ) : approvals.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem 0' }}>All caught up! No pending approvals.</div>
             ) : (
@@ -189,26 +171,24 @@ export function Overview() {
           <h3 className="section-title">
             <Briefcase size={20} color="#c084fc" /> Recruitment Pipeline
           </h3>
-          {loading ? <Skeleton className="skeleton-chart" style={{ height: '14rem' }} /> : (
-            <div className="pipeline-container">
-              {(() => {
-                const pipe = stats?.recruitmentPipeline || { applied: 0, screening: 0, interview: 0, offer: 0 };
-                const maxVal = Math.max(pipe.applied, pipe.screening, pipe.interview, pipe.offer, 1);
-                return [
-                  { label: 'Applied', val: pipe.applied, h: `${(pipe.applied / maxVal) * 100}%` },
-                  { label: 'Screening', val: pipe.screening, h: `${(pipe.screening / maxVal) * 100}%` },
-                  { label: 'Interview', val: pipe.interview, h: `${(pipe.interview / maxVal) * 100}%` },
-                  { label: 'Offer', val: pipe.offer, h: `${(pipe.offer / maxVal) * 100}%` },
-                ].map(stage => (
-                  <div key={stage.label} className="pipeline-stage">
-                    <div className="pipeline-val">{stage.val}</div>
-                    <div className="pipeline-bar" style={{ height: stage.h, minHeight: stage.val > 0 ? '5%' : '0' }}></div>
-                    <div className="pipeline-label">{stage.label}</div>
-                  </div>
-                ));
-              })()}
-            </div>
-          )}
+          <div className="pipeline-container">
+            {(() => {
+              const pipe = loading ? { applied: 0, screening: 0, interview: 0, offer: 0 } : (stats?.recruitmentPipeline || { applied: 0, screening: 0, interview: 0, offer: 0 });
+              const maxVal = Math.max(pipe.applied, pipe.screening, pipe.interview, pipe.offer, 1);
+              return [
+                { label: 'Applied', val: pipe.applied, h: `${(pipe.applied / maxVal) * 100}%` },
+                { label: 'Screening', val: pipe.screening, h: `${(pipe.screening / maxVal) * 100}%` },
+                { label: 'Interview', val: pipe.interview, h: `${(pipe.interview / maxVal) * 100}%` },
+                { label: 'Offer', val: pipe.offer, h: `${(pipe.offer / maxVal) * 100}%` },
+              ].map(stage => (
+                <div key={stage.label} className="pipeline-stage">
+                  <div className="pipeline-val">{loading ? '-' : stage.val}</div>
+                  <div className="pipeline-bar" style={{ height: loading ? 0 : stage.h, minHeight: (stage.val > 0 && !loading) ? '5%' : '0' }}></div>
+                  <div className="pipeline-label">{stage.label}</div>
+                </div>
+              ));
+            })()}
+          </div>
         </Card>
       </div>
 
@@ -235,7 +215,7 @@ export function Overview() {
         </h3>
         <div style={{ marginTop: '1rem' }}>
           {loading ? (
-            Array(3).fill(0).map((_, i) => <Skeleton key={i} className="skeleton-text-lg" style={{ width: '100%', marginBottom: '1rem' }} />)
+            <div className="empty-state">Loading activity...</div>
           ) : (
             <div className="empty-state">
               No recent alerts or activity in your organization.

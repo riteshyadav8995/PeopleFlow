@@ -161,6 +161,9 @@ export function AttendanceHistory() {
                       if (d.getHours() > 9 || (d.getHours() === 9 && d.getMinutes() > 30)) {
                         notes = 'Late In';
                       }
+                      if (!record.clockOutTime && status === 'absent') {
+                        notes = 'Single Punch';
+                      }
                     }
 
                     return (

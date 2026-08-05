@@ -49,4 +49,61 @@ export class TemplateService {
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async updateTemplate(context: ServiceContext, id: string, data: any) {
+    const template = await prisma.onboardingTemplate.findFirst({
+      where: { id, tenantId: context.tenantId }
+    });
+
+    if (!template) {
+      throw new AppError('Template not found', 404);
+    }
+
+    // A full update would delete old tasks and recreate new ones, 
+    // or we can just update the basic info for now depending on data passed
+    const updateData: any = {
+      name: data.name,
+      description: data.description,
+      isActive: data.isActive
+    };
+
+    if (data.tasks) {
+      // simplified: delete all tasks and recreate
+      updateData.tasks = {
+        deleteMany: {},
+        create: data.tasks.map((task: any) => ({
+          title: task.title,
+          category: task.category,
+          isMandatory: task.isMandatory ?? true,
+          dueDaysOffset: task.dueDaysOffset || 0
+        }))
+      };
+    }
+
+    return await prisma.onboardingTemplate.update({
+      where: { id },
+      data: updateData,
+      include: { tasks: true }
+    });
+  }
+
+  async deleteTemplate(context: ServiceContext, id: string) {
+    const template = await prisma.onboardingTemplate.findFirst({
+      where: { id, tenantId: context.tenantId }
+    });
+
+    if (!template) {
+      throw new AppError('Template not found', 404);
+    }
+
+    await prisma.onboardingTaskTemplate.deleteMany({
+      where: { templateId: id }
+    });
+
+    await prisma.onboardingTemplate.delete({
+      where: { id }
+    });
+
+    return { message: 'Template deleted successfully' };
+  }
 }

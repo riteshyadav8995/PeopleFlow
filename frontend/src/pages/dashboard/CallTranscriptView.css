@@ -8,7 +8,7 @@
   height: calc(100vh - 100px);
   max-width: 1000px;
   margin: 0 auto;
-  animation: fade-in 0.5s ease-out forwards;
+  
 }
 
 /* Header */
@@ -67,8 +67,8 @@
   gap: 0.75rem;
 }
 
-.status-text-listening { color: var(--danger); font-weight: 500; animation: pulse 2s infinite; }
-.status-text-speaking { color: var(--brand-500); font-weight: 500; animation: pulse 2s infinite; }
+.status-text-listening { color: var(--danger); font-weight: 500;  }
+.status-text-speaking { color: var(--brand-500); font-weight: 500;  }
 
 .wave-bars {
   display: flex;
@@ -160,7 +160,7 @@
   display: flex;
   align-items: flex-end;
   gap: 1rem;
-  animation: fade-in 0.3s ease-out forwards;
+  
 }
 
 .chat-msg-row.user { flex-direction: row-reverse; }
@@ -276,7 +276,7 @@
   background: linear-gradient(135deg, #ef4444, #dc2626);
   box-shadow: 0 0 30px var(--danger-glow);
   transform: scale(1.1);
-  animation: pulse-danger 2s infinite;
+  
 }
 
 .btn-mic-toggle.idle {

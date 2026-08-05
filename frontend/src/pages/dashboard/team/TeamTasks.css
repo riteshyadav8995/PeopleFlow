@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 1.5rem;
   height: calc(100vh - 140px);
-  animation: fade-in 0.5s ease-out forwards;
+  
 }
 
 .tasks-header {
@@ -80,13 +80,26 @@
 }
 
 .column-header {
-  padding: 1rem;
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
-  background: var(--gray-50);
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+}
+
+.column-header.todo {
+  background: linear-gradient(135deg, rgba(244,114,182,0.05), transparent);
+  border-left: 3px solid #f472b6;
+}
+.column-header.progress {
+  background: linear-gradient(135deg, rgba(99,102,241,0.05), transparent);
+  border-left: 3px solid var(--brand-500);
+}
+.column-header.done {
+  background: linear-gradient(135deg, rgba(16,185,129,0.05), transparent);
+  border-left: 3px solid var(--success);
 }
 
 .column-title-wrapper {

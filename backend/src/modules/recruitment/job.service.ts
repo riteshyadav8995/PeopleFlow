@@ -60,6 +60,38 @@ export class JobService {
     });
   }
 
+  async updateJob(context: ServiceContext, id: string, data: any) {
+    const job = await prisma.jobPosting.findUnique({ where: { id } });
+    if (!job || job.tenantId !== context.tenantId) {
+      throw new AppError('Job not found', 404);
+    }
+
+    return await prisma.jobPosting.update({
+      where: { id },
+      data: {
+        title: data.title,
+        positions: data.positions,
+        employmentType: data.employmentType,
+        workMode: data.workMode,
+        experienceMin: data.experienceMin,
+        experienceMax: data.experienceMax,
+        publicDescription: data.publicDescription,
+        applicationDeadline: data.applicationDeadline ? new Date(data.applicationDeadline) : null,
+        status: data.status
+      }
+    });
+  }
+
+  async deleteJob(context: ServiceContext, id: string) {
+    const job = await prisma.jobPosting.findUnique({ where: { id } });
+    if (!job || job.tenantId !== context.tenantId) {
+      throw new AppError('Job not found', 404);
+    }
+
+    await prisma.jobPosting.delete({ where: { id } });
+    return { success: true };
+  }
+
   async getPublicJobs(tenantId: string, organizationId: string) {
     return await prisma.jobOpening.findMany({
       where: {

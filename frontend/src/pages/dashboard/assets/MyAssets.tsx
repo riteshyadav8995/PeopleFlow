@@ -57,7 +57,7 @@ export function MyAssets() {
 
       <div className="assets-grid">
         {assets.map((asset: any) => (
-          <div key={asset.id} className="asset-card animate-fade-in">
+          <div key={asset.id} className="asset-card ">
             <div className="asset-card-header">
               <div className="asset-icon-wrapper">
                 {getIcon(asset.icon)}
@@ -87,7 +87,7 @@ export function MyAssets() {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="animate-fade-in" style={{ background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '450px', boxShadow: 'var(--shadow-xl)' }}>
+          <div className="" style={{ background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '450px', boxShadow: 'var(--shadow-xl)' }}>
             <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem' }}>Request New Asset</h2>
             
             <div style={{ marginBottom: '1rem' }}>

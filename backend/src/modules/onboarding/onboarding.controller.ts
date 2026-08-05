@@ -25,6 +25,20 @@ export class OnboardingController extends BaseController {
     ApiResponse.success(res, templates);
   });
 
+  updateTemplate = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const template = await this.templateService.updateTemplate(context, req.params.id, req.body);
+    ApiResponse.success(res, template, 'Template updated successfully');
+  });
+
+  deleteTemplate = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const result = await this.templateService.deleteTemplate(context, req.params.id);
+    ApiResponse.success(res, result, 'Template deleted successfully');
+  });
+
   // --- WORKFLOWS ---
   assignWorkflow = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;

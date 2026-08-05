@@ -21,7 +21,7 @@ export function PlatformUsage() {
   }, []);
 
   return (
-    <div className="animate-fade-in flex-col gap-6" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className=" flex-col gap-6" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

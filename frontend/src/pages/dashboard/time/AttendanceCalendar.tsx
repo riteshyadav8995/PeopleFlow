@@ -56,11 +56,16 @@ export function AttendanceCalendar() {
         return d.getDate() === i && d.getMonth() === month - 1 && d.getFullYear() === year;
       });
 
+      const isPastDay = dateObj < new Date(new Date().setHours(0,0,0,0));
+      const isToday = dateObj.toDateString() === new Date().toDateString();
+
       days.push({ 
         date: i, 
         isCurrentMonth: true, 
         isOff: isWeekend,
         isPresent: record && record.status === 'present',
+        isPastDay,
+        isToday,
         record
       });
     }
@@ -142,7 +147,7 @@ export function AttendanceCalendar() {
           </div>
         </div>
 
-        <div className="calendar-grid">
+        <div className="attendance-calendar-grid">
           {daysOfWeek.map(day => (
             <div key={day} className="day-header">{day}</div>
           ))}
@@ -170,10 +175,31 @@ export function AttendanceCalendar() {
                   </div>
                 )}
                 
-                {day.record && !day.isOff && !day.isPresent && (
-                   <div className="text-xs font-semibold mt-1 text-red-500">
-                     {day.record.status === 'absent' ? 'Absent' : day.record.status}
-                   </div>
+                {!day.isOff && day.isCurrentMonth && (
+                  <>
+
+                    
+                    {/* Absent with Single Punch (Past day or marked absent) */}
+                    {day.record && day.record.status === 'absent' && (
+                       <div className="text-xs font-semibold mt-1 text-red-500" title={day.record.clockInTime && !day.record.clockOutTime ? 'Single Punch' : 'Absent'}>
+                         {day.record.clockInTime && !day.record.clockOutTime ? 'Single Punch' : 'Absent'}
+                       </div>
+                    )}
+
+                    {/* Absent dynamically (Past day, no record) */}
+                    {!day.record && day.isPastDay && (
+                       <div className="text-xs font-semibold mt-1 text-red-500">
+                         Absent
+                       </div>
+                    )}
+
+                    {/* Other Explicit Statuses (like half_day, late) */}
+                    {day.record && !day.isPresent && day.record.status !== 'absent' && (!day.isToday || day.record.clockOutTime) && (
+                       <div className="text-xs font-semibold mt-1 text-yellow-600">
+                         {day.record.status.replace('_', ' ')}
+                       </div>
+                    )}
+                  </>
                 )}
               </div>
             ))

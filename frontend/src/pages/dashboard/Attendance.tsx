@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { attendanceService } from '@/services/attendance.service';
-import { UserCheck, ChevronDown, Calendar, Download, Filter } from 'lucide-react';
+import { UserCheck, ChevronDown, Calendar, Download, Filter, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './Attendance.css';
@@ -22,10 +22,17 @@ export function Attendance() {
     queryFn: () => attendanceService.getOrgTrends(orgId)
   });
 
-  const { data: exceptions, isLoading: loadingExceptions } = useQuery({
+  const { data: exceptionsData, isLoading: loadingExceptions } = useQuery({
     queryKey: ['orgAttendanceExceptions', orgId],
     queryFn: () => attendanceService.getOrgExceptions(orgId)
   });
+
+  const [resolvedIds, setResolvedIds] = useState<string[]>([]);
+  const exceptions = exceptionsData?.filter((e: any) => !resolvedIds.includes(e.id)) || [];
+
+  const handleResolve = (id: string) => {
+    setResolvedIds([...resolvedIds, id]);
+  };
 
   return (
     <div className="attendance-container page-container">
@@ -55,10 +62,10 @@ export function Attendance() {
         </div>
       ) : (
         <div className="attendance-stats-grid">
-          <StatCard title="Total Employees" value={stats?.totalEmployees || 0} change="+2.4%" trend="up" />
-          <StatCard title="Present Today" value={stats?.presentToday || 0} change="+1.2%" trend="up" />
-          <StatCard title="Absent" value={stats?.absent || 0} change="-5.4%" trend="down" />
-          <StatCard title="Late Arrivals" value={stats?.lateArrivals || 0} change="+0.8%" trend="up" />
+          <StatCard title="Total Employees" value={stats?.totalEmployees || 0} change="+2.4%" trend="up" icon={Users} color="#818cf8" />
+          <StatCard title="Present Today" value={stats?.presentToday || 0} change="+1.2%" trend="up" icon={CheckCircle} color="#34d399" />
+          <StatCard title="Absent" value={stats?.absent || 0} change="-5.4%" trend="down" icon={XCircle} color="#f87171" />
+          <StatCard title="Late Arrivals" value={stats?.lateArrivals || 0} change="+0.8%" trend="up" icon={Clock} color="#fbbf24" />
         </div>
       )}
 
@@ -135,7 +142,7 @@ export function Attendance() {
                         <span className="badge-danger">Missed Punch</span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <button className="btn-resolve">Resolve</button>
+                        <button className="btn-resolve" onClick={() => handleResolve(exc.id)}>Resolve</button>
                       </td>
                     </tr>
                   ))}
@@ -149,24 +156,27 @@ export function Attendance() {
   );
 }
 
-function StatCard({ title, value, change, trend }: { title: string, value: number | string, change: string, trend: 'up' | 'down' }) {
+function StatCard({ title, value, change, trend, icon: Icon, color }: { title: string, value: number | string, change: string, trend: 'up' | 'down', icon: any, color: string }) {
   return (
-    <div className="stat-card">
-      <p className="stat-label">{title}</p>
-      <div className="stat-bottom">
-        <p className="stat-value">{value}</p>
-        <div className={`stat-badge ${trend}`}>
+    <div className="stat-card-compact" style={{ borderLeft: `4px solid ${color}` }}>
+      <div className="stat-icon-compact" style={{ backgroundColor: `${color}15`, color: color }}>
+        <Icon size={18} />
+      </div>
+      <div className="stat-info-compact" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <p className="stat-label-compact" style={{ marginBottom: 0 }}>{title}:</p>
+        <h3 className="stat-value-compact" style={{ fontSize: '1.25rem' }}>{value}</h3>
+        <span className={`stat-badge-compact ${trend}`} style={{ marginLeft: 'auto' }}>
           {trend === 'up' ? (
-            <svg style={{ width: '14px', height: '14px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg style={{ width: '12px', height: '12px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
             </svg>
           ) : (
-            <svg style={{ width: '14px', height: '14px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg style={{ width: '12px', height: '12px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           )}
           {change}
-        </div>
+        </span>
       </div>
     </div>
   );

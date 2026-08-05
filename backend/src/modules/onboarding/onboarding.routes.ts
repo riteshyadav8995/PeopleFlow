@@ -13,6 +13,8 @@ router.use(authenticationMiddleware, tenantMiddleware);
 // Templates
 router.post('/templates', authorize('onboarding.template.create'), controller.createTemplate);
 router.get('/templates', authorize('onboarding.template.read'), controller.getTemplates);
+router.patch('/templates/:id', authorize('onboarding.template.update'), controller.updateTemplate);
+router.delete('/templates/:id', authorize('onboarding.template.delete'), controller.deleteTemplate);
 
 // Workflows
 router.post('/workflows', authorize('onboarding.workflow.assign'), controller.assignWorkflow);

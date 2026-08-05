@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { KanbanSquare, Plus, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { KanbanSquare, Plus, Clock, AlertCircle, CheckCircle2, Inbox } from 'lucide-react';
 import { useAuthStore } from '../../../store/auth.store';
 import { api } from '../../../lib/api';
 import { Spinner } from '../../../components/ui/Spinner';
@@ -123,7 +123,7 @@ export function TeamTasks() {
             
             return (
               <div key={col.id} className="kanban-column">
-                <div className="column-header">
+                <div className={`column-header ${col.iconClass}`}>
                   <div className="column-title-wrapper">
                     <span className={`column-icon ${col.iconClass}`}>{col.icon}</span>
                     <h3 className="column-title">{col.title}</h3>
@@ -173,8 +173,9 @@ export function TeamTasks() {
                     </div>
                   ))}
                   {columnTasks.length === 0 && (
-                    <div className="empty-column">
-                      No tasks
+                    <div className="empty-column" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: 0.7 }}>
+                      <Inbox size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                      <span>No tasks in {col.title}</span>
                     </div>
                   )}
                 </div>

@@ -117,8 +117,6 @@ export function MyPortal() {
           
           <div className="shift-info">
             <div className="shift-details">
-              <Clock size={14} className="shift-icon" /> 
-              {currentAttendance?.clockInTime ? formatTime(currentAttendance.clockInTime) : 'Not Clocked In'}<br/>
               Shift: 09:00 - 18:00
             </div>
             <a href="#" className="view-policies-link">View Policies</a>
@@ -158,9 +156,15 @@ export function MyPortal() {
               </div>
               
               {currentAttendance.clockOutTime ? (
-                <button disabled className="clock-btn disabled">
-                  <Clock3 size={16} /> Day Completed
-                </button>
+                <>
+                  <div style={{ backgroundColor: '#f0fdf4', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', textAlign: 'center', marginBottom: '1rem', border: '1px solid #bbf7d0' }}>
+                    <span style={{ color: '#166534', fontWeight: 'bold' }}>All Done!</span>
+                    <p style={{ fontSize: '0.875rem', color: '#15803d', marginTop: '0.25rem' }}>You have already made clockin and clockout for today.</p>
+                  </div>
+                  <button disabled className="clock-btn disabled" style={{ opacity: 0.7 }}>
+                    <Clock3 size={16} /> Day Completed
+                  </button>
+                </>
               ) : (
                 <button 
                   onClick={() => clockOutMutation.mutate()} 

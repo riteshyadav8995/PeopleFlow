@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  animation: fade-in 0.5s ease-out forwards;
+  
 }
 
 .attendance-header {
@@ -92,39 +92,52 @@
   }
 }
 
-.stat-card {
+.stat-card-compact {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 1rem;
   box-shadow: var(--shadow-sm);
 }
 
-.stat-label {
+.stat-icon-compact {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-info-compact {
+  flex: 1;
+}
+
+.stat-label-compact {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--text-secondary);
+  margin-bottom: 0.25rem;
 }
 
-.stat-bottom {
+.stat-value-row {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.stat-value {
-  font-size: 2.5rem;
+.stat-value-compact {
+  font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1;
   color: var(--text-primary);
+  line-height: 1;
 }
 
-.stat-badge {
+.stat-badge-compact {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -134,12 +147,12 @@
   font-weight: 600;
 }
 
-.stat-badge.up {
+.stat-badge-compact.up {
   background: var(--success-glow);
   color: var(--success);
 }
 
-.stat-badge.down {
+.stat-badge-compact.down {
   background: var(--danger-glow);
   color: var(--danger);
 }

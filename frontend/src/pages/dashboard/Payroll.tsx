@@ -108,14 +108,6 @@ export function Payroll() {
             >
               <Settings2 size={16} /> Salary Structures
             </button>
-            <button
-              className="btn-run-payroll"
-              onClick={handleGeneratePayroll}
-              disabled={generating}
-            >
-              <Play size={18} />
-              {generating ? 'Running...' : `Run ${months[filterMonth - 1]} ${filterYear} Payroll`}
-            </button>
           </div>
         )}
       </div>
@@ -130,35 +122,30 @@ export function Payroll() {
 
       {/* Stats */}
       <div className="payroll-stats">
-        <div className="stat-card brand">
-          <div className="stat-icon brand"><FileText size={26} /></div>
-          <div>
-            <p className="stat-label">Total Payslips</p>
-            <div className="stat-value">{payslips.length}</div>
-          </div>
+        <div className="payroll-stat-card brand">
+          <div className="payroll-stat-icon"><FileText size={16} /></div>
+          <p className="payroll-stat-label">Total Payslips:</p>
+          <p className="payroll-stat-value">{payslips.length}</p>
         </div>
-        <div className="stat-card success">
-          <div className="stat-icon success"><DollarSign size={26} /></div>
-          <div>
-            <p className="stat-label">Total Disbursement</p>
-            <div className="stat-value">
-              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(totalNetPay)}
-            </div>
-          </div>
+        
+        <div className="payroll-stat-card success">
+          <div className="payroll-stat-icon"><DollarSign size={16} /></div>
+          <p className="payroll-stat-label">Total Disbursement:</p>
+          <p className="payroll-stat-value">
+            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(totalNetPay)}
+          </p>
         </div>
-        <div className="stat-card info">
-          <div className="stat-icon info"><CheckCircle2 size={26} /></div>
-          <div>
-            <p className="stat-label">Processed</p>
-            <div className="stat-value">{paidCount}</div>
-          </div>
+        
+        <div className="payroll-stat-card info">
+          <div className="payroll-stat-icon"><CheckCircle2 size={16} /></div>
+          <p className="payroll-stat-label">Processed:</p>
+          <p className="payroll-stat-value">{paidCount}</p>
         </div>
-        <div className="stat-card warning">
-          <div className="stat-icon warning"><TrendingUp size={26} /></div>
-          <div>
-            <p className="stat-label">Pending / Draft</p>
-            <div className="stat-value warning-text">{draftCount}</div>
-          </div>
+        
+        <div className="payroll-stat-card warning">
+          <div className="payroll-stat-icon"><TrendingUp size={16} /></div>
+          <p className="payroll-stat-label">Pending / Draft:</p>
+          <p className="payroll-stat-value warning-text">{draftCount}</p>
         </div>
       </div>
 

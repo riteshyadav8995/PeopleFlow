@@ -68,8 +68,6 @@ export class DashboardService {
       }),
       prisma.attendanceRecord.findFirst({
         where: { 
-          tenantId, 
-          organizationId, 
           employeeId, 
           date: { gte: startOfDay, lte: endOfDay } 
         }

@@ -63,7 +63,12 @@ export function TeamAttendance() {
     return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (record: any) => {
+    const status = record.status;
+    if (status === 'absent' && record.clockInTime && !record.clockOutTime) {
+      return <span className="status-badge absent"><AlertCircle size={12} /> Single Punch</span>;
+    }
+    
     switch(status) {
       case 'present':
         return <span className="status-badge present"><CheckCircle size={12} /> Present</span>;
@@ -235,7 +240,7 @@ export function TeamAttendance() {
                       </div>
                     </td>
                     <td>
-                      {getStatusBadge(record.status)}
+                      {getStatusBadge(record)}
                     </td>
                     <td>
                       <div style={{ fontWeight: 600 }}>{formatTime(record.clockInTime)}</div>

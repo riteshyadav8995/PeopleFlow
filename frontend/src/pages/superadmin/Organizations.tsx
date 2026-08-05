@@ -84,7 +84,7 @@ export function Organizations() {
   };
 
   return (
-    <div className="animate-fade-in flex-col gap-6" style={{ padding: '1.5rem', maxWidth: '1600px', margin: '0 auto' }}>
+    <div className=" flex-col gap-6" style={{ padding: '1.5rem', maxWidth: '1600px', margin: '0 auto' }}>
       
       {/* Header - Fixed layout so button doesn't stretch */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
@@ -213,7 +213,7 @@ export function Organizations() {
       {/* Create Organization Modal */}
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', margin: '1rem', padding: '2rem' }}>
+          <div className="card " style={{ width: '100%', maxWidth: '500px', margin: '1rem', padding: '2rem' }}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Create New Organization</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-secondary hover:text-heading p-1">

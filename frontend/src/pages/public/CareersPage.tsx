@@ -73,7 +73,7 @@ export function CareersPage() {
 
           <div className="w-full md:w-1/3">
             {selectedJob ? (
-              <div className="card p-6 sticky top-6 animate-fade-in">
+              <div className="card p-6 sticky top-6 ">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedJob.title}</h3>
                 <div className="flex gap-2 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
                   <span>{selectedJob.location}</span>

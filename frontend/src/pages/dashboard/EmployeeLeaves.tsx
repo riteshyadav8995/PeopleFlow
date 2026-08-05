@@ -67,7 +67,7 @@ export function EmployeeLeaves() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 ">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Calendar className="w-6 h-6 text-indigo-600" />

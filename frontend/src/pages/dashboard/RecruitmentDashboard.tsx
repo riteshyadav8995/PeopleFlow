@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { 
   Briefcase, Users, Plus, Target, Building2, 
-  Clock, CheckCircle2, Calendar, X, FileText
+  Clock, CheckCircle2, Calendar, X, FileText,
+  MoreVertical, Edit2, Trash2
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import './RecruitmentDashboard.css';
@@ -17,6 +18,9 @@ interface JobPosting {
   positions: number;
   applicationDeadline?: string;
   department?: { name: string };
+  experienceMin?: number;
+  experienceMax?: number;
+  publicDescription?: string;
 }
 
 interface Application {
@@ -61,7 +65,12 @@ export function RecruitmentDashboard() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  const [activeJobMenu, setActiveJobMenu] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<any>(null);
+
   const [jobForm, setJobForm] = useState({
+    id: null as string | null,
     title: '',
     employmentType: 'full_time',
     workMode: 'office',
@@ -72,6 +81,15 @@ export function RecruitmentDashboard() {
     applicationDeadline: '',
     status: 'PUBLISHED',
   });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveJobMenu(null);
+    if (activeJobMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeJobMenu]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -94,21 +112,56 @@ export function RecruitmentDashboard() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/recruitment/jobs', {
-        ...jobForm,
-        organizationId,
-        positions: Number(jobForm.positions),
-        experienceMin: Number(jobForm.experienceMin),
-        experienceMax: Number(jobForm.experienceMax),
-        applicationDeadline: jobForm.applicationDeadline || null,
-      });
+      if (jobForm.id) {
+        await api.patch(`/recruitment/jobs/${jobForm.id}`, {
+          ...jobForm,
+          positions: Number(jobForm.positions),
+          experienceMin: Number(jobForm.experienceMin),
+          experienceMax: Number(jobForm.experienceMax),
+        });
+        setMessage('Job updated successfully!');
+      } else {
+        await api.post('/recruitment/jobs', {
+          ...jobForm,
+          organizationId,
+          positions: Number(jobForm.positions),
+          experienceMin: Number(jobForm.experienceMin),
+          experienceMax: Number(jobForm.experienceMax),
+        });
+        setMessage('Job created successfully!');
+      }
       setIsJobModalOpen(false);
-      setMessage('Job posted successfully!');
-      setJobForm({ title: '', employmentType: 'full_time', workMode: 'office', positions: 1, experienceMin: 0, experienceMax: 5, publicDescription: '', applicationDeadline: '', status: 'PUBLISHED' });
+      setJobForm({
+        id: null,
+        title: '',
+        employmentType: 'full_time',
+        workMode: 'office',
+        positions: 1,
+        experienceMin: 0,
+        experienceMax: 5,
+        publicDescription: '',
+        applicationDeadline: '',
+        status: 'PUBLISHED',
+      });
       fetchData();
-      setTimeout(() => setMessage(''), 3000);
     } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Failed to create job.');
+      setMessage(err.response?.data?.message || 'Failed to save job.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (!jobToDelete) return;
+    setSaving(true);
+    try {
+      await api.delete(`/recruitment/jobs/${jobToDelete.id}`);
+      setMessage('Job deleted successfully!');
+      setIsDeleteModalOpen(false);
+      setJobToDelete(null);
+      fetchData();
+    } catch (err: any) {
+      setMessage(err.response?.data?.message || 'Failed to delete job.');
     } finally {
       setSaving(false);
     }
@@ -160,34 +213,26 @@ export function RecruitmentDashboard() {
       )}
 
       {/* Stats */}
-      <div className="recruitment-stats">
-        <div className="stat-card pink">
-          <div className="stat-icon pink"><Briefcase size={26} /></div>
-          <div>
-            <p className="stat-label">Open Positions</p>
-            <div className="stat-value">{openJobs}</div>
-          </div>
+      <div className="recruitment-stats-compact">
+        <div className="stat-card-compact pink">
+          <Briefcase size={16} className="stat-icon-compact pink" />
+          <span className="stat-label-compact">Open Positions:</span>
+          <span className="stat-value-compact">{openJobs}</span>
         </div>
-        <div className="stat-card brand">
-          <div className="stat-icon brand"><Users size={26} /></div>
-          <div>
-            <p className="stat-label">Total Applicants</p>
-            <div className="stat-value">{totalApps}</div>
-          </div>
+        <div className="stat-card-compact brand">
+          <Users size={16} className="stat-icon-compact brand" />
+          <span className="stat-label-compact">Total Applicants:</span>
+          <span className="stat-value-compact">{totalApps}</span>
         </div>
-        <div className="stat-card success">
-          <div className="stat-icon success"><CheckCircle2 size={26} /></div>
-          <div>
-            <p className="stat-label">Hires This Cycle</p>
-            <div className="stat-value">{hiredCount}</div>
-          </div>
+        <div className="stat-card-compact success">
+          <CheckCircle2 size={16} className="stat-icon-compact success" />
+          <span className="stat-label-compact">Hires This Cycle:</span>
+          <span className="stat-value-compact">{hiredCount}</span>
         </div>
-        <div className="stat-card warning">
-          <div className="stat-icon warning"><Calendar size={26} /></div>
-          <div>
-            <p className="stat-label">In Interview Stage</p>
-            <div className="stat-value">{inInterviewCount}</div>
-          </div>
+        <div className="stat-card-compact warning">
+          <Calendar size={16} className="stat-icon-compact warning" />
+          <span className="stat-label-compact">In Interview:</span>
+          <span className="stat-value-compact">{inInterviewCount}</span>
         </div>
       </div>
 
@@ -281,12 +326,12 @@ export function RecruitmentDashboard() {
               </button>
             )}
           </div>
-          <div style={{ overflow: 'auto' }}>
+          <div style={{ overflow: 'visible' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border-color)' }}>
-                  {['Job Title', 'Code', 'Type', 'Mode', 'Positions', 'Status', 'Deadline'].map(h => (
-                    <th key={h} style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{h}</th>
+                  {['Job Title', 'Code', 'Type', 'Mode', 'Positions', 'Status', 'Deadline', ''].map((h, i) => (
+                    <th key={i} style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', textAlign: h === '' ? 'right' : 'left' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -296,7 +341,10 @@ export function RecruitmentDashboard() {
                 ) : jobs.length === 0 ? (
                   <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No jobs found.</td></tr>
                 ) : (
-                  jobs.map(job => (
+                  <>
+                  {jobs.map((job, jobIdx) => {
+                    const isLastRow = jobIdx >= jobs.length - 2;
+                    return (
                     <tr key={job.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}
                       onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-50)')}
                       onMouseOut={e => (e.currentTarget.style.background = '')}
@@ -312,6 +360,165 @@ export function RecruitmentDashboard() {
                       <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                         {job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : '—'}
                       </td>
+                      <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <button 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem 0.4rem', color: 'var(--text-secondary)', borderRadius: '4px' }}
+                            onClick={(e) => { e.stopPropagation(); setActiveJobMenu(activeJobMenu === job.id ? null : job.id); }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                          {activeJobMenu === job.id && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                right: 0,
+                                ...(isLastRow
+                                  ? { bottom: '100%', marginBottom: '0.25rem' }
+                                  : { top: '100%', marginTop: '0.25rem' }
+                                ),
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-md)',
+                                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                                zIndex: 9999,
+                                minWidth: '140px',
+                                overflow: 'hidden'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem' }}
+                                onClick={() => {
+                                  setJobForm({
+                                    id: job.id,
+                                    title: job.title,
+                                    employmentType: job.employmentType,
+                                    workMode: job.workMode,
+                                    positions: job.positions,
+                                    experienceMin: job.experienceMin || 0,
+                                    experienceMax: job.experienceMax || 0,
+                                    publicDescription: job.publicDescription || '',
+                                    applicationDeadline: job.applicationDeadline || '',
+                                    status: job.status,
+                                  });
+                                  setIsJobModalOpen(true);
+                                  setActiveJobMenu(null);
+                                }}
+                              >
+                                <Edit2 size={14} /> Edit
+                              </button>
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--danger)' }}
+                                onClick={() => {
+                                  setJobToDelete(job);
+                                  setIsDeleteModalOpen(true);
+                                  setActiveJobMenu(null);
+                                }}
+                              >
+                                <Trash2 size={14} /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                  })}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pipeline Tab - Table View */}
+      {activeTab === 'pipeline' && (
+        <div className="content-card">
+          <div className="content-card-header">
+            <span className="content-card-title">Candidate Pipeline</span>
+            <span className="content-card-count">{applications.length} total</span>
+          </div>
+          <div className="content-card-body" style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{ minWidth: '150px' }}>Candidate Name</th>
+                  <th style={{ minWidth: '200px' }}>Email ID</th>
+                  <th style={{ minWidth: '180px' }}>Role</th>
+                  {STAGES.map(stage => (
+                    <th key={stage} style={{ minWidth: '100px', textAlign: 'center' }}>
+                      {stage.charAt(0) + stage.slice(1).toLowerCase()}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {applications.length === 0 ? (
+                  <tr>
+                    <td colSpan={3 + STAGES.length} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      No candidates found.
+                    </td>
+                  </tr>
+                ) : (
+                  applications.map(app => (
+                    <tr key={app.id}>
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                        {app.candidate.firstName} {app.candidate.lastName}
+                      </td>
+                      <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {app.candidate.email}
+                      </td>
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 500 }}>
+                        {app.job.title}
+                      </td>
+                      {STAGES.map(stage => {
+                        let isYes = false;
+                        if (app.stage === 'REJECTED') {
+                          isYes = stage === 'REJECTED';
+                        } else if (stage !== 'REJECTED') {
+                          const appIdx = STAGES.indexOf(app.stage);
+                          const colIdx = STAGES.indexOf(stage);
+                          isYes = colIdx <= appIdx;
+                        }
+
+                        return (
+                          <td key={stage} style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
+                            <select
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border-color)',
+                                fontSize: '0.8125rem',
+                                background: isYes ? 'var(--brand-50)' : 'var(--bg-surface)',
+                                color: isYes ? 'var(--brand-700)' : 'var(--text-secondary)',
+                                fontWeight: isYes ? 600 : 400,
+                                cursor: 'pointer'
+                              }}
+                              value={isYes ? 'Yes' : 'No'}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'Yes') {
+                                  updateApplicationStage(app.id, stage);
+                                } else {
+                                  // If they select 'No', we downgrade to the stage before this one
+                                  const colIdx = STAGES.indexOf(stage);
+                                  if (colIdx > 0 && stage !== 'REJECTED') {
+                                    updateApplicationStage(app.id, STAGES[colIdx - 1]);
+                                  } else if (stage === 'REJECTED') {
+                                    // If un-rejecting, maybe fallback to APPLIED
+                                    updateApplicationStage(app.id, 'APPLIED');
+                                  }
+                                }
+                              }}
+                            >
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))
                 )}
@@ -321,58 +528,52 @@ export function RecruitmentDashboard() {
         </div>
       )}
 
-      {/* Pipeline Tab - Kanban Board */}
-      {activeTab === 'pipeline' && (
-        <div>
-          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            <Users size={16} /> Drag-free Kanban — click a card to move it to the next stage
-          </div>
-          <div className="pipeline-container">
-            {STAGES.map(stage => {
-              const stageApps = applications.filter(a => a.stage === stage);
-              return (
-                <div key={stage} className="pipeline-column" style={{ borderTop: `3px solid ${stageColor[stage]}` }}>
-                  <div className="pipeline-column-header">
-                    <span className="pipeline-column-title" style={{ color: stageColor[stage] }}>{stage}</span>
-                    <span className="pipeline-count">{stageApps.length}</span>
-                  </div>
-                  {stageApps.map(app => {
-                    const nextStageIdx = STAGES.indexOf(stage) + 1;
-                    const nextStage = STAGES[nextStageIdx];
-                    return (
-                      <div key={app.id} className="pipeline-card"
-                        title="Click to view details"
-                        onClick={() => setSelectedApp(app)}
-                      >
-                        <div className="pipeline-card-name">{app.candidate.firstName} {app.candidate.lastName}</div>
-                        <div className="pipeline-card-role">{app.job.title}</div>
-                      </div>
-                    );
-                  })}
-                  {stageApps.length === 0 && (
-                    <div style={{ padding: '0.75rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Empty</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Post Job Modal */}
+      {/* Post Job Full-Screen Page */}
       {isJobModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">Post New Job Opening</h2>
-              <button className="modal-close" onClick={() => setIsJobModalOpen(false)}>&times;</button>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'var(--bg-surface)',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: 'inherit'
+        }}>
+          {/* Top Bar */}
+          <div style={{
+            padding: '0.875rem 2.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(244,114,182,0.06), rgba(99,102,241,0.06))',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: 4, height: 24, borderRadius: 2, background: 'linear-gradient(180deg,#f472b6,#6366f1)' }} />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                {jobForm.id ? 'Edit Job Opening' : 'Post New Job Opening'}
+              </h2>
             </div>
-            <form onSubmit={handleCreateJob} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-              <div className="modal-body">
+            <button onClick={() => setIsJobModalOpen(false)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              width: 36, height: 36, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-muted)', fontSize: '1.5rem', transition: 'background 0.15s'
+            }}
+              onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-100)')}
+              onMouseOut={e => (e.currentTarget.style.background = 'none')}
+            >&times;</button>
+          </div>
+
+          {/* Form Body */}
+          <form onSubmit={handleCreateJob} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
+              <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                {/* Job Title */}
                 <div className="form-group">
                   <label className="form-label">Job Title *</label>
-                  <input className="form-input" required placeholder="e.g. Senior Frontend Engineer" value={jobForm.title} onChange={e => setJobForm(p => ({ ...p, title: e.target.value }))} />
+                  <input className="form-input" required placeholder="e.g. Senior Frontend Engineer"
+                    value={jobForm.title} onChange={e => setJobForm(p => ({ ...p, title: e.target.value }))} />
                 </div>
+
+                {/* Row 1 */}
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Employment Type</label>
@@ -392,30 +593,45 @@ export function RecruitmentDashboard() {
                     </select>
                   </div>
                 </div>
+
+                {/* Row 2 */}
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">No. of Positions</label>
-                    <input type="number" className="form-input" min={1} value={jobForm.positions} onChange={e => setJobForm(p => ({ ...p, positions: Number(e.target.value) }))} />
+                    <input type="number" className="form-input" min={1} value={jobForm.positions}
+                      onChange={e => setJobForm(p => ({ ...p, positions: Number(e.target.value) }))} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Application Deadline</label>
-                    <input type="date" className="form-input" value={jobForm.applicationDeadline} onChange={e => setJobForm(p => ({ ...p, applicationDeadline: e.target.value }))} />
+                    <input type="date" className="form-input" value={jobForm.applicationDeadline}
+                      onChange={e => setJobForm(p => ({ ...p, applicationDeadline: e.target.value }))} />
                   </div>
                 </div>
+
+                {/* Row 3 */}
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Min. Experience (yrs)</label>
-                    <input type="number" className="form-input" min={0} value={jobForm.experienceMin} onChange={e => setJobForm(p => ({ ...p, experienceMin: Number(e.target.value) }))} />
+                    <input type="number" className="form-input" min={0} value={jobForm.experienceMin}
+                      onChange={e => setJobForm(p => ({ ...p, experienceMin: Number(e.target.value) }))} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Max. Experience (yrs)</label>
-                    <input type="number" className="form-input" min={0} value={jobForm.experienceMax} onChange={e => setJobForm(p => ({ ...p, experienceMax: Number(e.target.value) }))} />
+                    <input type="number" className="form-input" min={0} value={jobForm.experienceMax}
+                      onChange={e => setJobForm(p => ({ ...p, experienceMax: Number(e.target.value) }))} />
                   </div>
                 </div>
+
+                {/* Description */}
                 <div className="form-group">
                   <label className="form-label">Job Description (Public)</label>
-                  <textarea className="form-textarea" placeholder="Describe the role, responsibilities, and requirements..." value={jobForm.publicDescription} onChange={e => setJobForm(p => ({ ...p, publicDescription: e.target.value }))} rows={4} />
+                  <textarea className="form-textarea" rows={5}
+                    placeholder="Describe the role, responsibilities, and requirements..."
+                    value={jobForm.publicDescription}
+                    onChange={e => setJobForm(p => ({ ...p, publicDescription: e.target.value }))} />
                 </div>
+
+                {/* Status */}
                 <div className="form-group">
                   <label className="form-label">Publish Status</label>
                   <select className="form-select" value={jobForm.status} onChange={e => setJobForm(p => ({ ...p, status: e.target.value }))}>
@@ -424,21 +640,28 @@ export function RecruitmentDashboard() {
                   </select>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary-modal" onClick={() => setIsJobModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-post-job" style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1rem' }} disabled={saving}>
-                  {saving ? 'Posting...' : 'Post Job'}
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '1rem 2.5rem',
+              borderTop: '1px solid var(--border-color)',
+              display: 'flex', justifyContent: 'flex-end', gap: '0.75rem',
+              background: 'var(--gray-50)', flexShrink: 0
+            }}>
+              <button type="button" className="btn-secondary-modal" onClick={() => setIsJobModalOpen(false)}>Cancel</button>
+              <button type="submit" className="btn-post-job" style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1.5rem' }} disabled={saving}>
+                {saving ? 'Saving...' : jobForm.id ? 'Update Job' : 'Post Job'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
       {/* Application Details Modal */}
       {selectedApp && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+          <div className="modal-content" style={{ maxWidth: '600px', height: 'auto', maxHeight: '90vh', borderRadius: '1.25rem' }}>
             <div className="modal-header">
               <h2 className="modal-title">Application Details</h2>
               <button className="modal-close" onClick={() => setSelectedApp(null)}>&times;</button>
@@ -485,6 +708,38 @@ export function RecruitmentDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && jobToDelete && (
+        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '400px', height: 'auto', padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Delete Job Opening</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                Are you really want to delete this job opening? This action cannot be undone.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                style={{ padding: '0.5rem 1.5rem', border: '1px solid var(--border-color)', background: 'transparent', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 500 }}
+              >
+                No, cancel
+              </button>
+              <button 
+                onClick={handleDeleteJob}
+                disabled={saving}
+                style={{ padding: '0.5rem 1.5rem', border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 500 }}
+              >
+                {saving ? 'Deleting...' : 'Yes, delete'}
+              </button>
             </div>
           </div>
         </div>

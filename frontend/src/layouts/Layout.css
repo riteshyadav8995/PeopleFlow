@@ -49,7 +49,7 @@
 .layout-loader p {
   color: var(--text-secondary);
   font-weight: 500;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
 }
 
 /* 
@@ -286,14 +286,68 @@
 
 /* Topbar */
 .topbar {
-  height: 4rem;
+  height: 0;
+  display: none;
+  border-bottom: none;
+}
+
+/* Sidebar Footer - Profile */
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sidebar-profile-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--border-color);
-  z-index: 10;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: left;
+}
+
+.sidebar-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-profile-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-profile-role {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Profile dropdown opens upward from sidebar footer */
+.sidebar-profile-dropdown {
+  bottom: calc(100% + 0.5rem) !important;
+  top: auto !important;
+  left: 0.75rem !important;
+  right: 0.75rem !important;
+  width: auto !important;
+  min-width: unset !important;
 }
 
 .workspace-badge {

@@ -44,5 +44,18 @@ export class ProjectController extends BaseController {
     const member = await this.projectService.addProjectMember(context, req.params.id as string, req.body);
     res.status(201).json({ data: member, message: 'Member added to project' });
   });
-}
 
+  updateProject = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const project = await this.projectService.updateProject(context, req.params.id as string, req.body);
+    res.json({ data: project, message: 'Project updated successfully' });
+  });
+
+  deleteProject = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    await this.projectService.deleteProject(context, req.params.id as string);
+    res.json({ message: 'Project deleted successfully' });
+  });
+}

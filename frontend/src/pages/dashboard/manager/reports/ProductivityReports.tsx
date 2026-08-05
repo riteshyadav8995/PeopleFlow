@@ -66,7 +66,7 @@ export function ProductivityReports() {
   };
 
   return (
-    <div className="prod-reports-container animate-fade-in">
+    <div className="prod-reports-container ">
       <div className="pr-header">
         <div className="pr-title-wrapper">
           <h1 className="pr-title">

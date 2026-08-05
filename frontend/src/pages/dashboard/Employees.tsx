@@ -1,27 +1,56 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { employeeService } from '@/services/employee.service';
 import { useAuthStore } from '@/store/auth.store';
 import { Spinner } from '@/components/ui/Spinner';
-import { Link } from 'react-router-dom';
-import { Users, Search, Plus, UserCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Search, Plus, UserCircle, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { organizationService } from '@/services/organization.service';
 import './Employees.css';
 
+function ThreeDotMenu({ emp, onEdit, onDelete }: { emp: any; onEdit: (emp: any) => void; onDelete: (emp: any) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button className="three-dot-btn" onClick={() => setOpen(o => !o)} title="More actions">
+        <MoreVertical size={16} />
+      </button>
+      {open && (
+        <div className="three-dot-dropdown">
+          <button className="three-dot-item" onClick={() => { onEdit(emp); setOpen(false); }}>
+            <Pencil size={14} /> Edit
+          </button>
+          <button className="three-dot-item three-dot-danger" onClick={() => { onDelete(emp); setOpen(false); }}>
+            <Trash2 size={14} /> Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Employees() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const orgId = user?.organizationId || 'demo-org-id';
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editEmployee, setEditEmployee] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    role: 'Employee',
-    departmentId: '',
-    designationId: '',
-    reportingTo: '',
+    firstName: '', lastName: '', email: '', phone: '', role: 'Employee',
+    departmentId: '', designationId: '', reportingTo: '',
     employeeCode: `EMP-${Math.floor(Math.random() * 10000)}`,
     joinDate: new Date().toISOString()
   });
@@ -30,55 +59,63 @@ export function Employees() {
     queryKey: ['employees', orgId],
     queryFn: () => employeeService.getEmployees(orgId)
   });
+  const { data: departments } = useQuery({ queryKey: ['departments', orgId], queryFn: () => organizationService.getDepartments(orgId) });
+  const { data: designations } = useQuery({ queryKey: ['designations', orgId], queryFn: () => organizationService.getDesignations(orgId) });
 
-  const { data: departments } = useQuery({
-    queryKey: ['departments', orgId],
-    queryFn: () => organizationService.getDepartments(orgId)
-  });
-
-  const { data: designations } = useQuery({
-    queryKey: ['designations', orgId],
-    queryFn: () => organizationService.getDesignations(orgId)
-  });
-
-  const filteredEmployees = employees?.filter((emp: any) => 
+  const filteredEmployees = employees?.filter((emp: any) =>
     emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateEmployee = async (e: React.FormEvent) => {
+  const openAddModal = () => {
+    setEditEmployee(null);
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', role: 'Employee', departmentId: '', designationId: '', reportingTo: '', employeeCode: `EMP-${Math.floor(Math.random() * 10000)}`, joinDate: new Date().toISOString() });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (emp: any) => {
+    setEditEmployee(emp);
+    setFormData({
+      firstName: emp.firstName, lastName: emp.lastName, email: emp.email, phone: emp.phone || '',
+      role: emp.role || 'Employee', departmentId: emp.departmentId || '', designationId: emp.designationId || '',
+      reportingTo: emp.reportingTo || '', employeeCode: emp.employeeCode, joinDate: emp.joinDate
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = {
-        ...formData,
-        organizationId: orgId
-      };
-      
-      // Remove empty UUID strings to prevent Zod validation errors on the backend
+      const payload: any = { ...formData, organizationId: orgId };
       if (!payload.departmentId) delete payload.departmentId;
       if (!payload.designationId) delete payload.designationId;
       if (!payload.reportingTo) delete payload.reportingTo;
-
-      await employeeService.createEmployee(payload);
+      if (editEmployee) {
+        await employeeService.updateEmployee(editEmployee.id, payload);
+        alert('Employee updated successfully!');
+      } else {
+        await employeeService.createEmployee(payload);
+        alert('Employee created and invitation sent successfully!');
+      }
       setIsModalOpen(false);
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        role: 'Employee',
-        departmentId: '',
-        designationId: '',
-        reportingTo: '',
-        employeeCode: `EMP-${Math.floor(Math.random() * 10000)}`,
-        joinDate: new Date().toISOString()
-      });
       refetch();
-      alert('Employee created and invitation sent successfully!');
     } catch (err: any) {
-      console.error(err);
-      alert(err.response?.data?.message || 'Failed to create employee');
+      alert(err.response?.data?.message || 'Operation failed');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await employeeService.deleteEmployee(deleteTarget.id);
+      setDeleteTarget(null);
+      refetch();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete employee');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -92,20 +129,20 @@ export function Employees() {
           </h1>
           <p className="employees-subtitle">Manage all employees in your organization.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-          <Plus size={16} />
-          Add Employee
+        <button onClick={openAddModal} className="btn-primary">
+          <Plus size={16} /> Add Employee
         </button>
       </div>
 
+      {/* Add / Edit Modal */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">Add New Employee</h3>
+              <h3 className="modal-title">{editEmployee ? 'Edit Employee' : 'Add New Employee'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="modal-close">&times;</button>
             </div>
-            <form onSubmit={handleCreateEmployee} className="modal-form">
+            <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">First Name *</label>
@@ -116,7 +153,6 @@ export function Employees() {
                   <input type="text" className="form-input" required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
                 </div>
               </div>
-              
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Email *</label>
@@ -127,28 +163,22 @@ export function Employees() {
                   <input type="text" className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Department</label>
                   <select value={formData.departmentId} onChange={e => setFormData({...formData, departmentId: e.target.value})} className="form-select">
                     <option value="">Select Department...</option>
-                    {departments?.map((d: any) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
+                    {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Designation</label>
                   <select value={formData.designationId} onChange={e => setFormData({...formData, designationId: e.target.value})} className="form-select">
                     <option value="">Select Designation...</option>
-                    {designations?.map((d: any) => (
-                      <option key={d.id} value={d.id}>{d.title}</option>
-                    ))}
+                    {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
                   </select>
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Role</label>
@@ -165,19 +195,49 @@ export function Employees() {
                   <select value={formData.reportingTo} onChange={e => setFormData({...formData, reportingTo: e.target.value})} className="form-select">
                     <option value="">Select Manager...</option>
                     {employees?.map((emp: any) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.firstName} {emp.lastName} ({emp.employeeCode})
-                      </option>
+                      <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeCode})</option>
                     ))}
                   </select>
                 </div>
               </div>
-
               <div className="modal-actions">
                 <button className="btn-secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button className="btn-primary" type="submit">Save Employee</button>
+                <button className="btn-primary" type="submit">{editEmployee ? 'Update Employee' : 'Save Employee'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Trash2 size={18} /> Confirm Delete
+              </h3>
+              <button onClick={() => setDeleteTarget(null)} className="modal-close">&times;</button>
+            </div>
+            <div style={{ padding: '1.5rem' }}>
+              <p style={{ color: '#374151', marginBottom: '0.5rem' }}>
+                Are you sure you want to delete <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong>?
+              </p>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                This action cannot be undone. All associated data will be permanently removed.
+              </p>
+            </div>
+            <div className="modal-actions" style={{ padding: '0 1.5rem 1.5rem' }}>
+              <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
+              <button
+                className="btn-primary"
+                style={{ backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -186,9 +246,9 @@ export function Employees() {
         <div className="employees-toolbar">
           <div className="search-wrapper">
             <Search className="search-icon" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
+            <input
+              type="text"
+              placeholder="Search by name or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -205,18 +265,19 @@ export function Employees() {
             <table className="employees-table">
               <thead>
                 <tr>
-                  <th>Employee</th>
+                  <th>Name</th>
+                  <th>Email</th>
                   <th>ID</th>
                   <th>Department</th>
                   <th>Designation</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th style={{ width: '48px' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {filteredEmployees?.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="empty-state">
                         <UserCircle className="empty-state-icon" size={48} />
                         <p>No employees found.</p>
@@ -227,16 +288,15 @@ export function Employees() {
                   filteredEmployees?.map((emp: any) => (
                     <tr key={emp.id}>
                       <td>
-                        <div className="employee-info-cell">
-                          <div className="employee-avatar">
-                            {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="employee-name">{emp.firstName} {emp.lastName}</div>
-                            <div className="employee-email">{emp.email}</div>
-                          </div>
-                        </div>
+                        <button
+                          className="emp-name-link"
+                          onClick={() => navigate(`/organization/employees/${emp.id}`)}
+                          title="View Profile"
+                        >
+                          {emp.firstName} {emp.lastName}
+                        </button>
                       </td>
+                      <td className="td-muted">{emp.email}</td>
                       <td className="td-id">{emp.employeeCode}</td>
                       <td>{emp.department?.name || '-'}</td>
                       <td>{emp.designation?.title || '-'}</td>
@@ -244,16 +304,13 @@ export function Employees() {
                         <span className={`status-badge ${
                           emp.status === 'active' ? 'active' :
                           emp.status === 'probation' ? 'probation' :
-                          emp.status === 'terminated' ? 'terminated' :
-                          'default'
+                          emp.status === 'terminated' ? 'terminated' : 'default'
                         }`}>
-                          {emp.status}
+                          {emp.status || 'active'}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <Link to={`/employees/${emp.id}`} className="btn-link">
-                          View Profile
-                        </Link>
+                      <td style={{ textAlign: 'center' }}>
+                        <ThreeDotMenu emp={emp} onEdit={openEditModal} onDelete={setDeleteTarget} />
                       </td>
                     </tr>
                   ))

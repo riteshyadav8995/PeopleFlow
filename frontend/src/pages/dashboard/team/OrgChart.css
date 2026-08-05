@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 1.5rem;
   height: calc(100vh - 140px);
-  animation: fade-in 0.5s ease-out forwards;
+  
 }
 
 .org-header {

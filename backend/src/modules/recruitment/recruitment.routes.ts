@@ -22,6 +22,8 @@ router.patch('/requisitions/:id/status', authorize('recruitment.job.approve'), c
 // Jobs (Internal)
 router.post('/jobs', authorize('recruitment.job.create'), controller.createJob);
 router.get('/jobs', authorize('recruitment.job.read'), controller.getJobs);
+router.patch('/jobs/:id', authorize('recruitment.job.update'), controller.updateJob);
+router.delete('/jobs/:id', authorize('recruitment.job.delete'), controller.deleteJob);
 
 // Applications
 router.get('/applications', authorize('recruitment.application.read'), controller.getApplications);

@@ -159,6 +159,44 @@ export class ProjectService extends BaseService {
     });
   }
 
+  async updateProject(context: ServiceContext, projectId: string, data: any) {
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project || project.tenantId !== context.tenantId) {
+      throw new AppError('Project not found', 404);
+    }
+
+    return await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        name: data.name,
+        code: data.code,
+        description: data.description,
+        clientName: data.clientName,
+        type: data.type,
+        visibility: data.visibility,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        budget: data.budget,
+        managerId: data.managerId
+      }
+    });
+  }
+
+  async deleteProject(context: ServiceContext, projectId: string) {
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project || project.tenantId !== context.tenantId) {
+      throw new AppError('Project not found', 404);
+    }
+
+    return await prisma.$transaction(async (tx) => {
+      await tx.projectMember.deleteMany({ where: { projectId } });
+      await tx.task.deleteMany({ where: { projectId } });
+      await tx.milestone.deleteMany({ where: { projectId } });
+      
+      return await tx.project.delete({ where: { id: projectId } });
+    });
+  }
+
   async addProjectMember(context: ServiceContext, projectId: string, data: { employeeId: string, role?: string, allocation?: number }) {
     const project = await prisma.project.findUnique({
       where: { id: projectId },

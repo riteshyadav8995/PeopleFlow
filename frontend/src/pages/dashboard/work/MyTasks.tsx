@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, PlayCircle, X } from 'lucide-react';
+import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, PlayCircle, X, Inbox } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import './MyTasks.css';
@@ -139,7 +139,7 @@ export function MyTasks() {
               const colTasks = filteredTasks.filter((t: any) => t.status === column);
               return (
                 <div key={column} className="board-column">
-                  <div className="column-header">
+                  <div className={`column-header ${column.replace(' ', '-').toLowerCase()}`}>
                     <div className="column-title-group">
                       {getStatusIcon(column)}
                       <h3 className="column-title">{column}</h3>
@@ -169,8 +169,9 @@ export function MyTasks() {
                       </div>
                     ))}
                     {colTasks.length === 0 && (
-                      <div className="empty-column">
-                        No tasks
+                      <div className="empty-column" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: 0.7 }}>
+                        <Inbox size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                        <span>No tasks in {column}</span>
                       </div>
                     )}
                   </div>

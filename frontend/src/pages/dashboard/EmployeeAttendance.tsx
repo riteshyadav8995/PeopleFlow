@@ -61,7 +61,7 @@ export function EmployeeAttendance() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 ">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Clock className="w-6 h-6 text-indigo-600" />
@@ -147,21 +147,29 @@ export function EmployeeAttendance() {
                   {records?.length === 0 ? (
                     <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No attendance records found.</td></tr>
                   ) : (
-                    records?.map((record: any) => (
+                    records?.map((record: any) => {
+                      let displayStatus = record.status.toUpperCase();
+                      let statusClass = record.status === 'present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+                      if (record.status === 'absent' && record.clockInTime && !record.clockOutTime) {
+                        displayStatus = 'SINGLE PUNCH';
+                        statusClass = 'bg-red-100 text-red-700';
+                      }
+
+                      return (
                       <tr key={record.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium text-gray-900">{new Date(record.date).toLocaleDateString()}</td>
                         <td className="px-4 py-3">{new Date(record.clockInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                         <td className="px-4 py-3">{record.clockOutTime ? new Date(record.clockOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            record.status === 'present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {record.status.toUpperCase()}
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClass}`}>
+                            {displayStatus}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-mono">{record.totalHours ? record.totalHours.toFixed(2) + 'h' : '-'}</td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>

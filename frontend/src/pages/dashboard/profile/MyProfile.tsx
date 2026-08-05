@@ -267,7 +267,7 @@ export function MyProfile() {
   };
 
   return (
-    <div className="profile-container animate-fade-in">
+    <div className="profile-container ">
 
       {/* Banner */}
       <div className="profile-banner-card">
@@ -320,7 +320,7 @@ export function MyProfile() {
 
         {/* PERSONAL INFORMATION */}
         {activeTab === 'personal' && (
-          <div className="animate-fade-in">
+          <div className="">
             <div className="profile-section-header">
               <h2 className="profile-section-title">Personal Information</h2>
               {!isEditingPersonal ? (
@@ -384,7 +384,7 @@ export function MyProfile() {
 
         {/* JOB INFORMATION */}
         {activeTab === 'job' && (
-          <div className="animate-fade-in">
+          <div className="">
             <div className="profile-section-header">
               <h2 className="profile-section-title">Job Information</h2>
               {!isEditingJob ? (
@@ -441,7 +441,7 @@ export function MyProfile() {
 
         {/* DOCUMENTS */}
         {activeTab === 'documents' && (
-          <div className="animate-fade-in">
+          <div className="">
             <h2 className="profile-section-title" style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>My Documents</h2>
             <div className="profile-doc-list">
               <div className="profile-doc-card">
@@ -505,7 +505,7 @@ export function MyProfile() {
 
         {/* BANK DETAILS */}
         {activeTab === 'bank' && (
-          <div className="animate-fade-in">
+          <div className="">
               <div className="profile-section-header">
                 <h2 className="profile-section-title">Bank Details</h2>
                 {!isEditingBank ? (
@@ -591,7 +591,7 @@ export function MyProfile() {
 
         {/* EMERGENCY */}
         {activeTab === 'emergency' && (
-          <div className="animate-fade-in">
+          <div className="">
             <div className="profile-section-header">
               <h2 className="profile-section-title">Emergency Contacts</h2>
               {!isEditingEmergency ? (
@@ -637,7 +637,7 @@ export function MyProfile() {
 
         {/* DYNAMIC LISTS: EDUCATION, EXPERIENCE, SKILLS, CERTIFICATIONS */}
         {['education', 'experience', 'skills', 'certifications'].includes(activeTab) && (
-          <div className="animate-fade-in">
+          <div className="">
             <div className="profile-section-header">
               <h2 className="profile-section-title" style={{ textTransform: 'capitalize' }}>{activeTab}</h2>
               <button className="btn-secondary" onClick={() => { setAddingType(activeTab); setDynamicForm({}); }}>
@@ -695,7 +695,7 @@ export function MyProfile() {
 
             {/* Add Form */}
             {addingType === activeTab && (
-              <div className="profile-emergency-card animate-fade-in" style={{ border: '1px solid var(--brand-500)', background: 'white' }}>
+              <div className="profile-emergency-card " style={{ border: '1px solid var(--brand-500)', background: 'white' }}>
                 <h3 style={{ margin: '0 0 1rem 0', color: 'var(--gray-900)' }}>Add {activeTab}</h3>
                 
                 <div className="profile-data-grid" style={{ marginBottom: '1.5rem' }}>

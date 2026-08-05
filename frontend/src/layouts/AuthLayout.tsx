@@ -4,7 +4,7 @@ import './AuthLayout.css';
 
 export function AuthLayout() {
   return (
-    <div className="auth-container animate-fade-in">
+    <div className="auth-container ">
       {/* Left Side: Branding / Company Info */}
       <div className="auth-brand-side">
         <div className="auth-brand-content">

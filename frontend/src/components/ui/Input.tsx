@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className="form-input"
           {...props} 
         />
-        {error && <span className="form-error animate-fade-in">{error}</span>}
+        {error && <span className="form-error ">{error}</span>}
       </div>
     );
   }
