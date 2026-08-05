@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Rocket, BookOpen, Zap, Clock, ShieldCheck, Plus, CheckCircle2, AlertCircle, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { onboardingService } from '@/services/onboarding.service';
@@ -60,6 +60,7 @@ export function OnboardingDashboard() {
   const { user } = useAuthStore();
   const organizationId = (user as any)?.organizationId || '';
   const isAdmin = user?.roles.includes('tenant_admin') || user?.roles.includes('super_admin');
+  const queryClient = useQueryClient();
 
   const [templates, setTemplates] = useState<OnboardingTemplate[]>([]);
   const [myTasks, setMyTasks] = useState<MyTask[]>([]);
@@ -71,7 +72,9 @@ export function OnboardingDashboard() {
   // Assign workflow modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [assignForm, setAssignForm] = useState({ employeeId: '', templateId: '' });
+  const [assignForm, setAssignForm] = useState({ employeeIds: [] as string[], templateId: '' });
+  const [empSearch, setEmpSearch] = useState('');
+  const [tmplSearch, setTmplSearch] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Create template modal
@@ -127,12 +130,27 @@ export function OnboardingDashboard() {
 
   const handleAssignWorkflow = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (assignForm.employeeIds.length === 0) {
+      showMessage('Please click on at least one employee from the list to select them.', 'error');
+      return;
+    }
+    if (!assignForm.templateId) {
+      showMessage('Please choose a template.', 'error');
+      return;
+    }
     setSaving(true);
     try {
-      await api.post('/onboarding/workflows', assignForm);
+      await Promise.all(
+        assignForm.employeeIds.map(empId =>
+          api.post('/onboarding/workflows', { employeeId: empId, templateId: assignForm.templateId })
+        )
+      );
       setIsAssignModalOpen(false);
       showMessage('Onboarding workflow assigned successfully!');
-      setAssignForm({ employeeId: '', templateId: '' });
+      setAssignForm({ employeeIds: [], templateId: '' });
+      setEmpSearch('');
+      setTmplSearch('');
+      queryClient.invalidateQueries({ queryKey: ['orgWorkflows'] });
       fetchData();
     } catch (err: any) {
       showMessage(err.response?.data?.message || 'Failed to assign workflow.', 'error');
@@ -543,19 +561,44 @@ export function OnboardingDashboard() {
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
               <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Select Employee *</label>
-                  <select className="form-select" required value={assignForm.employeeId} onChange={e => setAssignForm(p => ({ ...p, employeeId: e.target.value }))}>
-                    <option value="">— Choose Employee —</option>
-                    {employees.map(emp => (
+                  <label className="form-label">Select Employees *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Search employees..." 
+                    value={empSearch}
+                    onChange={e => setEmpSearch(e.target.value)}
+                    style={{ marginBottom: '0.5rem' }}
+                  />
+                  <select 
+                    className="form-select" 
+                    multiple 
+                    value={assignForm.employeeIds} 
+                    onChange={e => {
+                      const selected = Array.from(e.target.selectedOptions, option => option.value);
+                      setAssignForm(p => ({ ...p, employeeIds: selected }));
+                    }}
+                    style={{ height: '120px' }}
+                  >
+                    {employees.filter(emp => `${emp.firstName} ${emp.lastName} ${emp.employeeCode}`.toLowerCase().includes(empSearch.toLowerCase())).map(emp => (
                       <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeCode})</option>
                     ))}
                   </select>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Hold Ctrl/Cmd to select multiple employees</p>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Select Template *</label>
-                  <select className="form-select" required value={assignForm.templateId} onChange={e => setAssignForm(p => ({ ...p, templateId: e.target.value }))}>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Search templates..." 
+                    value={tmplSearch}
+                    onChange={e => setTmplSearch(e.target.value)}
+                    style={{ marginBottom: '0.5rem' }}
+                  />
+                  <select className="form-select" value={assignForm.templateId} onChange={e => setAssignForm(p => ({ ...p, templateId: e.target.value }))}>
                     <option value="">— Choose Template —</option>
-                    {templates.map(t => (
+                    {templates.filter(t => t.name.toLowerCase().includes(tmplSearch.toLowerCase())).map(t => (
                       <option key={t.id} value={t.id}>{t.name} ({t.tasks.length} tasks)</option>
                     ))}
                   </select>

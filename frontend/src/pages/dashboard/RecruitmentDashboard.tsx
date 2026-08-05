@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { 
   Briefcase, Users, Plus, Target, Building2, 
   Clock, CheckCircle2, Calendar, X, FileText,
-  MoreVertical, Edit2, Trash2
+  MoreVertical, Edit2, Trash2, PhoneCall
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import './RecruitmentDashboard.css';
@@ -65,6 +65,13 @@ export function RecruitmentDashboard() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  // AI Calling State
+  const [isAICallModalOpen, setIsAICallModalOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [candidateToCall, setCandidateToCall] = useState<Application | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState('');
+  const [calling, setCalling] = useState(false);
+
   const [activeJobMenu, setActiveJobMenu] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<any>(null);
@@ -105,8 +112,41 @@ export function RecruitmentDashboard() {
   };
 
   useEffect(() => {
-    if (organizationId) fetchData();
+    if (organizationId) {
+      fetchData();
+      fetchCampaigns();
+    }
   }, [organizationId]);
+
+  const fetchCampaigns = async () => {
+    try {
+      const res = await api.get('/voice-agent/campaigns');
+      setCampaigns(res.data.data || []);
+      if (res.data.data && res.data.data.length > 0) {
+        setSelectedCampaignId(res.data.data[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch campaigns', error);
+    }
+  };
+
+  const handleCallAI = async () => {
+    if (!candidateToCall || !selectedCampaignId) return;
+    setCalling(true);
+    try {
+      await api.post('/voice-agent/calls', {
+        campaignId: selectedCampaignId,
+        phoneNumber: candidateToCall.candidate.phone || ''
+      });
+      alert('Call initiated successfully! The AI Agent is calling the candidate.');
+      setIsAICallModalOpen(false);
+      setCandidateToCall(null);
+    } catch (error) {
+      alert('Failed to initiate AI call. Make sure Exotel is configured and KYC is approved.');
+    } finally {
+      setCalling(false);
+    }
+  };
 
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -465,7 +505,25 @@ export function RecruitmentDashboard() {
                   applications.map(app => (
                     <tr key={app.id}>
                       <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-                        {app.candidate.firstName} {app.candidate.lastName}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{app.candidate.firstName} {app.candidate.lastName}</span>
+                          <button 
+                            onClick={() => {
+                              setCandidateToCall(app);
+                              setIsAICallModalOpen(true);
+                            }}
+                            style={{
+                              background: 'var(--brand-50)', border: 'none', cursor: 'pointer', color: 'var(--brand-600)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '50%',
+                              transition: 'all 0.2s'
+                            }}
+                            title="Call Candidate via AI Voice Agent"
+                            onMouseOver={(e) => e.currentTarget.style.background = 'var(--brand-100)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'var(--brand-50)'}
+                          >
+                            <PhoneCall size={14} />
+                          </button>
+                        </div>
                       </td>
                       <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                         {app.candidate.email}
@@ -739,6 +797,65 @@ export function RecruitmentDashboard() {
                 style={{ padding: '0.5rem 1.5rem', border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 500 }}
               >
                 {saving ? 'Deleting...' : 'Yes, delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* AI Call Modal */}
+      {isAICallModalOpen && candidateToCall && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)', borderRadius: '1rem', width: '100%', maxWidth: '400px',
+            boxShadow: 'var(--shadow-xl)', overflow: 'hidden'
+          }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <PhoneCall size={20} className="text-brand-500" /> Call {candidateToCall.candidate.firstName}
+              </h3>
+              <button onClick={() => setIsAICallModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '1.5rem' }}>
+              {campaigns.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  No AI Voice Campaigns found. Please create one in the Voice Agent dashboard first.
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label className="form-label">Select Voice Campaign</label>
+                  <select 
+                    className="form-select" 
+                    value={selectedCampaignId} 
+                    onChange={e => setSelectedCampaignId(e.target.value)}
+                  >
+                    {campaigns.map(camp => (
+                      <option key={camp.id} value={camp.id}>{camp.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '1rem', background: 'var(--gray-50)' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsAICallModalOpen(false)}
+                style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', background: '#fff', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500 }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleCallAI}
+                disabled={calling || campaigns.length === 0}
+                style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: 'linear-gradient(135deg, #f472b6, #6366f1)', color: '#fff', cursor: calling ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: calling || campaigns.length === 0 ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                {calling ? 'Initiating Call...' : 'Call Now'}
               </button>
             </div>
           </div>
