@@ -6,7 +6,7 @@ import { dashboardService } from '@/services/dashboard.service';
 import { useNavigate } from 'react-router-dom';
 import { Spinner } from '@/components/ui/Spinner';
 
-import { 
+import {
   Clock, Sun, Moon, Search, Calendar, FileText, User, Users, Clock3, GitMerge,
   ArrowRight, CheckCircle, FilePlus, Gift, Cake, UserPlus, FileSearch, ShieldCheck
 } from 'lucide-react';
@@ -84,10 +84,10 @@ export function MyPortal() {
 
   return (
     <div className="portal-container">
-      
+
       {/* Top Section: Banner & Clock */}
       <div className="portal-top-grid">
-        
+
         {/* Banner */}
         <div className="portal-banner">
           <div className="portal-banner-content">
@@ -98,14 +98,14 @@ export function MyPortal() {
           </div>
           {/* Mock Illustration SVG */}
           <div className="portal-banner-img-container">
-             <img src="https://illustrations.popsy.co/blue/freelancer.svg" alt="Illustration" className="portal-banner-img" />
+            <img src="https://illustrations.popsy.co/blue/freelancer.svg" alt="Illustration" className="portal-banner-img" />
           </div>
         </div>
 
         {/* Clock Widget */}
         <div className="clock-widget">
           <div className="clock-widget-title">Let's Get the Ball Rolling</div>
-          
+
           <div className="clock-display">
             <div className="clock-date">
               {currentTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'long' })}
@@ -114,14 +114,14 @@ export function MyPortal() {
               {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </div>
           </div>
-          
+
           <div className="shift-info">
             <div className="shift-details">
               Shift: 09:00 - 18:00
             </div>
             <a href="#" className="view-policies-link">View Policies</a>
           </div>
-          
+
           {currentAttendance?.clockInTime ? (
             <>
               <div className="attendance-block">
@@ -146,7 +146,7 @@ export function MyPortal() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="work-duration mt-4 p-3 bg-brand-50 rounded-lg text-center" style={{ backgroundColor: 'var(--brand-50)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', textAlign: 'center' }}>
                   <span className="text-sm text-subtle block mb-1">Total Work Duration</span>
                   <span className="text-lg font-bold text-brand-600">
@@ -154,7 +154,7 @@ export function MyPortal() {
                   </span>
                 </div>
               </div>
-              
+
               {currentAttendance.clockOutTime ? (
                 <>
                   <div style={{ backgroundColor: '#f0fdf4', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', textAlign: 'center', marginBottom: '1rem', border: '1px solid #bbf7d0' }}>
@@ -166,9 +166,9 @@ export function MyPortal() {
                   </button>
                 </>
               ) : (
-                <button 
-                  onClick={() => clockOutMutation.mutate()} 
-                  disabled={clockOutMutation.isPending} 
+                <button
+                  onClick={() => clockOutMutation.mutate()}
+                  disabled={clockOutMutation.isPending}
                   className="clock-btn clock-out"
                 >
                   <Clock3 size={16} /> Clockout
@@ -178,14 +178,14 @@ export function MyPortal() {
           ) : (
             <>
               {currentTime.getHours() >= 10 && (
-                 <div style={{ backgroundColor: 'var(--danger-50)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', textAlign: 'center', marginBottom: '1rem' }}>
-                    <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>Missed Punch</span>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-subtle)', marginTop: '0.25rem' }}>You missed your clock in for today's shift.</p>
-                 </div>
+                <div style={{ backgroundColor: 'var(--danger-50)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', textAlign: 'center', marginBottom: '1rem' }}>
+                  <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>Missed Punch</span>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-subtle)', marginTop: '0.25rem' }}>You missed your clock in for today's shift.</p>
+                </div>
               )}
-              <button 
-                onClick={() => clockInMutation.mutate()} 
-                disabled={clockInMutation.isPending} 
+              <button
+                onClick={() => clockInMutation.mutate()}
+                disabled={clockInMutation.isPending}
                 className="clock-btn clock-in"
               >
                 <Clock3 size={16} /> Clock In
@@ -197,14 +197,14 @@ export function MyPortal() {
 
       {/* Main Grid: Apps, Requests, Events */}
       <div className="portal-main-grid">
-        
+
         {/* Left Column */}
         <div className="apps-card">
           <div className="section-header">
             <h2 className="section-title">My Apps</h2>
             <a href="#" className="view-all-link">View All</a>
           </div>
-          
+
           <div className="apps-grid">
             <div onClick={() => navigate('/employee/work/tasks')} className="app-item cursor-pointer">
               <div className="app-icon-wrapper tasks">
@@ -226,7 +226,7 @@ export function MyPortal() {
               </div>
               <span className="app-label">Profile</span>
             </div>
-            
+
             <div onClick={() => navigate('/employee/leave/apply')} className="app-item cursor-pointer">
               <div className="app-icon-wrapper comp">
                 <Sun size={28} />
@@ -238,14 +238,14 @@ export function MyPortal() {
 
         {/* Right Column */}
         <div className="right-column">
-          
+
           {/* Requests Section */}
           <div className="apps-card">
             <div className="section-header">
               <h2 className="section-title">Requests</h2>
               <a href="#" className="view-all-link">View All</a>
             </div>
-            
+
             <div className="requests-grid">
               <div className="request-item leave cursor-pointer" onClick={() => navigate('/employee/leave/apply')}>
                 <FilePlus size={24} className="request-icon" />
@@ -269,23 +269,23 @@ export function MyPortal() {
           {/* Events Section */}
           <div className="events-card">
             <h2 className="section-title" style={{ marginBottom: '1rem' }}>Events</h2>
-            
+
             <div className="events-tabs">
-              <div 
+              <div
                 onClick={() => setActiveEventTab('Leave')}
                 className={`event-tab ${activeEventTab === 'Leave' ? 'active' : ''}`}
               >
                 Leave
                 {activeEventTab === 'Leave' && <div className="event-tab-indicator" />}
               </div>
-              <div 
+              <div
                 onClick={() => setActiveEventTab('Birthdays')}
                 className={`event-tab ${activeEventTab === 'Birthdays' ? 'active' : ''}`}
               >
                 Birthdays
                 {activeEventTab === 'Birthdays' && <div className="event-tab-indicator" />}
               </div>
-              <div 
+              <div
                 onClick={() => setActiveEventTab('Anniversaries')}
                 className={`event-tab ${activeEventTab === 'Anniversaries' ? 'active' : ''}`}
               >
@@ -293,7 +293,7 @@ export function MyPortal() {
                 {activeEventTab === 'Anniversaries' && <div className="event-tab-indicator" />}
               </div>
             </div>
-            
+
             <div className="events-content text-sm text-subtle py-6 text-center">
               {activeEventTab === 'Leave' && 'No upcoming leave found in your team.'}
               {activeEventTab === 'Birthdays' && 'No birthdays today.'}

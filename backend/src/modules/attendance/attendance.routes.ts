@@ -18,6 +18,7 @@ router.get('/', authorize('attendance.self:read'), attendanceController.listAtte
 router.get('/dashboard', authorize('attendance.manage:read'), attendanceController.getDashboardStats);
 router.get('/trends', authorize('attendance.manage:read'), attendanceController.getTrends);
 router.get('/exceptions', authorize('attendance.manage:read'), attendanceController.getExceptions);
+router.post('/exceptions/:id/resolve', authorize('attendance.manage:update'), attendanceController.resolveException);
 router.get('/reports/monthly', authorize('attendance.manage:read'), attendanceController.getMonthlyReport);
 
 // Attendance Corrections

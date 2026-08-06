@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 1.5rem;
   padding-bottom: 2.5rem;
-  
+
 }
 
 /* Top Section Layout */
@@ -360,29 +360,77 @@
   transform: translateY(-2px);
 }
 
-.app-icon-wrapper.recruitment { background-color: var(--brand-50); color: var(--brand-600); }
-.app-item:hover .app-icon-wrapper.recruitment { background-color: var(--brand-100); }
+.app-icon-wrapper.recruitment {
+  background-color: var(--brand-50);
+  color: var(--brand-600);
+}
 
-.app-icon-wrapper.tasks { background-color: #f0fdf4; color: #16a34a; }
-.app-item:hover .app-icon-wrapper.tasks { background-color: #dcfce7; }
+.app-item:hover .app-icon-wrapper.recruitment {
+  background-color: var(--brand-100);
+}
 
-.app-icon-wrapper.timesheets { background-color: #fefce8; color: #ca8a04; }
-.app-item:hover .app-icon-wrapper.timesheets { background-color: #fef9c3; }
+.app-icon-wrapper.tasks {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
 
-.app-icon-wrapper.profile { background-color: #f5f3ff; color: #7c3aed; }
-.app-item:hover .app-icon-wrapper.profile { background-color: #ede9fe; }
+.app-item:hover .app-icon-wrapper.tasks {
+  background-color: #dcfce7;
+}
 
-.app-icon-wrapper.comp { background-color: #fff7ed; color: #ea580c; }
-.app-item:hover .app-icon-wrapper.comp { background-color: #ffedd5; }
+.app-icon-wrapper.timesheets {
+  background-color: #fefce8;
+  color: #ca8a04;
+}
 
-.app-icon-wrapper.flows { background-color: #fdf4ff; color: #c026d3; }
-.app-item:hover .app-icon-wrapper.flows { background-color: #fae8ff; }
+.app-item:hover .app-icon-wrapper.timesheets {
+  background-color: #fef9c3;
+}
 
-.app-icon-wrapper.employees { background-color: #f0fdfa; color: #0d9488; }
-.app-item:hover .app-icon-wrapper.employees { background-color: #ccfbf1; }
+.app-icon-wrapper.profile {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
 
-.app-icon-wrapper.calendar { background-color: var(--gray-100); color: var(--text-secondary); }
-.app-item:hover .app-icon-wrapper.calendar { background-color: var(--gray-200); }
+.app-item:hover .app-icon-wrapper.profile {
+  background-color: #ede9fe;
+}
+
+.app-icon-wrapper.comp {
+  background-color: #fff7ed;
+  color: #ea580c;
+}
+
+.app-item:hover .app-icon-wrapper.comp {
+  background-color: #ffedd5;
+}
+
+.app-icon-wrapper.flows {
+  background-color: #fdf4ff;
+  color: #c026d3;
+}
+
+.app-item:hover .app-icon-wrapper.flows {
+  background-color: #fae8ff;
+}
+
+.app-icon-wrapper.employees {
+  background-color: #f0fdfa;
+  color: #0d9488;
+}
+
+.app-item:hover .app-icon-wrapper.employees {
+  background-color: #ccfbf1;
+}
+
+.app-icon-wrapper.calendar {
+  background-color: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.app-item:hover .app-icon-wrapper.calendar {
+  background-color: var(--gray-200);
+}
 
 .app-label {
   font-size: 0.875rem;
@@ -424,10 +472,25 @@
   transform: translateY(-2px);
 }
 
-.request-item.leave { background-color: #fdf2f8; color: #db2777; }
-.request-item.prefs { background-color: #f0f9ff; color: #0284c7; }
-.request-item.flow { background-color: #fefce8; color: #ca8a04; }
-.request-item.letter { background-color: #faf5ff; color: #9333ea; }
+.request-item.leave {
+  background-color: #fdf2f8;
+  color: #db2777;
+}
+
+.request-item.prefs {
+  background-color: #f0f9ff;
+  color: #0284c7;
+}
+
+.request-item.flow {
+  background-color: #fefce8;
+  color: #ca8a04;
+}
+
+.request-item.letter {
+  background-color: #faf5ff;
+  color: #9333ea;
+}
 
 .request-icon {
   margin-bottom: 0.25rem;
@@ -481,6 +544,12 @@
   right: 0;
   height: 2px;
   background-color: var(--brand-500);
+}
+
+.events-content {
+  padding: 1rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
 }
 
 .events-content {

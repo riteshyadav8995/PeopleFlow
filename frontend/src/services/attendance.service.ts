@@ -29,6 +29,11 @@ export const attendanceService = {
     return res.data.data;
   },
 
+  async resolveException(recordId: string) {
+    const res = await api.post(`/attendance/exceptions/${recordId}/resolve`);
+    return res.data.data;
+  },
+
   async getMonthlyReport(orgId: string, month: number, year: number) {
     const res = await api.get(`/attendance/reports/monthly`, {
       params: { organizationId: orgId, month, year }

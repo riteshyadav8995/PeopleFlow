@@ -137,72 +137,111 @@ export function Employees() {
       {/* Add / Edit Modal */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">{editEmployee ? 'Edit Employee' : 'Add New Employee'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="modal-close">&times;</button>
+          <div className="modal-content" style={{ maxWidth: '1100px', height: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '1.25rem' }}>
+            <div style={{
+              padding: '1.5rem 2.5rem',
+              borderBottom: '1px solid var(--border-color)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: 'linear-gradient(135deg, rgba(244,114,182,0.06), rgba(99,102,241,0.06))',
+              flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: 4, height: 24, borderRadius: 2, background: 'linear-gradient(180deg,#f472b6,#6366f1)' }} />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  {editEmployee ? 'Edit Employee' : 'Add New Employee'}
+                </h2>
+              </div>
+              <button type="button" onClick={() => setIsModalOpen(false)} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                width: 36, height: 36, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)', fontSize: '1.5rem', transition: 'background 0.15s'
+              }}
+                onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-100)')}
+                onMouseOut={e => (e.currentTarget.style.background = 'none')}
+              >&times;</button>
             </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">First Name *</label>
-                  <input type="text" className="form-input" required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Last Name *</label>
-                  <input type="text" className="form-input" required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+            
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
+                <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>First Name *</label>
+                      <input type="text" className="form-input" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }} required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Last Name *</label>
+                      <input type="text" className="form-input" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }} required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Email *</label>
+                      <input type="email" className="form-input" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }} required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Phone</label>
+                      <input type="text" className="form-input" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Department</label>
+                      <select value={formData.departmentId} onChange={e => setFormData({...formData, departmentId: e.target.value})} className="form-select" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }}>
+                        <option value="">Select Department...</option>
+                        {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Designation</label>
+                      <select value={formData.designationId} onChange={e => setFormData({...formData, designationId: e.target.value})} className="form-select" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }}>
+                        <option value="">Select Designation...</option>
+                        {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Role</label>
+                      <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="form-select" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }}>
+                        <option value="Employee">Employee</option>
+                        <option value="Manager">Manager</option>
+                        <option value="HR">HR</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Recruiter">Recruiter</option>
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Reporting Manager</label>
+                      <select value={formData.reportingTo} onChange={e => setFormData({...formData, reportingTo: e.target.value})} className="form-select" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem' }}>
+                        <option value="">Select Manager...</option>
+                        {employees?.map((emp: any) => (
+                          <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeCode})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phone</label>
-                  <input type="text" className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Department</label>
-                  <select value={formData.departmentId} onChange={e => setFormData({...formData, departmentId: e.target.value})} className="form-select">
-                    <option value="">Select Department...</option>
-                    {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Designation</label>
-                  <select value={formData.designationId} onChange={e => setFormData({...formData, designationId: e.target.value})} className="form-select">
-                    <option value="">Select Designation...</option>
-                    {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Role</label>
-                  <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="form-select">
-                    <option value="Employee">Employee</option>
-                    <option value="Manager">Manager</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Recruiter">Recruiter</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Reporting Manager</label>
-                  <select value={formData.reportingTo} onChange={e => setFormData({...formData, reportingTo: e.target.value})} className="form-select">
-                    <option value="">Select Manager...</option>
-                    {employees?.map((emp: any) => (
-                      <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeCode})</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button className="btn-secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button className="btn-primary" type="submit">{editEmployee ? 'Update Employee' : 'Save Employee'}</button>
+              
+              <div style={{
+                padding: '1rem 2.5rem',
+                borderTop: '1px solid var(--border-color)',
+                display: 'flex', justifyContent: 'flex-end', gap: '0.75rem',
+                background: 'var(--gray-50)', flexShrink: 0
+              }}>
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)} style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1.5rem', background: 'transparent', border: '1px solid var(--border-color)' }}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" style={{ borderRadius: 'var(--radius-md)', padding: '0.625rem 1.5rem', background: 'var(--brand-500)', border: 'none', color: 'white' }}>
+                  {editEmployee ? 'Update Employee' : 'Save Employee'}
+                </button>
               </div>
             </form>
           </div>

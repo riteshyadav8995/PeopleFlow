@@ -104,6 +104,13 @@ export class AttendanceController extends BaseController {
     ApiResponse.success(res, exceptions);
   });
 
+  resolveException = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    await this.attendanceService.resolveException(context, req.params.id as string);
+    ApiResponse.success(res, null, 'Exception resolved successfully');
+  });
+
   // --- Corrections APIs ---
   createCorrection = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;

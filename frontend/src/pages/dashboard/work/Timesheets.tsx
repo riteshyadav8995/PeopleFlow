@@ -61,7 +61,7 @@ export function Timesheets() {
             const hours = Number(entry[days[i]]) || 0;
             if (hours > 0) {
               const d = getWeekDate(week, i);
-              const res = await api.post('/timesheet/log', {
+              const res = await api.post('/timesheets/log', {
                 date: d.toISOString(),
                 hours,
                 description: desc,
@@ -75,7 +75,7 @@ export function Timesheets() {
         } else {
           const hours = Number(entry.dailyHours) || 0;
           if (hours > 0) {
-            const res = await api.post('/timesheet/log', {
+            const res = await api.post('/timesheets/log', {
               date: new Date(dailyDate).toISOString(),
               hours,
               description: desc,
@@ -105,7 +105,7 @@ export function Timesheets() {
       }
 
       // Submit timesheet
-      await api.post('/timesheet/', {
+      await api.post('/timesheets/', {
         periodStart: periodStart.toISOString(),
         periodEnd: periodEnd.toISOString(),
         totalHours,

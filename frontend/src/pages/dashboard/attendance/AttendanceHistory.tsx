@@ -171,7 +171,7 @@ export function AttendanceHistory() {
                     }
 
                     return (
-                      <tr key={idx}>
+                      <tr key={idx} title={notes === 'Single Punch' ? 'Single Punch (Missing Clock Out)' : ''}>
                         <td className="td-date">{dateStr}</td>
                         <td className={`td-time-in ${clockIn === '--' ? 'empty' : ''}`}>{clockIn}</td>
                         <td className={`td-time-out ${clockOut === '--' ? 'empty' : ''}`}>{clockOut}</td>

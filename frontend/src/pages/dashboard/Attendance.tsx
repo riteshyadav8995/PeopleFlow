@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { attendanceService } from '@/services/attendance.service';
 import { UserCheck, ChevronDown, Calendar, Download, Filter, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
@@ -27,11 +27,22 @@ export function Attendance() {
     queryFn: () => attendanceService.getOrgExceptions(orgId)
   });
 
+  const queryClient = useQueryClient();
+  
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
   const exceptions = exceptionsData?.filter((e: any) => !resolvedIds.includes(e.id)) || [];
 
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => attendanceService.resolveException(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orgAttendanceExceptions', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['orgAttendanceStats', orgId] });
+    }
+  });
+
   const handleResolve = (id: string) => {
-    setResolvedIds([...resolvedIds, id]);
+    setResolvedIds([...resolvedIds, id]); // Optimistic UI update
+    resolveMutation.mutate(id);
   };
 
   return (

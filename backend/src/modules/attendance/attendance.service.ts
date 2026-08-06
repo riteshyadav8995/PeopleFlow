@@ -152,12 +152,31 @@ export class AttendanceService extends BaseService {
       whereClause.employee = { reportingTo: context.employeeId };
     }
 
-    return prisma.attendanceRecord.findMany({
+    const records = await prisma.attendanceRecord.findMany({
       where: whereClause,
       include: {
         employee: { select: { firstName: true, lastName: true, employeeCode: true, department: true } }
       },
       orderBy: { date: 'desc' }
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return records.map(record => {
+      const recordDate = new Date(record.date);
+      recordDate.setHours(0, 0, 0, 0);
+      const isPast = recordDate.getTime() < today.getTime();
+      
+      if (isPast && !record.clockOutTime) {
+        return {
+          ...record,
+          status: 'absent',
+          totalHours: 0,
+          isSinglePunch: true
+        };
+      }
+      return record;
     });
   }
 
@@ -244,6 +263,26 @@ export class AttendanceService extends BaseService {
     });
   }
 
+  async resolveException(context: ServiceContext, recordId: string) {
+    const tenantId = this.getTenantId(context);
+    const record = await prisma.attendanceRecord.findFirst({
+      where: { id: recordId, tenantId }
+    });
+    if (!record) throw new Error('Record not found');
+
+    // Default resolution for missing punch: set clockOutTime to 18:00 (6 PM) of that date
+    const clockOutTime = new Date(record.date);
+    clockOutTime.setHours(18, 0, 0, 0);
+
+    return prisma.attendanceRecord.update({
+      where: { id: recordId },
+      data: {
+        clockOutTime,
+        status: 'present'
+      }
+    });
+  }
+
   // --- Attendance Corrections ---
   async createCorrection(context: ServiceContext, data: any) {
     const tenantId = this.getTenantId(context);
@@ -315,17 +354,26 @@ export class AttendanceService extends BaseService {
         where: { employeeId_date: { employeeId: correction.employeeId, date: correction.date } }
       });
 
+      // Default logic: If an employee forgot to clock out, they might not provide a requestedClockOut.
+      // In this case, upon approval, we set it to 6:00 PM of that date.
+      let finalClockOut = correction.requestedClockOut;
+      if (!finalClockOut) {
+        finalClockOut = new Date(correction.date);
+        finalClockOut.setHours(18, 0, 0, 0); // 6:00 PM
+      }
+
       let totalHours = 0;
-      if (correction.requestedClockOut) {
-        totalHours = (correction.requestedClockOut.getTime() - correction.requestedClockIn.getTime()) / (1000 * 60 * 60);
+      if (finalClockOut) {
+        totalHours = (finalClockOut.getTime() - correction.requestedClockIn.getTime()) / (1000 * 60 * 60);
       }
 
       if (existingRecord) {
         return tx.attendanceRecord.update({
           where: { id: existingRecord.id },
           data: {
+            status: 'present', // Reset status to present on approval
             clockInTime: correction.requestedClockIn,
-            clockOutTime: correction.requestedClockOut,
+            clockOutTime: finalClockOut,
             totalHours
           }
         });
@@ -336,10 +384,10 @@ export class AttendanceService extends BaseService {
             organizationId: correction.organizationId,
             employeeId: correction.employeeId,
             date: correction.date,
+            status: 'present',
             clockInTime: correction.requestedClockIn,
-            clockOutTime: correction.requestedClockOut,
-            totalHours,
-            status: 'present'
+            clockOutTime: finalClockOut,
+            totalHours
           }
         });
       }

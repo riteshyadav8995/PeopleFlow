@@ -12,25 +12,25 @@ router.use(authenticationMiddleware, tenantMiddleware);
 
 router.post(
   '/',
-  authorize('timesheet.submission.submit'),
+  authorize('timesheet.submission:submit'),
   controller.submitTimesheet
 );
 
 router.get(
   '/',
-  authorize('timesheet.submission.read'),
+  authorize('timesheet.submission:read'),
   controller.getTimesheets
 );
 
 router.post(
   '/:id/approve',
-  authorize('timesheet.submission.approve'),
+  authorize('timesheet.submission:approve'),
   controller.approveTimesheet
 );
 
 router.post(
   '/log',
-  authorize('time.entry.create'),
+  authorize('timesheet.entry:create'),
   controller.logTime
 );
 
