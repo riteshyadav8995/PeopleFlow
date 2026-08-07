@@ -4,6 +4,7 @@ import { AppError } from '../../core/errors/app.error';
 import { prisma } from '../../core/base/base.model';
 import { appConfig } from '../../config';
 import { emailService } from '../../integrations/email/email.service';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export class VoiceAgentService extends BaseService {
   
@@ -198,47 +199,29 @@ export class VoiceAgentService extends BaseService {
     let aiResponseText = 'I am sorry, I am currently unable to process your request.';
 
     try {
-      // Dummy key fallback
-      const apiKey = process.env.GROQ_API_KEY || 'dummy';
-      if (apiKey === 'dummy') {
-        aiResponseText = `[Simulated AI Response] I heard you say: "${userMessage}". This is a placeholder since a valid Groq/Gemini API key was not provided in the .env file.`;
+      const apiKey = process.env.GEMINI_API_KEY || '';
+      if (!apiKey) {
+        aiResponseText = `[Simulated AI Response] I heard you say: "${userMessage}". This is a placeholder since a valid GEMINI_API_KEY was not provided in the .env file.`;
       } else {
-        // Prepare messages for Groq API
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...callLog.transcripts.map(t => ({
-            role: t.role.toLowerCase() === 'ai' ? 'assistant' : 'user',
-            content: t.message
-          }))
-        ];
-
-        // Ensure we add the latest user message
-        if (messages[messages.length - 1].content !== userMessage) {
-           messages.push({ role: 'user', content: userMessage });
-        }
-
-        // Call Groq (using raw fetch for minimal dependency overhead)
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: 'llama3-8b-8192', // Fast model suitable for voice
-            messages: messages,
-            temperature: 0.5,
-            max_tokens: 150 // Keep responses brief for voice
-          })
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ 
+           model: 'gemini-1.5-flash', 
+           systemInstruction: systemPrompt 
         });
 
-        const data = await res.json() as any;
-        if (data.choices && data.choices.length > 0) {
-          aiResponseText = data.choices[0].message.content;
-        } else {
-          console.error('Groq Error:', data);
-          aiResponseText = 'Sorry, there was an error processing your response with the AI.';
+        const history = callLog.transcripts.map(t => ({
+          role: t.role.toLowerCase() === 'ai' ? 'model' : 'user',
+          parts: [{ text: t.message }]
+        }));
+
+        let promptText = userMessage;
+        if (userMessage === '[SYSTEM_INIT_CALL]') {
+           promptText = "You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.";
         }
+
+        const chat = model.startChat({ history });
+        const result = await chat.sendMessage(promptText);
+        aiResponseText = result.response.text();
       }
     } catch (err) {
       console.error('AI Generation Error:', err);
@@ -306,6 +289,11 @@ export class VoiceAgentService extends BaseService {
     if (callLog.status !== 'IN_PROGRESS') throw new AppError('Call session is not active', 400);
 
     const dummyContext: any = { tenantId: callLog.tenantId };
+    
+    if (userMessage !== '[SYSTEM_INIT_CALL]') {
+      await this.saveTranscript(dummyContext, callLogId, 'USER', userMessage);
+    }
+    
     return await this.generateAIResponse(dummyContext, callLogId, userMessage);
   }
 
@@ -321,34 +309,22 @@ export class VoiceAgentService extends BaseService {
     
     let summary = 'No summary generated.';
     try {
-      const apiKey = process.env.GROQ_API_KEY || 'dummy';
-      if (apiKey === 'dummy') {
+      const apiKey = process.env.GEMINI_API_KEY || '';
+      if (!apiKey) {
         summary = 'Simulated summary: The call concluded successfully. This is a placeholder since a valid API key was not provided.';
       } else {
         const transcriptText = callLog.transcripts.map(t => `${t.role}: ${t.message}`).join('\n');
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: 'llama3-8b-8192',
-            messages: [
-              { role: 'system', content: 'You are an AI assistant. Summarize the following conversation in 2-3 short sentences highlighting the key points discussed.' },
-              { role: 'user', content: transcriptText }
-            ],
-            temperature: 0.3,
-            max_tokens: 200
-          })
-        });
-        const data = await res.json() as any;
-        if (data.choices && data.choices.length > 0) {
-           summary = data.choices[0].message.content;
-        }
+        
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        
+        const prompt = `You are an AI assistant. Summarize the following conversation in 2-3 short sentences highlighting the key points discussed:\n\n${transcriptText}`;
+        const result = await model.generateContent(prompt);
+        summary = result.response.text();
       }
     } catch (err) {
-      console.error('Summary generation error', err);
+      console.error('AI Summary Error:', err);
+      summary = 'Failed to generate summary.';
     }
 
     return await prisma.voiceCallLog.update({

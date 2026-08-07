@@ -35,6 +35,10 @@ export function BrowserCall() {
     try {
       const res = await publicApi.get(`/voice-agent/public/calls/${id}`);
       setCallInfo(res.data.data);
+      // Wait for a short moment then ask AI to initiate
+      setTimeout(() => {
+        handleUserSpeak('[SYSTEM_INIT_CALL]');
+      }, 500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load call session. It may have expired or ended.');
     } finally {
@@ -72,7 +76,9 @@ export function BrowserCall() {
   };
 
   const handleUserSpeak = async (text: string) => {
-    setTranscript(prev => [...prev, { role: 'user', text }]);
+    if (text !== '[SYSTEM_INIT_CALL]') {
+      setTranscript(prev => [...prev, { role: 'user', text }]);
+    }
     
     try {
       setIsSpeaking(true);
