@@ -71,4 +71,22 @@ export class VoiceAgentController extends BaseController {
     const log = await this.voiceService.getCallTranscript(context, req.params.id as string);
     res.json({ data: log });
   });
+
+  // --- Public Browser Calling Methods ---
+
+  getPublicCallInfo = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const log = await this.voiceService.getPublicCallInfo(req.params.id as string);
+    res.json({ data: log });
+  });
+
+  publicInteract = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { message } = req.body;
+    const response = await this.voiceService.publicInteract(req.params.id as string, message);
+    res.json({ data: response });
+  });
+
+  endCallPublic = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const log = await this.voiceService.endCallPublic(req.params.id as string);
+    res.json({ data: log, message: 'Call ended and summarized successfully' });
+  });
 }

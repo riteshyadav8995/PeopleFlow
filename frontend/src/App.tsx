@@ -92,6 +92,7 @@ import JobDetails from './pages/public/JobDetails';
 import CandidateAuth from './pages/public/CandidateAuth';
 import CandidateDashboard from './pages/public/CandidateDashboard';
 import { useAuthStore } from './store/auth.store';
+import { BrowserCall } from './pages/public/BrowserCall';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -159,6 +160,7 @@ export default function App() {
 
         {/* Unauthenticated Public Pages */}
         <Route path="/careers" element={<CareersPage />} />
+        <Route path="/public/call/:id" element={<BrowserCall />} />
 
         {/* Public Candidate Portal */}
         <Route element={<PublicLayout />}>

@@ -71,6 +71,7 @@ export function RecruitmentDashboard() {
   const [candidateToCall, setCandidateToCall] = useState<Application | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState('');
   const [calling, setCalling] = useState(false);
+  const [callMethod, setCallMethod] = useState<'MOBILE' | 'BROWSER'>('BROWSER');
 
   const [activeJobMenu, setActiveJobMenu] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -136,9 +137,11 @@ export function RecruitmentDashboard() {
     try {
       await api.post('/voice-agent/calls', {
         campaignId: selectedCampaignId,
-        phoneNumber: candidateToCall.candidate.phone || ''
+        candidateId: candidateToCall.candidate.id,
+        phoneNumber: callMethod === 'MOBILE' ? candidateToCall.candidate.phone : undefined,
+        callMethod
       });
-      alert('Call initiated successfully! The AI Agent is calling the candidate.');
+      alert(callMethod === 'BROWSER' ? 'Call initiated! An email link has been sent to the candidate.' : 'Call initiated successfully! The AI Agent is calling the candidate.');
       setIsAICallModalOpen(false);
       setCandidateToCall(null);
     } catch (error) {
@@ -827,18 +830,33 @@ export function RecruitmentDashboard() {
                   No AI Voice Campaigns found. Please create one in the Voice Agent dashboard first.
                 </div>
               ) : (
-                <div className="form-group">
-                  <label className="form-label">Select Voice Campaign</label>
-                  <select 
-                    className="form-select" 
-                    value={selectedCampaignId} 
-                    onChange={e => setSelectedCampaignId(e.target.value)}
-                  >
-                    {campaigns.map(camp => (
-                      <option key={camp.id} value={camp.id}>{camp.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label className="form-label">Select Voice Campaign</label>
+                    <select 
+                      className="form-select" 
+                      value={selectedCampaignId} 
+                      onChange={e => setSelectedCampaignId(e.target.value)}
+                    >
+                      {campaigns.map(camp => (
+                        <option key={camp.id} value={camp.id}>{camp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Call Method</label>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexDirection: 'column' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                        <input type="radio" name="callMethod" checked={callMethod === 'BROWSER'} onChange={() => setCallMethod('BROWSER')} style={{ width: '16px', height: '16px' }} />
+                        Call via Browser (Sends Email Link)
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                        <input type="radio" name="callMethod" checked={callMethod === 'MOBILE'} onChange={() => setCallMethod('MOBILE')} style={{ width: '16px', height: '16px' }} />
+                        Call on Mobile (Exotel Voice)
+                      </label>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
             <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '1rem', background: 'var(--gray-50)' }}>

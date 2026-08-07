@@ -1106,6 +1106,7 @@ model VoiceCallLog {
   candidateId String?  @map("candidate_id")
   employeeId  String?  @map("employee_id")
   status      String   @default("COMPLETED") // IN_PROGRESS | COMPLETED | FAILED
+  callMethod  String   @default("MOBILE") // MOBILE | BROWSER
   duration    Int      @default(0) // seconds
   summary     String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")

@@ -3,6 +3,7 @@ import { ServiceContext } from '../../core/interfaces/service-context.interface'
 import { AppError } from '../../core/errors/app.error';
 import { prisma } from '../../core/base/base.model';
 import { appConfig } from '../../config';
+import { emailService } from '../../integrations/email/email.service';
 
 export class VoiceAgentService extends BaseService {
   
@@ -34,27 +35,84 @@ export class VoiceAgentService extends BaseService {
     });
   }
 
-  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string }) {
+  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string, callMethod?: string }) {
     const campaign = await prisma.voiceCampaign.findUnique({
       where: { id: data.campaignId, tenantId: context.tenantId },
       include: { configurations: true }
     });
 
     if (!campaign) throw new AppError('Campaign not found', 404);
+    
+    const callMethod = data.callMethod || (data.phoneNumber ? 'MOBILE' : 'BROWSER');
+
+    let resolvedCandidateId = data.candidateId;
+    if (resolvedCandidateId) {
+       const isCandidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
+       if (!isCandidate) {
+          const isUserCandidate = await prisma.candidate.findFirst({ where: { userId: resolvedCandidateId } });
+          if (isUserCandidate) {
+             resolvedCandidateId = isUserCandidate.id;
+          } else {
+             const user = await prisma.user.findUnique({ where: { id: resolvedCandidateId } });
+             if (user) {
+                const jobApp = await prisma.jobApplication.findFirst({
+                   where: { candidateId: user.id },
+                   include: { job: true }
+                });
+                const orgId = jobApp?.job?.organizationId || context.tenantId;
+                const newCandidate = await prisma.candidate.create({
+                   data: {
+                      tenantId: context.tenantId,
+                      organizationId: orgId,
+                      userId: user.id,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      email: user.email,
+                      phone: user.phone || ''
+                   }
+                });
+                resolvedCandidateId = newCandidate.id;
+             } else {
+                resolvedCandidateId = undefined;
+             }
+          }
+       }
+    }
 
     const callLog = await prisma.voiceCallLog.create({
       data: {
         tenantId: context.tenantId,
         campaignId: data.campaignId,
-        candidateId: data.candidateId,
+        candidateId: resolvedCandidateId,
         employeeId: data.employeeId,
-        status: 'IN_PROGRESS'
+        status: 'IN_PROGRESS',
+        callMethod
       },
       include: { campaign: { include: { configurations: true } } }
     });
 
-    // If phoneNumber is provided, dial out via Exotel
-    if (data.phoneNumber) {
+    if (callMethod === 'BROWSER') {
+       let recipientEmail = '';
+       let recipientName = 'User';
+       if (resolvedCandidateId) {
+          const candidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
+          if (candidate) { recipientEmail = candidate.email; recipientName = candidate.firstName; }
+       } else if (data.employeeId) {
+          const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
+          if (employee) { recipientEmail = employee.email; recipientName = employee.firstName; }
+       }
+       if (recipientEmail) {
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+          const callLink = `${frontendUrl}/public/call/${callLog.id}`;
+          const html = `
+             <h2>Hi ${recipientName},</h2>
+             <p>You have been invited to an AI-powered voice session for: <b>${campaign.name}</b>.</p>
+             <p>Please click the link below to join the call in your browser. Ensure your microphone is ready.</p>
+             <a href="${callLink}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;">Join Call Now</a>
+          `;
+          await emailService.sendEmail(recipientEmail, 'AI Voice Session: ' + campaign.name, html);
+       }
+    } else if (data.phoneNumber) {
       try {
         const exotelApiKey = process.env.EXOTEL_API_KEY;
         const exotelApiToken = process.env.EXOTEL_API_TOKEN;
@@ -222,5 +280,80 @@ export class VoiceAgentService extends BaseService {
 
     if (!log) throw new AppError('Call log not found', 404);
     return log;
+  }
+
+  // --- Public Browser Calling Methods ---
+
+  async getPublicCallInfo(callLogId: string) {
+    const log = await prisma.voiceCallLog.findUnique({
+      where: { id: callLogId },
+      include: {
+        campaign: true,
+        candidate: true,
+        employee: true
+      }
+    });
+    if (!log) throw new AppError('Call session not found', 404);
+    if (log.status !== 'IN_PROGRESS') throw new AppError('Call session has ended or failed', 400);
+    return log;
+  }
+
+  async publicInteract(callLogId: string, userMessage: string) {
+    const callLog = await prisma.voiceCallLog.findUnique({
+      where: { id: callLogId }
+    });
+    if (!callLog) throw new AppError('Call session not found', 404);
+    if (callLog.status !== 'IN_PROGRESS') throw new AppError('Call session is not active', 400);
+
+    const dummyContext: any = { tenantId: callLog.tenantId };
+    return await this.generateAIResponse(dummyContext, callLogId, userMessage);
+  }
+
+  async endCallPublic(callLogId: string) {
+    const callLog = await prisma.voiceCallLog.findUnique({
+      where: { id: callLogId },
+      include: {
+        transcripts: { orderBy: { createdAt: 'asc' } },
+        campaign: { include: { configurations: true } }
+      }
+    });
+    if (!callLog) throw new AppError('Call session not found', 404);
+    
+    let summary = 'No summary generated.';
+    try {
+      const apiKey = process.env.GROQ_API_KEY || 'dummy';
+      if (apiKey === 'dummy') {
+        summary = 'Simulated summary: The call concluded successfully. This is a placeholder since a valid API key was not provided.';
+      } else {
+        const transcriptText = callLog.transcripts.map(t => `${t.role}: ${t.message}`).join('\n');
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'llama3-8b-8192',
+            messages: [
+              { role: 'system', content: 'You are an AI assistant. Summarize the following conversation in 2-3 short sentences highlighting the key points discussed.' },
+              { role: 'user', content: transcriptText }
+            ],
+            temperature: 0.3,
+            max_tokens: 200
+          })
+        });
+        const data = await res.json() as any;
+        if (data.choices && data.choices.length > 0) {
+           summary = data.choices[0].message.content;
+        }
+      }
+    } catch (err) {
+      console.error('Summary generation error', err);
+    }
+
+    return await prisma.voiceCallLog.update({
+      where: { id: callLogId },
+      data: { status: 'COMPLETED', summary }
+    });
   }
 }
