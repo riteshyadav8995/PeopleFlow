@@ -105,7 +105,7 @@ export function CallTranscriptView() {
   if (!callLog) {
     return (
       <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
-        <Activity className="animate-spin text-brand-500" style={{ marginRight: '0.5rem' }} /> Loading Call Session...
+        Loading Call Session...
       </div>
     );
   }

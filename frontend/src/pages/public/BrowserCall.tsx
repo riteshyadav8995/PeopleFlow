@@ -135,7 +135,7 @@ export function BrowserCall() {
     }
   };
 
-  if (loading) return <div className="call-container centered"><Activity className="animate-spin text-brand" size={32} /></div>;
+  if (loading) return <div className="call-container centered">Loading...</div>;
   if (error) return <div className="call-container centered"><p className="error-text">{error}</p></div>;
   if (!callInfo) return null;
 

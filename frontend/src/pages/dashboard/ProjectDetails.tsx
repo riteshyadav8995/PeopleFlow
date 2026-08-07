@@ -155,7 +155,7 @@ export function ProjectDetails() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-secondary flex items-center justify-center gap-3"><Activity className="animate-spin text-brand-500" /> Loading Kanban Board...</div>;
+  if (isLoading) return <div className="p-8 text-secondary flex items-center justify-center gap-3">Loading Kanban Board...</div>;
   if (!project) return <div className="p-8 text-danger">Project not found</div>;
 
   const columns = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];

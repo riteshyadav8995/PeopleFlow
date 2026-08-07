@@ -114,7 +114,7 @@ export function VoiceAgentDashboard() {
   if (isLoading) {
     return (
       <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
-        <Activity className="animate-spin text-brand-500" style={{ marginRight: '0.5rem' }} /> Loading Voice AI...
+        Loading Voice AI...
       </div>
     );
   }
