@@ -27,6 +27,7 @@ interface Application {
   id: string;
   stage: string;
   candidate: {
+    id: string;
     firstName: string;
     lastName: string;
     email: string;

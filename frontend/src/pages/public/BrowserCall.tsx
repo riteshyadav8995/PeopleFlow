@@ -43,7 +43,7 @@ export function BrowserCall() {
   };
 
   const initSpeech = () => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setError('Your browser does not support Web Speech API. Please use Chrome or Edge.');
       return;

@@ -16,6 +16,7 @@ interface CallLog {
   status: string;
   campaign: { name: string; type: string };
   transcripts: Transcript[];
+  summary?: string;
 }
 
 export function CallTranscriptView() {
