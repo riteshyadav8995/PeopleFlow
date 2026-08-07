@@ -18,6 +18,7 @@ interface Campaign {
 export function VoiceAgentDashboard() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [testModal, setTestModal] = useState<{isOpen: boolean, campaignId: string | null}>({ isOpen: false, campaignId: null });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,10 +57,8 @@ export function VoiceAgentDashboard() {
     }
   };
 
-  const startTestCall = async (campaignId: string) => {
+  const executeTestCall = async (campaignId: string, phoneNumber: string | null) => {
     try {
-      const phoneNumber = window.prompt("Enter phone number to call (with country code, e.g. +919876543210). Leave blank to test in browser:");
-      
       const res = await api.post('/voice-agent/calls', { 
         campaignId, 
         phoneNumber: phoneNumber ? phoneNumber.trim() : undefined 
@@ -192,14 +191,14 @@ export function VoiceAgentDashboard() {
             </div>
 
             <div className="campaign-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button variant="secondary" onClick={() => editCampaign(campaign)} style={{ flex: 1, justifyContent: 'center' }}>
+              <Button variant="secondary" onClick={() => editCampaign(campaign)} style={{ flex: 1, justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
                  Edit
               </Button>
-              <Button variant="danger" onClick={() => deleteCampaign(campaign.id)} style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ef4444', color: 'white', border: 'none' }}>
+              <Button variant="danger" onClick={() => deleteCampaign(campaign.id)} style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
                  Delete
               </Button>
-              <Button variant="primary" className="btn-test-call" onClick={() => startTestCall(campaign.id)} style={{ flex: 1.5, justifyContent: 'center' }}>
-                <Mic size={16} style={{ marginRight: '0.25rem' }} /> Test Call
+              <Button variant="primary" className="btn-test-call" onClick={() => setTestModal({isOpen: true, campaignId: campaign.id})} style={{ flex: 1.5, justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
+                <Mic size={14} style={{ marginRight: '0.25rem' }} /> Test Call
               </Button>
             </div>
           </div>
@@ -216,6 +215,29 @@ export function VoiceAgentDashboard() {
           </div>
         )}
       </div>
+
+      {testModal.isOpen && testModal.campaignId && (
+        <div className="modal-overlay" onClick={() => setTestModal({isOpen: false, campaignId: null})} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ padding: '2rem', borderRadius: '1rem', background: 'var(--bg-primary)', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 600 }}>How would you like to test?</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <Button variant="primary" onClick={() => {
+                const phone = prompt('Enter mobile number with country code (e.g. +919876543210):');
+                if (phone) executeTestCall(testModal.campaignId, phone);
+                setTestModal({isOpen: false, campaignId: null});
+              }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
+                <PhoneCall size={18} style={{ marginRight: '0.5rem' }} /> Test on Mobile Number
+              </Button>
+              <Button variant="secondary" onClick={() => {
+                executeTestCall(testModal.campaignId, null);
+                setTestModal({isOpen: false, campaignId: null});
+              }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
+                <Mic size={18} style={{ marginRight: '0.5rem' }} /> Test in Browser
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

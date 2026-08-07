@@ -243,21 +243,31 @@ export class VoiceAgentService extends BaseService {
            systemInstruction: systemPrompt 
         });
 
-        const history = callLog.transcripts.map(t => ({
-          role: t.role.toLowerCase() === 'ai' ? 'model' : 'user',
-          parts: [{ text: t.message }]
-        }));
+        const rawHistory = callLog.transcripts.reduce((acc: any[], t) => {
+          const role = t.role.toLowerCase() === 'ai' ? 'model' : 'user';
+          if (acc.length > 0 && acc[acc.length - 1].role === role) {
+            acc[acc.length - 1].parts[0].text += '\n' + t.message;
+          } else {
+            acc.push({ role, parts: [{ text: t.message }] });
+          }
+          return acc;
+        }, []);
 
         let promptText = userMessage;
         if (userMessage === '[SYSTEM_INIT_CALL]') {
            promptText = "You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.";
-        } else if (history.length > 0 && history[history.length - 1].role === 'user') {
-           // We just saved this userMessage to DB, so it's in history. 
-           // Gemini expects us to pass the new message via sendMessage(), so we must remove it from the historical context.
-           history.pop();
         }
 
-        const chat = model.startChat({ history });
+        if (rawHistory.length > 0 && rawHistory[rawHistory.length - 1].role === 'user') {
+           const lastUser = rawHistory.pop();
+           if (userMessage !== '[SYSTEM_INIT_CALL]') {
+               promptText = lastUser.parts[0].text;
+           } else {
+               promptText = lastUser.parts[0].text + '\n' + promptText;
+           }
+        }
+
+        const chat = model.startChat({ history: rawHistory });
         const result = await chat.sendMessage(promptText);
         aiResponseText = result.response.text();
       }
