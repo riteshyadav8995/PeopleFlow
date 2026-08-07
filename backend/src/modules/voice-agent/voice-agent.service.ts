@@ -12,7 +12,8 @@ export class VoiceAgentService extends BaseService {
     return await prisma.voiceCampaign.findMany({
       where: { tenantId: context.tenantId },
       include: {
-        _count: { select: { callLogs: true } }
+        _count: { select: { callLogs: true } },
+        configurations: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -34,6 +35,37 @@ export class VoiceAgentService extends BaseService {
         }
       }
     });
+  }
+
+  async updateCampaign(context: ServiceContext, campaignId: string, data: any) {
+    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId }});
+    if (!campaign) throw new AppError('Campaign not found', 404);
+
+    return await prisma.voiceCampaign.update({
+      where: { id: campaignId },
+      data: {
+        name: data.name,
+        description: data.description,
+        type: data.type,
+        configurations: {
+          updateMany: {
+            where: { campaignId },
+            data: {
+              systemPrompt: data.systemPrompt,
+              voiceSettings: data.voiceSettings
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async deleteCampaign(context: ServiceContext, campaignId: string) {
+    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId }});
+    if (!campaign) throw new AppError('Campaign not found', 404);
+
+    await prisma.voiceCampaign.delete({ where: { id: campaignId } });
+    return { success: true };
   }
 
   async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string, callMethod?: string }) {
@@ -178,8 +210,10 @@ export class VoiceAgentService extends BaseService {
   }
 
   async generateAIResponse(context: ServiceContext, callLogId: string, userMessage: string) {
-    // 1. Save user message to transcript
-    await this.saveTranscript(context, callLogId, 'USER', userMessage);
+    // 1. Save user message to transcript ONLY if it's not a system init
+    if (userMessage !== '[SYSTEM_INIT_CALL]') {
+      await this.saveTranscript(context, callLogId, 'USER', userMessage);
+    }
 
     // 2. Fetch full transcript and system prompt
     const callLog = await prisma.voiceCallLog.findUnique({
@@ -217,6 +251,10 @@ export class VoiceAgentService extends BaseService {
         let promptText = userMessage;
         if (userMessage === '[SYSTEM_INIT_CALL]') {
            promptText = "You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.";
+        } else if (history.length > 0 && history[history.length - 1].role === 'user') {
+           // We just saved this userMessage to DB, so it's in history. 
+           // Gemini expects us to pass the new message via sendMessage(), so we must remove it from the historical context.
+           history.pop();
         }
 
         const chat = model.startChat({ history });
@@ -289,11 +327,6 @@ export class VoiceAgentService extends BaseService {
     if (callLog.status !== 'IN_PROGRESS') throw new AppError('Call session is not active', 400);
 
     const dummyContext: any = { tenantId: callLog.tenantId };
-    
-    if (userMessage !== '[SYSTEM_INIT_CALL]') {
-      await this.saveTranscript(dummyContext, callLogId, 'USER', userMessage);
-    }
-    
     return await this.generateAIResponse(dummyContext, callLogId, userMessage);
   }
 

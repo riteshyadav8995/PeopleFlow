@@ -12,6 +12,7 @@ interface Campaign {
   status: string;
   _count?: { callLogs: number };
   createdAt: string;
+  configurations?: Array<{ systemPrompt: string, voiceSettings?: any }>;
 }
 
 export function VoiceAgentDashboard() {
@@ -73,6 +74,41 @@ export function VoiceAgentDashboard() {
     } catch (error) {
       console.error('Failed to start call', error);
       alert('Failed to start call');
+    }
+  };
+
+  const editCampaign = async (campaign: Campaign) => {
+    const newName = prompt('Edit Campaign Name:', campaign.name);
+    if (newName === null) return;
+    
+    const currentPrompt = campaign.configurations && campaign.configurations.length > 0 
+      ? campaign.configurations[0].systemPrompt 
+      : 'You are a helpful AI HR assistant.';
+    
+    const newPrompt = prompt('Edit AI System Prompt:', currentPrompt);
+    if (newPrompt === null) return;
+
+    try {
+      await api.put(`/voice-agent/campaigns/${campaign.id}`, {
+        name: newName,
+        systemPrompt: newPrompt,
+        type: campaign.type
+      });
+      fetchCampaigns();
+    } catch (error) {
+      console.error('Failed to update campaign', error);
+      alert('Failed to update campaign');
+    }
+  };
+
+  const deleteCampaign = async (campaignId: string) => {
+    if (!window.confirm('Are you sure you want to delete this campaign?')) return;
+    try {
+      await api.delete(`/voice-agent/campaigns/${campaignId}`);
+      fetchCampaigns();
+    } catch (error) {
+      console.error('Failed to delete campaign', error);
+      alert('Failed to delete campaign');
     }
   };
 
@@ -155,12 +191,15 @@ export function VoiceAgentDashboard() {
                </div>
             </div>
 
-            <div className="campaign-actions">
-              {/* <Button variant="secondary" onClick={() => navigate(`/voice-agent/campaigns/${campaign.id}/logs`)} style={{ flex: 1, justifyContent: 'center' }}>
-                <History size={16} style={{ marginRight: '0.5rem' }} /> Logs
-              </Button> */}
-              <Button variant="primary" className="btn-test-call" onClick={() => startTestCall(campaign.id)} style={{ flex: 1, justifyContent: 'center' }}>
-                <Mic size={16} style={{ marginRight: '0.5rem' }} /> Test Call
+            <div className="campaign-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+              <Button variant="secondary" onClick={() => editCampaign(campaign)} style={{ flex: 1, justifyContent: 'center' }}>
+                 Edit
+              </Button>
+              <Button variant="danger" onClick={() => deleteCampaign(campaign.id)} style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ef4444', color: 'white', border: 'none' }}>
+                 Delete
+              </Button>
+              <Button variant="primary" className="btn-test-call" onClick={() => startTestCall(campaign.id)} style={{ flex: 1.5, justifyContent: 'center' }}>
+                <Mic size={16} style={{ marginRight: '0.25rem' }} /> Test Call
               </Button>
             </div>
           </div>

@@ -40,7 +40,21 @@ export class VoiceAgentController extends BaseController {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
     const campaign = await this.voiceService.createCampaign(context, req.body);
-    res.status(201).json({ data: campaign, message: 'Campaign created successfully' });
+    res.status(201).json({ data: campaign, message: 'Voice campaign created successfully' });
+  });
+
+  updateCampaign = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const campaign = await this.voiceService.updateCampaign(context, req.params.id as string, req.body);
+    res.json({ data: campaign, message: 'Voice campaign updated successfully' });
+  });
+
+  deleteCampaign = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    await this.voiceService.deleteCampaign(context, req.params.id as string);
+    res.json({ message: 'Voice campaign deleted successfully' });
   });
 
   startCall = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {

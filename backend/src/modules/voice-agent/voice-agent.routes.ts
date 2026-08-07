@@ -21,6 +21,8 @@ router.use(authenticationMiddleware, tenantMiddleware);
 // Campaigns
 router.get('/campaigns', authorize('voice.campaign.read'), controller.getCampaigns);
 router.post('/campaigns', authorize('voice.campaign.create'), controller.createCampaign);
+router.put('/campaigns/:id', authorize('voice.campaign.update'), controller.updateCampaign);
+router.delete('/campaigns/:id', authorize('voice.campaign.delete'), controller.deleteCampaign);
 
 // Calls
 router.get('/calls', authorize('voice.call.read'), controller.getCallLogs);
