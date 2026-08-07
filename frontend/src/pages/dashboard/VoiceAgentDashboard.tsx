@@ -223,13 +223,13 @@ export function VoiceAgentDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Button variant="primary" onClick={() => {
                 const phone = prompt('Enter mobile number with country code (e.g. +919876543210):');
-                if (phone) executeTestCall(testModal.campaignId, phone);
+                if (phone) executeTestCall(testModal.campaignId!, phone);
                 setTestModal({isOpen: false, campaignId: null});
               }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
                 <PhoneCall size={18} style={{ marginRight: '0.5rem' }} /> Test on Mobile Number
               </Button>
               <Button variant="secondary" onClick={() => {
-                executeTestCall(testModal.campaignId, null);
+                executeTestCall(testModal.campaignId!, null);
                 setTestModal({isOpen: false, campaignId: null});
               }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
                 <Mic size={18} style={{ marginRight: '0.5rem' }} /> Test in Browser
