@@ -160,8 +160,7 @@ export function DashboardLayout() {
         subItems: [
           { path: '/employee/attendance/my', label: 'My Attendance' },
           { path: '/employee/attendance/corrections', label: 'Attendance Corrections' },
-          { path: '/employee/attendance/history', label: 'Attendance History' },
-          { path: '/employee/attendance/shifts', label: 'Shift Schedule' }
+          { path: '/employee/attendance/history', label: 'Attendance History' }
         ]
       },
       {
@@ -182,7 +181,6 @@ export function DashboardLayout() {
         subItems: [
           { path: '/employee/payroll/payslips', label: 'Payslips' },
           { path: '/employee/payroll/structure', label: 'Salary Structure' },
-          { path: '/employee/payroll/tax', label: 'Tax Documents' },
           { path: '/employee/payroll/reimbursements', label: 'Reimbursements' }
         ]
       },
@@ -219,26 +217,7 @@ export function DashboardLayout() {
           { path: '/employee/expenses/claim', label: 'Claim Expense' },
           { path: '/employee/expenses/history', label: 'Expense History' }
         ]
-      },
-      {
-        path: '#',
-        label: 'AI Assistant',
-        icon: Bot,
-        subItems: [
-          { path: '/employee/ai/voice', label: 'AI Voice Agent' },
-          { path: '/employee/ai/hr', label: 'HR Assistant' }
-        ]
-      },
-      {
-        path: '#',
-        label: 'Help',
-        icon: LifeBuoy,
-        subItems: [
-          { path: '/employee/help/tickets', label: 'Support Tickets' },
-          { path: '/employee/help/policies', label: 'Company Policies' },
-          { path: '/employee/help/knowledge', label: 'Knowledge Base' }
-        ]
-      },
+      }
     ];
   };
 
@@ -372,33 +351,13 @@ export function DashboardLayout() {
       },
       {
         path: '#',
-        label: 'AI Assistant',
-        icon: Bot,
-        subItems: [
-          { path: '/employee/ai/voice', label: 'AI Voice Agent' },
-          { path: '/employee/ai/hr', label: 'HR Assistant' }
-        ]
-      },
-      {
-        path: '#',
         label: 'Reports',
         icon: BarChart3,
         subItems: [
           { path: '/employee/manager/reports/team', label: 'Team Reports' },
-          { path: '/employee/manager/reports/attendance', label: 'Attendance Reports' },
-          { path: '/employee/manager/reports/leave', label: 'Leave Reports' },
-          { path: '/employee/manager/reports/productivity', label: 'Productivity Reports' }
+          { path: '/employee/manager/reports/attendance', label: 'Attendance Reports' }
         ]
-      },
-      {
-        path: '#',
-        label: 'Help',
-        icon: HelpCircle,
-        subItems: [
-          { path: '/employee/help/tickets', label: 'Support' },
-          { path: '/employee/help/policies', label: 'Company Policies' }
-        ]
-      },
+      }
     ];
   };
 

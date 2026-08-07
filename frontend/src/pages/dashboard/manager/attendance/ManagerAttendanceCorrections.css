@@ -1,0 +1,154 @@
+/* ManagerAttendanceCorrections.css */
+
+.mac-page-container {
+  animation: macFadeIn 0.4s ease-out;
+  max-width: 72rem; /* reduced from max-w-7xl to make it a bit smaller */
+  margin: 0 auto;
+}
+
+.mac-header {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  margin-bottom: 1.5rem;
+}
+
+.mac-page-title {
+  background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.mac-page-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Premium Table */
+.mac-table-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+}
+
+.mac-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.mac-table thead tr {
+  background: #f8fafc;
+}
+
+.mac-table th {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mac-table-row {
+  transition: all 0.2s ease;
+  animation: macRowSlideIn 0.3s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.mac-table-row:hover {
+  background-color: #f8fafc;
+  transform: scale(1.001);
+}
+
+.mac-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.mac-table-row:last-child td {
+  border-bottom: none;
+}
+
+/* Status Badges */
+.mac-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+  width: max-content;
+}
+
+.mac-status-badge.success {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+.mac-status-badge.danger {
+  background: #fef2f2;
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+.mac-status-badge.warning {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+/* Action Buttons */
+.mac-btn-action {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mac-btn-action:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.mac-btn-action.approve:hover {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.mac-btn-action.reject:hover {
+  background: #fef2f2;
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+
+@keyframes macFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes macRowSlideIn {
+  to { opacity: 1; transform: translateY(0); }
+}

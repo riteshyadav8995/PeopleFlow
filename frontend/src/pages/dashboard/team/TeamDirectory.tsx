@@ -10,6 +10,7 @@ export function TeamDirectory() {
   const { user } = useAuthStore();
   const organizationId = user?.organizationId;
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
   // Fetch all employees in the organization for the directory
   const { data: directory, isLoading } = useQuery({
@@ -80,11 +81,14 @@ export function TeamDirectory() {
                   <tr key={emp.id}>
                     <td>
                       <div className="employee-cell">
-                        <div className="employee-avatar">
-                          {emp.firstName?.charAt(0)}{emp.lastName?.charAt(0)}
-                        </div>
                         <div>
-                          <div className="employee-name">{emp.firstName} {emp.lastName}</div>
+                          <div 
+                            className="employee-name" 
+                            style={{ cursor: 'pointer', color: 'var(--brand-600)', textDecoration: 'underline' }}
+                            onClick={() => setSelectedEmployee(emp)}
+                          >
+                            {emp.firstName} {emp.lastName}
+                          </div>
                           <div className="employee-id">ID: {emp.employeeCode}</div>
                         </div>
                       </div>
@@ -120,6 +124,48 @@ export function TeamDirectory() {
           </div>
         )}
       </div>
+
+      {selectedEmployee && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#0f172a' }}>
+              Employee Details
+              <button onClick={() => setSelectedEmployee(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+            </h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Name</div>
+                <div style={{ fontWeight: 600, fontSize: '1.125rem', color: '#1e293b' }}>{selectedEmployee.firstName} {selectedEmployee.lastName}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Employee ID</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.employeeCode}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Email</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.email}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Phone</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.phone || '-'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Role</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.designation?.title || '-'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Department</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.department?.name || '-'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>Location</div>
+                <div style={{ color: '#334155' }}>{selectedEmployee.branch?.name || '-'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

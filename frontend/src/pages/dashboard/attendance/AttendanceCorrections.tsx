@@ -58,13 +58,13 @@ export function AttendanceCorrections() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="ac-page-container p-8 max-w-7xl mx-auto">
+      <div className="ac-header flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-heading">Attendance Corrections</h1>
-          <p className="text-subtle mt-1">Submit and track your attendance punch corrections.</p>
+          <h1 className="ac-page-title text-3xl font-bold">Attendance Corrections</h1>
+          <p className="ac-page-subtitle text-subtle mt-2">Submit and track your attendance punch corrections.</p>
         </div>
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+        <Button variant="primary" onClick={() => setIsModalOpen(true)} className="ac-btn-raise">
           <Plus size={18} className="mr-2" />
           Raise Correction
         </Button>
@@ -77,30 +77,35 @@ export function AttendanceCorrections() {
           ) : corrections.length === 0 ? (
             <div className="text-center py-10 text-subtle">You have no correction requests.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="ac-table-container">
+              <table className="ac-table w-full text-left">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="pb-3 text-sm font-semibold text-subtle">Date</th>
-                    <th className="pb-3 text-sm font-semibold text-subtle">Requested Time</th>
-                    <th className="pb-3 text-sm font-semibold text-subtle">Reason</th>
-                    <th className="pb-3 text-sm font-semibold text-subtle">Status</th>
-                    <th className="pb-3 text-sm font-semibold text-subtle">Submitted On</th>
+                  <tr>
+                    <th>Date</th>
+                    <th>Requested Time</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Submitted On</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {corrections.map((corr: any) => (
-                    <tr key={corr.id} className="border-b border-border last:border-0">
-                      <td className="py-4 text-body font-medium">
-                        {new Date(corr.date).toLocaleDateString()}
+                  {corrections.map((corr: any, idx: number) => (
+                    <tr key={corr.id} className="ac-table-row" style={{ animationDelay: `${idx * 0.05}s` }}>
+                      <td className="font-medium text-primary">
+                        <div className="flex items-center gap-2">
+                          <Clock size={16} className="text-brand-500" />
+                          {new Date(corr.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </div>
                       </td>
-                      <td className="py-4 text-body">
-                        <div>In: {new Date(corr.requestedClockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                        {corr.requestedClockOut && <div>Out: {new Date(corr.requestedClockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>}
+                      <td>
+                        <div className="ac-time-block">
+                          <span className="ac-time-in">In: {new Date(corr.requestedClockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {corr.requestedClockOut && <span className="ac-time-out">Out: {new Date(corr.requestedClockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+                        </div>
                       </td>
-                      <td className="py-4 text-body max-w-xs truncate" title={corr.reason}>{corr.reason}</td>
-                      <td className="py-4">{getStatusBadge(corr.status)}</td>
-                      <td className="py-4 text-subtle text-sm">{new Date(corr.createdAt).toLocaleDateString()}</td>
+                      <td className="max-w-xs truncate" title={corr.reason}>{corr.reason}</td>
+                      <td>{getStatusBadge(corr.status)}</td>
+                      <td className="text-subtle text-sm">{new Date(corr.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>

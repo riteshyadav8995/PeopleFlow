@@ -123,3 +123,122 @@
   from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* Premium Page Layout */
+.ac-page-container {
+  animation: acFadeIn 0.4s ease-out;
+}
+
+.ac-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.ac-page-title {
+  background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.ac-btn-raise {
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 9999px;
+  padding: 0.6rem 1.5rem;
+}
+
+.ac-btn-raise:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+}
+
+/* Premium Table */
+.ac-table-container {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+}
+
+.ac-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.ac-table thead tr {
+  background: #f8fafc;
+}
+
+.ac-table th {
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ac-table-row {
+  transition: all 0.2s ease;
+  animation: acRowSlideIn 0.3s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.ac-table-row:hover {
+  background-color: #f8fafc;
+  transform: scale(1.001);
+}
+
+.ac-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.ac-table-row:last-child td {
+  border-bottom: none;
+}
+
+/* Time Block */
+.ac-time-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ac-time-in, .ac-time-out {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  font-family: monospace;
+  width: max-content;
+}
+
+.ac-time-in {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.ac-time-out {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
+
+@keyframes acFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes acRowSlideIn {
+  to { opacity: 1; transform: translateY(0); }
+}
