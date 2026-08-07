@@ -102,7 +102,7 @@ export class VoiceAgentService extends BaseService {
           if (employee) { recipientEmail = employee.email; recipientName = employee.firstName; }
        }
        if (recipientEmail) {
-          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+          const frontendUrl = process.env.FRONTEND_URL || 'https://people-flow-rose.vercel.app';
           const callLink = `${frontendUrl}/public/call/${callLog.id}`;
           const html = `
              <h2>Hi ${recipientName},</h2>
