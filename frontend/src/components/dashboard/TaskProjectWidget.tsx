@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export function TaskProjectWidget({ stats }: { stats: { pendingTasks: number, activeProjects: number } }) {
   return (
-    <div className="grid grid-cols-2 gap-6 h-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 h-full">
       <Link 
         to="/employee/work/tasks"
         className="card"

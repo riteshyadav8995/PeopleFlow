@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Building2, Briefcase, UserPlus,
   Clock, Calendar, LayoutTemplate, DollarSign,
   Mic, Search, FileText, ChevronDown, UserCircle,
-  MonitorSmartphone, CreditCard, Bot, LifeBuoy, Map, LogOut, Settings, X, ArrowLeft, LayoutGrid, Bell, CheckSquare, Target, Users2, BarChart3, HelpCircle, Check
+  MonitorSmartphone, CreditCard, Bot, LifeBuoy, Map, LogOut, Settings, X, ArrowLeft, LayoutGrid, Bell, CheckSquare, Target, Users2, BarChart3, HelpCircle, Check, Menu
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useState, useRef, useEffect } from 'react';
@@ -28,6 +28,7 @@ export function DashboardLayout() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -415,8 +416,11 @@ export function DashboardLayout() {
 
   return (
     <div className="dashboard-layout">
+      {isMobileSidebarOpen && (
+        <div className="sidebar-mobile-overlay" onClick={() => setIsMobileSidebarOpen(false)} />
+      )}
       {/* Sidebar */}
-      <aside className={`sidebar ${isAppDrawerOpen ? 'app-drawer-open' : ''}`}>
+      <aside className={`sidebar ${isAppDrawerOpen ? 'app-drawer-open' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
         {!isAppDrawerOpen ? (
           <>
             <div className="sidebar-header">
@@ -635,6 +639,9 @@ export function DashboardLayout() {
       <main className="main-content">
         {/* Top Header - Simplified (profile moved to sidebar) */}
         <header className="topbar">
+          <button className="mobile-menu-btn" onClick={() => setIsMobileSidebarOpen(true)}>
+            <Menu size={24} />
+          </button>
         </header>
 
         {/* Page Content */}

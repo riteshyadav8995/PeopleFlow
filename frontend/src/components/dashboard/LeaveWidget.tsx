@@ -22,7 +22,7 @@ export function LeaveWidget({ balances, holidays }: { balances: any[]; holidays:
         <div>
           <h4 className="text-xs uppercase tracking-wider text-subtle font-semibold mb-3">Balances</h4>
           {balances && balances.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {balances.slice(0, 4).map((b, i) => (
                 <div key={i} className="widget-box flex flex-col items-center justify-center text-center py-4">
                   <span className="text-xl font-bold text-heading">{b.balance}</span>

@@ -6,7 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { dashboardService } from '@/services/dashboard.service';
 import { 
   Users, Briefcase, Calendar, Clock, TrendingUp, AlertCircle, 
-  CheckCircle, Activity, UserPlus, DollarSign, LayoutTemplate, AlertTriangle 
+  CheckCircle, Activity, UserPlus, DollarSign, LayoutTemplate, AlertTriangle, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import './Overview.css';
@@ -16,6 +16,7 @@ export function Overview() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [successMsg, setSuccessMsg] = useState('');
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['org-dashboard-stats'],
@@ -105,12 +106,15 @@ export function Overview() {
             <h3 className="section-title">
               <TrendingUp size={20} color="#818cf8" /> Headcount Trend
             </h3>
-            <Button variant="secondary" size="sm">Details</Button>
+            <Button variant="secondary" size="sm" onClick={() => setIsDetailsModalOpen(true)}>Details</Button>
           </div>
           <div style={{ height: '12rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.5rem', padding: '0 0.5rem' }}>
-            {[40, 60, 45, 70, 65, 80, 90, 85, 100].map((h, i) => (
-              <div key={i} style={{ width: '100%', background: 'rgba(99, 102, 241, 0.2)', borderRadius: '0.125rem 0.125rem 0 0', transition: 'all 0.2s', height: `${loading ? 0 : h}%` }}></div>
-            ))}
+            {(stats?.attendanceTrend || Array.from({length: 7}).map(() => ({ present: 0, totalStaff: 1 }))).map((day: any, i: number) => {
+              const h = day.totalStaff > 0 ? (day.present / day.totalStaff) * 100 : 0;
+              return (
+                <div key={i} title={day.date ? `${day.date}: ${day.present} present` : ''} style={{ width: '100%', background: 'rgba(99, 102, 241, 0.2)', borderRadius: '0.125rem 0.125rem 0 0', transition: 'all 0.2s', height: `${loading ? 0 : Math.max(0, Math.min(100, h))}%` }}></div>
+              );
+            })}
           </div>
         </Card>
         
@@ -223,6 +227,49 @@ export function Overview() {
           )}
         </div>
       </Card>
+
+      {/* Headcount Details Modal */}
+      {isDetailsModalOpen && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '2rem', borderRadius: '12px', width: '600px', maxWidth: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Headcount & Attendance Trend (Last 7 Days)</h2>
+              <button onClick={() => setIsDetailsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} color="var(--text-secondary)" />
+              </button>
+            </div>
+            
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Total Staff</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Present</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>On Leave</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats?.attendanceTrend?.length ? stats.attendanceTrend.map((day: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{day.date}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>{day.totalStaff}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: '#10b981', fontWeight: 600 }}>{day.present}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: '#f59e0b' }}>{day.onLeave}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No attendance data available.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+              <Button variant="secondary" onClick={() => setIsDetailsModalOpen(false)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

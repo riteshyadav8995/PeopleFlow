@@ -57,19 +57,13 @@ export function VoiceAgentDashboard() {
     }
   };
 
-  const executeTestCall = async (campaignId: string, phoneNumber: string | null) => {
+  const executeTestCall = async (campaignId: string, phoneNumber: string) => {
     try {
-      const res = await api.post('/voice-agent/calls', { 
+      await api.post('/voice-agent/calls', { 
         campaignId, 
-        phoneNumber: phoneNumber ? phoneNumber.trim() : undefined 
+        phoneNumber: phoneNumber.trim()
       });
-      
-      if (!phoneNumber || phoneNumber.trim() === '') {
-        // If testing in browser, route to browser interface
-        navigate(`/organization/voice-agent/${res.data.data.id}`);
-      } else {
-        alert('Call initiated successfully via Exotel! Your phone should ring shortly.');
-      }
+      alert('Call initiated successfully via Exotel! Your phone should ring shortly.');
     } catch (error) {
       console.error('Failed to start call', error);
       alert('Failed to start call');
@@ -219,20 +213,14 @@ export function VoiceAgentDashboard() {
       {testModal.isOpen && testModal.campaignId && (
         <div className="modal-overlay" onClick={() => setTestModal({isOpen: false, campaignId: null})} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ padding: '2rem', borderRadius: '1rem', background: 'var(--bg-primary)', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 600 }}>How would you like to test?</h3>
+            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 600 }}>Test Voice Agent</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Button variant="primary" onClick={() => {
                 const phone = prompt('Enter mobile number with country code (e.g. +919876543210):');
                 if (phone) executeTestCall(testModal.campaignId!, phone);
                 setTestModal({isOpen: false, campaignId: null});
               }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
-                <PhoneCall size={18} style={{ marginRight: '0.5rem' }} /> Test on Mobile Number
-              </Button>
-              <Button variant="secondary" onClick={() => {
-                executeTestCall(testModal.campaignId!, null);
-                setTestModal({isOpen: false, campaignId: null});
-              }} style={{ justifyContent: 'center', padding: '0.75rem' }}>
-                <Mic size={18} style={{ marginRight: '0.5rem' }} /> Test in Browser
+                <PhoneCall size={18} style={{ marginRight: '0.5rem' }} /> Call My Mobile
               </Button>
             </div>
           </div>

@@ -73,6 +73,58 @@ export class OrganizationAdminService {
       offer: pipelineData.find(p => p.stage === 'OFFER')?._count.stage || 0,
     };
 
+    const trendDays = 7;
+    const trendStartDate = new Date(today);
+    trendStartDate.setDate(trendStartDate.getDate() - (trendDays - 1));
+
+    const attendanceRecords = await prisma.attendanceRecord.findMany({
+      where: {
+        tenantId,
+        date: { gte: trendStartDate }
+      },
+      select: { date: true, status: true }
+    });
+
+    const leaveRecords = await prisma.leaveRequest.findMany({
+      where: {
+        tenantId,
+        status: 'approved',
+        startDate: { lte: today },
+        endDate: { gte: trendStartDate }
+      },
+      select: { startDate: true, endDate: true }
+    });
+
+    const attendanceTrend = [];
+    for (let i = 0; i < trendDays; i++) {
+      const targetDate = new Date(trendStartDate);
+      targetDate.setDate(targetDate.getDate() + i);
+      const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const isoDate = targetDate.toISOString().split('T')[0];
+      
+      const presentCount = attendanceRecords.filter(r => {
+        const d = new Date(r.date);
+        return d.getDate() === targetDate.getDate() && d.getMonth() === targetDate.getMonth() && r.status === 'present';
+      }).length;
+
+      const onLeaveCount = leaveRecords.filter(r => {
+        const start = new Date(r.startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(r.endDate);
+        end.setHours(23, 59, 59, 999);
+        const target = targetDate.getTime();
+        return target >= start.getTime() && target <= end.getTime();
+      }).length;
+
+      attendanceTrend.push({
+        date: dateStr,
+        fullDate: isoDate,
+        present: presentCount,
+        onLeave: onLeaveCount,
+        totalStaff: activeEmployees
+      });
+    }
+
     const stats = {
       totalStaff,
       activeEmployees,
@@ -83,7 +135,8 @@ export class OrganizationAdminService {
       onboarding,
       activeProjects,
       overdueTasks,
-      recruitmentPipeline
+      recruitmentPipeline,
+      attendanceTrend
     };
 
     // Cache for 5 minutes (300 seconds)

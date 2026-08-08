@@ -69,7 +69,7 @@ export class VoiceAgentService extends BaseService {
     return { success: true };
   }
 
-  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string, callMethod?: string }) {
+  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string }) {
     const campaign = await prisma.voiceCampaign.findUnique({
       where: { id: data.campaignId, tenantId: context.tenantId },
       include: { configurations: true }
@@ -129,42 +129,18 @@ export class VoiceAgentService extends BaseService {
        }
     }
 
-    const callMethod = data.callMethod || (data.phoneNumber ? 'MOBILE' : 'BROWSER');
-
     const callLog = await prisma.voiceCallLog.create({
       data: {
         tenantId: context.tenantId,
         campaignId: data.campaignId,
         candidateId: resolvedCandidateId,
         employeeId: data.employeeId,
-        status: 'IN_PROGRESS',
-        callMethod
+        status: 'IN_PROGRESS'
       },
       include: { campaign: { include: { configurations: true } } }
     });
 
-    if (callMethod === 'BROWSER') {
-       let recipientEmail = '';
-       let recipientName = 'User';
-       if (resolvedCandidateId) {
-          const candidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
-          if (candidate) { recipientEmail = candidate.email; recipientName = candidate.firstName; }
-       } else if (data.employeeId) {
-          const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
-          if (employee) { recipientEmail = employee.email; recipientName = employee.firstName; }
-       }
-       if (recipientEmail) {
-          const frontendUrl = process.env.FRONTEND_URL || 'https://people-flow-rose.vercel.app';
-          const callLink = `${frontendUrl}/public/call/${callLog.id}`;
-          const html = `
-             <h2>Hi ${recipientName},</h2>
-             <p>You have been invited to an AI-powered voice session for: <b>${campaign.name}</b>.</p>
-             <p>Please click the link below to join the call in your browser. Ensure your microphone is ready.</p>
-             <a href="${callLink}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;">Join Call Now</a>
-          `;
-          await emailService.sendEmail(recipientEmail, 'AI Voice Session: ' + campaign.name, html);
-       }
-    } else if (data.phoneNumber) {
+    if (data.phoneNumber) {
       try {
         const exotelApiKey = process.env.EXOTEL_API_KEY;
         const exotelApiToken = process.env.EXOTEL_API_TOKEN;

@@ -72,7 +72,6 @@ export function RecruitmentDashboard() {
   const [candidateToCall, setCandidateToCall] = useState<Application | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState('');
   const [calling, setCalling] = useState(false);
-  const [callMethod, setCallMethod] = useState<'MOBILE' | 'BROWSER'>('BROWSER');
 
   const [activeJobMenu, setActiveJobMenu] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -139,10 +138,9 @@ export function RecruitmentDashboard() {
       await api.post('/voice-agent/calls', {
         campaignId: selectedCampaignId,
         candidateId: candidateToCall.candidate.id,
-        phoneNumber: callMethod === 'MOBILE' ? candidateToCall.candidate.phone : undefined,
-        callMethod
+        phoneNumber: candidateToCall.candidate.phone,
       });
-      alert(callMethod === 'BROWSER' ? 'Call initiated! An email link has been sent to the candidate.' : 'Call initiated successfully! The AI Agent is calling the candidate.');
+      alert('Call initiated successfully! The AI Agent is calling the candidate.');
       setIsAICallModalOpen(false);
       setCandidateToCall(null);
     } catch (error) {
@@ -844,19 +842,7 @@ export function RecruitmentDashboard() {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Call Method</label>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexDirection: 'column' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                        <input type="radio" name="callMethod" checked={callMethod === 'BROWSER'} onChange={() => setCallMethod('BROWSER')} style={{ width: '16px', height: '16px' }} />
-                        Call via Browser (Sends Email Link)
-                      </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                        <input type="radio" name="callMethod" checked={callMethod === 'MOBILE'} onChange={() => setCallMethod('MOBILE')} style={{ width: '16px', height: '16px' }} />
-                        Call on Mobile (Exotel Voice)
-                      </label>
-                    </div>
-                  </div>
+
                 </>
               )}
             </div>
