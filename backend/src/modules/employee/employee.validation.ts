@@ -22,19 +22,19 @@ export const createEmployeeSchema = z.object({
 });
 
 export const updateEmployeeSchema = z.object({
-  departmentId: z.string().uuid().optional(),
-  designationId: z.string().uuid().optional(),
-  branchId: z.string().uuid().optional(),
-  reportingTo: z.string().uuid().optional(),
+  departmentId: z.string().uuid().nullable().optional(),
+  designationId: z.string().uuid().nullable().optional(),
+  branchId: z.string().uuid().nullable().optional(),
+  reportingTo: z.string().uuid().nullable().optional(),
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
-  phone: z.string().max(20).optional(),
-  dateOfBirth: z.string().datetime().optional(),
-  gender: z.string().optional(),
-  maritalStatus: z.string().optional(),
-  confirmationDate: z.string().datetime().optional(),
-  resignationDate: z.string().datetime().optional(),
-  exitDate: z.string().datetime().optional(),
+  phone: z.string().max(20).nullable().optional(),
+  dateOfBirth: z.string().datetime().nullable().optional(),
+  gender: z.string().nullable().optional(),
+  maritalStatus: z.string().nullable().optional(),
+  confirmationDate: z.string().datetime().nullable().optional(),
+  resignationDate: z.string().datetime().nullable().optional(),
+  exitDate: z.string().datetime().nullable().optional(),
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'intern']).optional(),
   status: z.enum(['active', 'probation', 'on_notice', 'terminated', 'resigned']).optional()
 });

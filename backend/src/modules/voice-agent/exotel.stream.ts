@@ -18,7 +18,7 @@ export function setupExotelWebSocket(server: HttpServer) {
     }
   });
 
-  wss.on('connection', (ws: WebSocket, req) => {
+  wss.on('connection', async (ws: WebSocket, req) => {
     logger.info(`[Exotel Stream] New WebSocket connection from ${req.socket.remoteAddress}`);
     
     // Parse callLogId from URL query params
@@ -28,6 +28,23 @@ export function setupExotelWebSocket(server: HttpServer) {
     let streamSid: string | null = null;
     let callSid: string | null = null;
     let fullTranscript: string = '';
+    
+    let systemPrompt = 'You are an HR Assistant for PeopleFlow. You are conducting an initial phone screening with a candidate. Ask one question at a time.';
+    
+    if (callLogId) {
+      try {
+        const callLog = await prisma.voiceCallLog.findUnique({
+          where: { id: callLogId },
+          include: { campaign: { include: { configurations: true } } }
+        });
+        const campaignPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt;
+        if (campaignPrompt) {
+          systemPrompt = campaignPrompt;
+        }
+      } catch (err) {
+        logger.error('Error fetching campaign prompt', { err });
+      }
+    }
     
     // Check API Keys
     if (!env.DEEPGRAM_API_KEY) {
@@ -101,8 +118,8 @@ export function setupExotelWebSocket(server: HttpServer) {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     let chatSession = model.startChat({
       history: [
-        { role: 'user', parts: [{ text: 'You are an HR Assistant named Maya for PeopleFlow. You are conducting an initial phone screening with a candidate. If they are suitable, you must conclude by offering to schedule an interview. Ask one question at a time.' }] },
-        { role: 'model', parts: [{ text: 'Got it. I will act as Maya, the HR Assistant and guide the conversation towards interview scheduling if they are a fit.' }] }
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'Got it. I will follow those instructions and ask one question at a time.' }] }
       ]
     });
 
@@ -133,7 +150,7 @@ export function setupExotelWebSocket(server: HttpServer) {
           callSid = msg.start.callSid;
           logger.info(`[Exotel Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
-          const greeting = "Hi there! I am Maya from PeopleFlow HR. Is this a good time to talk about your recent job application?";
+          const greeting = "Hello! This is the PeopleFlow AI Voice Assistant. Am I speaking with the candidate?";
           fullTranscript += `\nAI: ${greeting}`;
           sendAudioToExotel(greeting);
         } 

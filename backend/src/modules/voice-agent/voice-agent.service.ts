@@ -5,7 +5,8 @@ import { prisma } from '../../core/base/base.model';
 import { appConfig } from '../../config';
 import { emailService } from '../../integrations/email/email.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+// @ts-ignore
+import { RestClient } from '@signalwire/compatibility-api';
 export class VoiceAgentService extends BaseService {
   
   async getCampaigns(context: ServiceContext) {
@@ -76,8 +77,6 @@ export class VoiceAgentService extends BaseService {
 
     if (!campaign) throw new AppError('Campaign not found', 404);
     
-    const callMethod = data.callMethod || (data.phoneNumber ? 'MOBILE' : 'BROWSER');
-
     let resolvedCandidateId = data.candidateId;
     if (resolvedCandidateId) {
        const isCandidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
@@ -111,6 +110,26 @@ export class VoiceAgentService extends BaseService {
           }
        }
     }
+
+    if (!data.phoneNumber && resolvedCandidateId) {
+       const candidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
+       if (candidate?.phone) {
+          data.phoneNumber = candidate.phone;
+       }
+    }
+
+    if (data.phoneNumber) {
+       const cleaned = data.phoneNumber.replace(/\D/g, '');
+       if (cleaned.length === 10) {
+          data.phoneNumber = '+91' + cleaned;
+       } else if (cleaned.length === 12 && cleaned.startsWith('91')) {
+          data.phoneNumber = '+' + cleaned;
+       } else if (!data.phoneNumber.startsWith('+')) {
+          data.phoneNumber = '+' + cleaned; // Fallback
+       }
+    }
+
+    const callMethod = data.callMethod || (data.phoneNumber ? 'MOBILE' : 'BROWSER');
 
     const callLog = await prisma.voiceCallLog.create({
       data: {

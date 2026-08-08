@@ -146,7 +146,7 @@ export function RecruitmentDashboard() {
       setIsAICallModalOpen(false);
       setCandidateToCall(null);
     } catch (error) {
-      alert('Failed to initiate AI call. Make sure Exotel is configured and KYC is approved.');
+      alert('Failed to initiate AI call. Make sure Exotel is configured.');
     } finally {
       setCalling(false);
     }

@@ -15,18 +15,16 @@ export class VoiceAgentController extends BaseController {
     const host = req.headers.host;
     const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/exotel-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
-    // Return standard SVAML to connect to stream
-    res.set('Content-Type', 'application/json');
-    res.send({
-      "svaml": {
-        "instructions": [
-          {
-            "name": "stream",
-            "url": streamUrl
-          }
-        ]
-      }
-    });
+    // Return standard TwiML to connect to stream
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <Response>
+        <Connect>
+          <Stream url="${streamUrl}" />
+        </Connect>
+      </Response>`;
+
+    res.set('Content-Type', 'text/xml');
+    res.send(xml);
   });
 
   getCampaigns = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {

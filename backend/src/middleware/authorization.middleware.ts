@@ -29,7 +29,10 @@ export function authorize(...requiredPermissions: string[]) {
       authReq.user.permissions.includes(perm)
     );
 
-    if (!hasPermission && !isTenantAdmin) {
+    // Allow self-updates (employees can update their own record)
+    const isSelfUpdate = req.params.id && req.params.id === authReq.user.employeeId && req.method === 'PUT';
+
+    if (!hasPermission && !isTenantAdmin && !isSelfUpdate) {
       return next(
         new AuthorizationError(
           `Missing required permissions: ${requiredPermissions.join(', ')}`,
