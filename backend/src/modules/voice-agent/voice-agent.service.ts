@@ -5,6 +5,7 @@ import { prisma } from '../../core/base/base.model';
 import { appConfig } from '../../config';
 import { emailService } from '../../integrations/email/email.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import twilio from 'twilio';
 // @ts-ignore
 import { RestClient } from '@signalwire/compatibility-api';
 export class VoiceAgentService extends BaseService {
@@ -142,44 +143,27 @@ export class VoiceAgentService extends BaseService {
 
     if (data.phoneNumber) {
       try {
-        const exotelApiKey = process.env.EXOTEL_API_KEY;
-        const exotelApiToken = process.env.EXOTEL_API_TOKEN;
-        const exotelAccountSid = process.env.EXOTEL_ACCOUNT_SID;
-        const exotelVirtualNumber = process.env.EXOTEL_VIRTUAL_NUMBER || '09513886363';
-        // IMPORTANT: This must be the BACKEND public URL (not frontend)
+        const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+        const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+        const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
         const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
 
-        if (!exotelApiKey || !exotelApiToken || !exotelAccountSid) {
-          throw new Error('Exotel credentials not configured in .env');
+        if (!twilioSid || !twilioToken || !twilioNumber) {
+          throw new Error('Twilio credentials not configured in .env');
         }
 
-        const authHeader = Buffer.from(`${exotelApiKey}:${exotelApiToken}`).toString('base64');
-        const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelAccountSid}/Calls/connect.json`;
+        const client = twilio(twilioSid, twilioToken);
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
 
-        // The webhook where Exotel gets instructions to connect to our WebSocket Stream
-        const webhookUrl = `${backendUrl}/api/v1/voice-agent/exotel/webhook?callLogId=${callLog.id}`;
-
-        const formData = new URLSearchParams();
-        formData.append('From', exotelVirtualNumber);
-        formData.append('To', data.phoneNumber);
-        formData.append('Url', webhookUrl);
-
-        const exotelRes = await fetch(exotelUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${authHeader}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData.toString()
+        const call = await client.calls.create({
+          url: webhookUrl,
+          to: data.phoneNumber,
+          from: twilioNumber,
         });
-
-        if (!exotelRes.ok) {
-          const errBody = await exotelRes.text();
-          console.error('Exotel Call Error:', errBody);
-          throw new Error('Exotel API Error: ' + errBody);
-        }
+        
+        console.log(`Twilio call initiated with SID: ${call.sid}`);
       } catch (err) {
-        console.error('Failed to trigger Exotel outbound call:', err);
+        console.error('Failed to trigger Twilio outbound call:', err);
         // We log the error but still return the callLog to frontend
       }
     }

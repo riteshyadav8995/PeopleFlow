@@ -8,8 +8,8 @@ const router = Router();
 const controller = new VoiceAgentController();
 
 // --- Public Webhooks ---
-// Exotel hits this to get the TwiML to connect to our WebSocket
-router.post('/exotel/webhook', controller.exotelWebhook);
+// Twilio hits this to get the TwiML to connect to our WebSocket
+router.post('/twilio/webhook', controller.twilioWebhook);
 
 // --- Public Browser Call Endpoints ---
 router.get('/public/calls/:id', controller.getPublicCallInfo);

@@ -7,11 +7,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../../core/base/base.model';
 import { sendInterviewScheduledByAIEmail } from '../../shared/utils/mailer';
 
-export function setupExotelWebSocket(server: HttpServer) {
+export function setupTwilioWebSocket(server: HttpServer) {
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (request, socket, head) => {
-    if (request.url?.startsWith('/api/v1/voice-agent/exotel-stream')) {
+    if (request.url?.startsWith('/api/v1/voice-agent/twilio-stream')) {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
       });
@@ -19,7 +19,7 @@ export function setupExotelWebSocket(server: HttpServer) {
   });
 
   wss.on('connection', async (ws: WebSocket, req) => {
-    logger.info(`[Exotel Stream] New WebSocket connection from ${req.socket.remoteAddress}`);
+    logger.info(`[Twilio Stream] New WebSocket connection from ${req.socket.remoteAddress}`);
     
     // Parse callLogId from URL query params
     const url = new URL(req.url || '', `http://${req.headers.host}`);
@@ -85,7 +85,7 @@ export function setupExotelWebSocket(server: HttpServer) {
       logger.error('[Deepgram STT] Error', { err });
     });
 
-    const sendAudioToExotel = async (text: string) => {
+    const sendAudioToTwilio = async (text: string) => {
       try {
         const response = await deepgram.speak.request(
           { text },
@@ -134,7 +134,7 @@ export function setupExotelWebSocket(server: HttpServer) {
           const responseText = result.response.text().trim();
           logger.info(`[AI]: ${responseText}`);
           fullTranscript += `\nAI: ${responseText}`;
-          await sendAudioToExotel(responseText);
+          await sendAudioToTwilio(responseText);
         } catch (err) {
           logger.error('[LLM] Error', { err });
         }
@@ -148,11 +148,11 @@ export function setupExotelWebSocket(server: HttpServer) {
         if (msg.event === 'start') {
           streamSid = msg.start.streamSid;
           callSid = msg.start.callSid;
-          logger.info(`[Exotel Stream] Started stream: ${streamSid} for call: ${callSid}`);
+          logger.info(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
           const greeting = "Hello! This is the PeopleFlow AI Voice Assistant. Am I speaking with the candidate?";
           fullTranscript += `\nAI: ${greeting}`;
-          sendAudioToExotel(greeting);
+          sendAudioToTwilio(greeting);
         } 
         else if (msg.event === 'media') {
           const buffer = Buffer.from(msg.media.payload, 'base64');
@@ -161,7 +161,7 @@ export function setupExotelWebSocket(server: HttpServer) {
           }
         } 
         else if (msg.event === 'stop') {
-          logger.info(`[Exotel Stream] Stopped stream: ${streamSid}`);
+          logger.info(`[Twilio Stream] Stopped stream: ${streamSid}`);
           dgConnection.finish();
           clearInterval(keepAlive);
           
@@ -173,12 +173,12 @@ export function setupExotelWebSocket(server: HttpServer) {
           }
         }
       } catch (err) {
-        logger.error('[Exotel Stream] Message parsing error', { err });
+        logger.error('[Twilio Stream] Message parsing error', { err });
       }
     });
 
     ws.on('close', () => {
-      logger.info(`[Exotel Stream] Connection closed`);
+      logger.info(`[Twilio Stream] Connection closed`);
       dgConnection.finish();
       clearInterval(keepAlive);
     });

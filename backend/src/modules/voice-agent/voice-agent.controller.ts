@@ -6,14 +6,14 @@ import { AuthenticatedRequest } from '../../core/interfaces/authenticated-reques
 export class VoiceAgentController extends BaseController {
   private voiceService = new VoiceAgentService();
 
-  // Exotel Webhook to provide SVAML/TwiML for WebSocket streaming
-  exotelWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+  // Twilio Webhook to provide TwiML for WebSocket streaming
+  twilioWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const callLogId = req.query.callLogId as string;
     // Generate absolute WebSocket URL based on the incoming request host
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const wsProtocol = protocol === 'https' ? 'wss' : 'ws';
     const host = req.headers.host;
-    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/exotel-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
+    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
     // Return standard TwiML to connect to stream
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

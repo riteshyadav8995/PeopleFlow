@@ -6,7 +6,7 @@ import app from './app';
 import { appConfig } from './config';
 import { connectDatabase, disconnectDatabase } from './core/base/base.model';
 import { logger } from './shared/logger/logger';
-import { setupExotelWebSocket } from './modules/voice-agent/exotel.stream';
+import { setupTwilioWebSocket } from './modules/voice-agent/twilio.stream';
 import { initPayrollCron } from './cron/payroll.cron';
 import { initAttendanceCron } from './cron/attendance.cron';
 
@@ -27,8 +27,8 @@ async function bootstrap(): Promise<void> {
       logger.info(`📡 API base:     http://localhost:${PORT}/api/v1`);
     });
 
-    // 3. Attach WebSocket for Exotel Media Streams
-    setupExotelWebSocket(server);
+    // 3. Attach WebSocket for Twilio Media Streams
+    setupTwilioWebSocket(server);
 
     // 4. Initialize Cron Jobs
     initPayrollCron();
