@@ -9,7 +9,7 @@ import twilio from 'twilio';
 // @ts-ignore
 import { RestClient } from '@signalwire/compatibility-api';
 export class VoiceAgentService extends BaseService {
-  
+
   async getCampaigns(context: ServiceContext) {
     return await prisma.voiceCampaign.findMany({
       where: { tenantId: context.tenantId },
@@ -40,7 +40,7 @@ export class VoiceAgentService extends BaseService {
   }
 
   async updateCampaign(context: ServiceContext, campaignId: string, data: any) {
-    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId }});
+    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId } });
     if (!campaign) throw new AppError('Campaign not found', 404);
 
     return await prisma.voiceCampaign.update({
@@ -63,7 +63,7 @@ export class VoiceAgentService extends BaseService {
   }
 
   async deleteCampaign(context: ServiceContext, campaignId: string) {
-    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId }});
+    const campaign = await prisma.voiceCampaign.findUnique({ where: { id: campaignId, tenantId: context.tenantId } });
     if (!campaign) throw new AppError('Campaign not found', 404);
 
     await prisma.voiceCampaign.delete({ where: { id: campaignId } });
@@ -77,74 +77,66 @@ export class VoiceAgentService extends BaseService {
     });
 
     if (!campaign) throw new AppError('Campaign not found', 404);
-    
+
     let resolvedCandidateId = data.candidateId;
     if (resolvedCandidateId) {
-       const isCandidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
-       if (!isCandidate) {
-          const isUserCandidate = await prisma.candidate.findFirst({ where: { userId: resolvedCandidateId } });
-          if (isUserCandidate) {
-             resolvedCandidateId = isUserCandidate.id;
+      const isCandidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
+      if (!isCandidate) {
+        const isUserCandidate = await prisma.candidate.findFirst({ where: { userId: resolvedCandidateId } });
+        if (isUserCandidate) {
+          resolvedCandidateId = isUserCandidate.id;
+        } else {
+          const user = await prisma.user.findUnique({ where: { id: resolvedCandidateId } });
+          if (user) {
+            const jobApp = await prisma.jobApplication.findFirst({
+              where: { candidateId: user.id },
+              include: { job: true }
+            });
+            const orgId = jobApp?.job?.organizationId || context.tenantId;
+            const newCandidate = await prisma.candidate.create({
+              data: {
+                tenantId: context.tenantId,
+                organizationId: orgId,
+                userId: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phone: user.phone || ''
+              }
+            });
+            resolvedCandidateId = newCandidate.id;
           } else {
-             const user = await prisma.user.findUnique({ where: { id: resolvedCandidateId } });
-             if (user) {
-                const jobApp = await prisma.jobApplication.findFirst({
-                   where: { candidateId: user.id },
-                   include: { job: true }
-                });
-                const orgId = jobApp?.job?.organizationId || context.tenantId;
-                const newCandidate = await prisma.candidate.create({
-                   data: {
-                      tenantId: context.tenantId,
-                      organizationId: orgId,
-                      userId: user.id,
-                      firstName: user.firstName,
-                      lastName: user.lastName,
-                      email: user.email,
-                      phone: user.phone || ''
-                   }
-                });
-                resolvedCandidateId = newCandidate.id;
-             } else {
-                resolvedCandidateId = undefined;
-             }
+            resolvedCandidateId = undefined;
           }
-       }
+        }
+      }
     }
 
     if (!data.phoneNumber && resolvedCandidateId) {
-       const candidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
-       if (candidate?.phone) {
-          data.phoneNumber = candidate.phone;
-       }
+      const candidate = await prisma.candidate.findUnique({ where: { id: resolvedCandidateId } });
+      if (candidate?.phone) {
+        data.phoneNumber = candidate.phone;
+      }
     }
 
     if (!data.phoneNumber && data.employeeId) {
-       const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
-       if (employee?.phone) {
-          data.phoneNumber = employee.phone;
-       }
-    }
-
-    // Fallback: If no phone number could be found for the candidate, fetch the admin's (User's) own phone number to allow testing
-    if (!data.phoneNumber && context.userId) {
-       const user = await prisma.user.findUnique({ where: { id: context.userId } });
-       if (user?.phone) {
-          data.phoneNumber = user.phone;
-       }
+      const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
+      if (employee?.phone) {
+        data.phoneNumber = employee.phone;
+      }
     }
 
     if (data.phoneNumber) {
-       const cleaned = data.phoneNumber.replace(/\D/g, '');
-       if (cleaned.length === 10) {
-          data.phoneNumber = '+91' + cleaned;
-       } else if (cleaned.length === 12 && cleaned.startsWith('91')) {
-          data.phoneNumber = '+' + cleaned;
-       } else if (!data.phoneNumber.startsWith('+')) {
-          data.phoneNumber = '+' + cleaned; // Fallback
-       }
+      const cleaned = data.phoneNumber.replace(/\D/g, '');
+      if (cleaned.length === 10) {
+        data.phoneNumber = '+91' + cleaned;
+      } else if (cleaned.length === 12 && cleaned.startsWith('91')) {
+        data.phoneNumber = '+' + cleaned;
+      } else if (!data.phoneNumber.startsWith('+')) {
+        data.phoneNumber = '+' + cleaned; // Fallback
+      }
     } else {
-       throw new Error('Phone number is missing for this candidate. Please update the Admin User Profile with a phone number to test it.');
+      throw new Error('Phone number is missing for this candidate/employee.');
     }
 
     const callLog = await prisma.voiceCallLog.create({
@@ -186,7 +178,7 @@ export class VoiceAgentService extends BaseService {
           to: data.phoneNumber,
           from: twilioNumber,
         });
-        
+
         console.log(`[Twilio Call] Success! SID: ${call.sid}`);
       } catch (err: any) {
         console.error('Failed to trigger Twilio outbound call:', err?.message || err);
@@ -234,7 +226,7 @@ export class VoiceAgentService extends BaseService {
 
     const config = callLog.campaign.configurations[0];
     const systemPrompt = config?.systemPrompt || 'You are a helpful AI HR assistant.';
-    
+
     // 3. Call LLM (Groq / Gemini)
     let aiResponseText = 'I am sorry, I am currently unable to process your request.';
 
@@ -244,9 +236,9 @@ export class VoiceAgentService extends BaseService {
         aiResponseText = `[Simulated AI Response] I heard you say: "${userMessage}". This is a placeholder since a valid GEMINI_API_KEY was not provided in the .env file.`;
       } else {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-           model: 'gemini-2.5-flash', 
-           systemInstruction: systemPrompt 
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-2.5-flash',
+          systemInstruction: systemPrompt
         });
 
         const rawHistory = callLog.transcripts.reduce((acc: any[], t) => {
@@ -261,16 +253,16 @@ export class VoiceAgentService extends BaseService {
 
         let promptText = userMessage;
         if (userMessage === '[SYSTEM_INIT_CALL]') {
-           promptText = "You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.";
+          promptText = "You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.";
         }
 
         if (rawHistory.length > 0 && rawHistory[rawHistory.length - 1].role === 'user') {
-           const lastUser = rawHistory.pop();
-           if (userMessage !== '[SYSTEM_INIT_CALL]') {
-               promptText = lastUser.parts[0].text;
-           } else {
-               promptText = lastUser.parts[0].text + '\n' + promptText;
-           }
+          const lastUser = rawHistory.pop();
+          if (userMessage !== '[SYSTEM_INIT_CALL]') {
+            promptText = lastUser.parts[0].text;
+          } else {
+            promptText = lastUser.parts[0].text + '\n' + promptText;
+          }
         }
 
         const chat = model.startChat({ history: rawHistory });
@@ -303,7 +295,7 @@ export class VoiceAgentService extends BaseService {
       orderBy: { createdAt: 'desc' }
     });
   }
-  
+
   async getCallTranscript(context: ServiceContext, callLogId: string) {
     const log = await prisma.voiceCallLog.findUnique({
       where: { id: callLogId, tenantId: context.tenantId },
@@ -355,7 +347,7 @@ export class VoiceAgentService extends BaseService {
       }
     });
     if (!callLog) throw new AppError('Call session not found', 404);
-    
+
     let summary = 'No summary generated.';
     try {
       const apiKey = process.env.GEMINI_API_KEY || '';
@@ -363,10 +355,10 @@ export class VoiceAgentService extends BaseService {
         summary = 'Simulated summary: The call concluded successfully. This is a placeholder since a valid API key was not provided.';
       } else {
         const transcriptText = callLog.transcripts.map(t => `${t.role}: ${t.message}`).join('\n');
-        
+
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        
+
         const prompt = `You are an AI assistant. Summarize the following conversation in 2-3 short sentences highlighting the key points discussed:\n\n${transcriptText}`;
         const result = await model.generateContent(prompt);
         summary = result.response.text();
