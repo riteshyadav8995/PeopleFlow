@@ -84,11 +84,11 @@ export function setupTwilioWebSocket(server: HttpServer) {
         // Append Candidate and Job info to system prompt so the AI can answer contextually
         if (callLog?.candidate) {
           const c = callLog.candidate;
-          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone}\nExperience: ${c.experience} years\nSkills: ${JSON.stringify(c.skills || [])}\nResume Text: ${c.resumeText || 'Not available'}`;
+          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
         }
         if (callLog?.jobOpening) {
           const j = callLog.jobOpening;
-          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nDepartment: ${j.departmentId || 'N/A'}\nDescription: ${j.description}\nRequirements: ${j.requirements}`;
+          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
         }
       } catch (err) {
         console.error('[Twilio Stream] Error fetching campaign prompt', err);
