@@ -16,23 +16,8 @@ export class VoiceAgentController extends BaseController {
     const host = req.headers.host;
     const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
-    let greeting = "Please hold while I connect you to the AI assistant.";
+    let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold.";
     
-    if (callLogId) {
-      try {
-        const callLog = await prisma.voiceCallLog.findUnique({
-          where: { id: callLogId },
-          include: { campaign: { include: { configurations: true } } }
-        });
-        const campaignPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt;
-        if (campaignPrompt) {
-          greeting = campaignPrompt;
-        }
-      } catch (err) {
-        console.error('[Twilio Webhook] Error fetching campaign prompt', err);
-      }
-    }
-
     console.log(`[Twilio Webhook] Hit! callLogId=${callLogId}, host=${host}, streamUrl=${streamUrl}`);
     
     // Return TwiML: brief greeting then connect to WebSocket stream for AI conversation

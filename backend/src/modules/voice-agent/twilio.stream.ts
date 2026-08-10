@@ -172,10 +172,20 @@ export function setupTwilioWebSocket(server: HttpServer) {
           console.log(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           logger.info(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
-          const greeting = "Hello! This is the PeopleFlow AI Voice Assistant. Am I speaking with the candidate?";
-          fullTranscript += `\nAI: ${greeting}`;
-          console.log(`[Twilio Stream] Sending greeting via TTS...`);
-          sendAudioToTwilio(greeting);
+          // Generate dynamic first greeting using Gemini instead of hardcoded text
+          if (chatSession) {
+             console.log(`[Twilio Stream] Asking Gemini for initial greeting...`);
+             chatSession.sendMessage("Hello! Please introduce yourself to the candidate and ask your first question based on the system prompt.").then(async (result: any) => {
+                const greeting = result.response.text().trim();
+                fullTranscript += `\nAI: ${greeting}`;
+                console.log(`[Twilio Stream] Sending dynamic greeting via TTS: ${greeting}`);
+                await sendAudioToTwilio(greeting);
+             }).catch((err: any) => {
+                console.error('[Twilio Stream] Failed to get initial greeting from Gemini', err);
+                const backupGreeting = "Hello! This is the AI assistant calling. How are you today?";
+                sendAudioToTwilio(backupGreeting);
+             });
+          }
         } 
         else if (msg.event === 'media') {
           const buffer = Buffer.from(msg.media.payload, 'base64');
@@ -222,6 +232,9 @@ export function setupTwilioWebSocket(server: HttpServer) {
         
         try {
           if (chatSession) {
+            // Play a filler message so the user knows the AI is thinking (simulates human pause)
+            await sendAudioToTwilio("Hmm... just a second.");
+            
             const result = await chatSession.sendMessage(transcript);
             const responseText = result.response.text().trim();
             console.log(`[AI replied]: ${responseText}`);
