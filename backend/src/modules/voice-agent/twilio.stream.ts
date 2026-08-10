@@ -29,6 +29,33 @@ export function setupTwilioWebSocket(server: HttpServer) {
     let callSid: string | null = null;
     let fullTranscript: string = '';
     
+    let isReady = false;
+    const messageQueue: string[] = [];
+    
+    // Declare these variables so they can be accessed inside processMessage and close handlers
+    let dgConnection: any = null;
+    let keepAlive: NodeJS.Timeout | null = null;
+    let chatSession: any = null;
+    const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || env.OPENAI_API_KEY || '';
+
+    // Attach message listener immediately to prevent dropping events
+    ws.on('message', (message: string) => {
+      if (!isReady) {
+        messageQueue.push(message.toString());
+      } else {
+        processMessage(message.toString());
+      }
+    });
+
+    ws.on('close', () => {
+      logger.info(`[Twilio Stream] Connection closed`);
+      if (dgConnection) dgConnection.finish();
+      if (keepAlive) clearInterval(keepAlive);
+    });
+
+    // -----------------------------------------------------------------
+    // ASYNC INITIALIZATION
+    // -----------------------------------------------------------------
     let systemPrompt = 'You are an HR Assistant for PeopleFlow. You are conducting an initial phone screening with a candidate. Ask one question at a time.';
     
     if (callLogId) {
@@ -53,7 +80,6 @@ export function setupTwilioWebSocket(server: HttpServer) {
       return;
     }
 
-    const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || env.OPENAI_API_KEY;
     if (!llmApiKey) {
       logger.error('LLM API Key (GEMINI_API_KEY or OPENAI_API_KEY) is not set.');
       ws.close();
@@ -61,10 +87,9 @@ export function setupTwilioWebSocket(server: HttpServer) {
     }
 
     const deepgram = createClient(env.DEEPGRAM_API_KEY);
-    let keepAlive: NodeJS.Timeout;
 
     // --- Setup Deepgram STT ---
-    const dgConnection = deepgram.listen.live({
+    dgConnection = deepgram.listen.live({
       model: 'nova-2',
       language: 'en-IN',
       smart_format: true,
@@ -77,7 +102,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     dgConnection.on('open', () => {
       logger.info('[Deepgram STT] Connection opened');
       keepAlive = setInterval(() => {
-        dgConnection.keepAlive();
+        if (dgConnection) dgConnection.keepAlive();
       }, 10 * 1000);
     });
 
@@ -114,34 +139,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
       }
     };
 
-    const genAI = new GoogleGenerativeAI(llmApiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    let chatSession = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'Got it. I will follow those instructions and ask one question at a time.' }] }
-      ]
-    });
-
-    dgConnection.on('transcript', async (data: any) => {
-      const transcript = data.channel.alternatives[0].transcript;
-      if (transcript && data.is_final) {
-        logger.info(`[User]: ${transcript}`);
-        fullTranscript += `\nCandidate: ${transcript}`;
-        
-        try {
-          const result = await chatSession.sendMessage(transcript);
-          const responseText = result.response.text().trim();
-          logger.info(`[AI]: ${responseText}`);
-          fullTranscript += `\nAI: ${responseText}`;
-          await sendAudioToTwilio(responseText);
-        } catch (err) {
-          logger.error('[LLM] Error', { err });
-        }
-      }
-    });
-
-    ws.on('message', (message: string) => {
+    const processMessage = (message: string) => {
       try {
         const msg = JSON.parse(message);
         
@@ -162,8 +160,8 @@ export function setupTwilioWebSocket(server: HttpServer) {
         } 
         else if (msg.event === 'stop') {
           logger.info(`[Twilio Stream] Stopped stream: ${streamSid}`);
-          dgConnection.finish();
-          clearInterval(keepAlive);
+          if (dgConnection) dgConnection.finish();
+          if (keepAlive) clearInterval(keepAlive);
           
           // Post-call Processing: Save Transcript & Schedule Interview
           if (callLogId) {
@@ -175,13 +173,45 @@ export function setupTwilioWebSocket(server: HttpServer) {
       } catch (err) {
         logger.error('[Twilio Stream] Message parsing error', { err });
       }
+    };
+
+    const genAI = new GoogleGenerativeAI(llmApiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    chatSession = model.startChat({
+      history: [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'Got it. I will follow those instructions and ask one question at a time.' }] }
+      ]
     });
 
-    ws.on('close', () => {
-      logger.info(`[Twilio Stream] Connection closed`);
-      dgConnection.finish();
-      clearInterval(keepAlive);
+    dgConnection.on('transcript', async (data: any) => {
+      const transcript = data.channel.alternatives[0].transcript;
+      if (transcript && data.is_final) {
+        logger.info(`[User]: ${transcript}`);
+        fullTranscript += `\nCandidate: ${transcript}`;
+        
+        try {
+          if (chatSession) {
+            const result = await chatSession.sendMessage(transcript);
+            const responseText = result.response.text().trim();
+            logger.info(`[AI]: ${responseText}`);
+            fullTranscript += `\nAI: ${responseText}`;
+            await sendAudioToTwilio(responseText);
+          }
+        } catch (err) {
+          logger.error('[LLM] Error', { err });
+        }
+      }
     });
+
+    // -----------------------------------------------------------------
+    // FLUSH QUEUED MESSAGES
+    // -----------------------------------------------------------------
+    isReady = true;
+    for (const msg of messageQueue) {
+      processMessage(msg);
+    }
+    messageQueue.length = 0; // Clear the queue
   });
 }
 
