@@ -10,11 +10,11 @@ export class VoiceAgentController extends BaseController {
   // Twilio Webhook to provide TwiML for WebSocket streaming
   twilioWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const callLogId = req.query.callLogId as string;
-    // Generate absolute WebSocket URL based on the incoming request host
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers.host || '';
-    const wsProtocol = host.includes('localhost') ? 'ws' : 'wss';
-    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
+    
+    // Generate absolute WebSocket URL using BACKEND_URL to avoid proxy host issues on Render
+    const backendUrl = process.env.BACKEND_URL || `${req.protocol}://${req.headers.host}`;
+    const wsBaseUrl = backendUrl.replace(/^http/, 'ws');
+    const streamUrl = `${wsBaseUrl}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
     let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold.";
     
