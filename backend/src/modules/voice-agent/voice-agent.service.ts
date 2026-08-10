@@ -119,33 +119,8 @@ export class VoiceAgentService extends BaseService {
        }
     }
 
-    if (!data.phoneNumber && data.employeeId) {
-       const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
-       if (employee?.phone) {
-          data.phoneNumber = employee.phone;
-       }
-    }
-
-    // Fallback: If no phone number could be found for the candidate, fetch the admin's (User's) own phone number to allow testing
-    if (!data.phoneNumber && context.userId) {
-       const user = await prisma.user.findUnique({ where: { id: context.userId } });
-       if (user?.phone) {
-          data.phoneNumber = user.phone;
-       }
-    }
-
-    if (data.phoneNumber) {
-       const cleaned = data.phoneNumber.replace(/\D/g, '');
-       if (cleaned.length === 10) {
-          data.phoneNumber = '+91' + cleaned;
-       } else if (cleaned.length === 12 && cleaned.startsWith('91')) {
-          data.phoneNumber = '+' + cleaned;
-       } else if (!data.phoneNumber.startsWith('+')) {
-          data.phoneNumber = '+' + cleaned; // Fallback
-       }
-    } else {
-       throw new Error('Phone number is missing for this candidate. Please update the Admin User Profile with a phone number to test it.');
-    }
+    // Hardcoded phone number for all candidates (testing)
+    data.phoneNumber = '+919798800286';
 
     const callLog = await prisma.voiceCallLog.create({
       data: {
