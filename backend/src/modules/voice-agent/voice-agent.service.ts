@@ -126,6 +126,14 @@ export class VoiceAgentService extends BaseService {
        }
     }
 
+    // Fallback: If no phone number could be found for the candidate, fetch the admin's (User's) own phone number to allow testing
+    if (!data.phoneNumber && context.userId) {
+       const user = await prisma.user.findUnique({ where: { id: context.userId } });
+       if (user?.phone) {
+          data.phoneNumber = user.phone;
+       }
+    }
+
     if (data.phoneNumber) {
        const cleaned = data.phoneNumber.replace(/\D/g, '');
        if (cleaned.length === 10) {
@@ -136,7 +144,7 @@ export class VoiceAgentService extends BaseService {
           data.phoneNumber = '+' + cleaned; // Fallback
        }
     } else {
-       throw new Error('Phone number is missing for this candidate/employee.');
+       throw new Error('Phone number is missing for this candidate. Please update the Admin User Profile with a phone number to test it.');
     }
 
     const callLog = await prisma.voiceCallLog.create({
