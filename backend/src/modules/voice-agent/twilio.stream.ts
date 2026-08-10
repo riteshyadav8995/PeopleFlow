@@ -112,6 +112,47 @@ export function setupTwilioWebSocket(server: HttpServer) {
     }
 
     const deepgram = createClient(env.DEEPGRAM_API_KEY);
+    
+    // --- STT SETUP ---
+    const sttStream = deepgram.listen.live({
+      model: 'nova-2',
+      language: 'en',
+      encoding: 'mulaw',
+      sample_rate: 8000,
+      channels: 1,
+      interim_results: false,
+      endpointing: 300,
+    });
+
+    sttStream.addListener('open', () => {
+      console.log(`[Deepgram STT] Connection opened`);
+    });
+
+    sttStream.addListener('Results', async (data: any) => {
+      const transcript = data.channel.alternatives[0].transcript;
+      if (transcript && data.is_final) {
+        console.log(`[STT Transcript] User: ${transcript}`);
+        fullTranscript += `\nCandidate: ${transcript}`;
+
+        // Send to Gemini
+        if (chatSession) {
+          try {
+            console.log(`[Twilio Stream] Sending to Gemini...`);
+            const result = await chatSession.sendMessage(transcript);
+            const aiResponse = result.response.text().trim();
+            fullTranscript += `\nAI: ${aiResponse}`;
+            console.log(`[Twilio Stream] Gemini Response: ${aiResponse}`);
+            await sendAudioToTwilio(aiResponse);
+          } catch (err) {
+            console.error('[Twilio Stream] Gemini generation failed', err);
+          }
+        }
+      }
+    });
+
+    sttStream.addListener('error', (error: any) => {
+      console.error('[Deepgram STT] Error:', error);
+    });
 
     const sendAudioToTwilio = async (text: string) => {
       try {
@@ -140,7 +181,6 @@ export function setupTwilioWebSocket(server: HttpServer) {
             chunkCount++;
             
             // Throttle sending to Twilio to prevent buffer overrun. 
-            // Deepgram generates audio 10x faster than real-time, which overflows Twilio's ingest buffers if sent instantly.
             await new Promise(resolve => setTimeout(resolve, 20));
           }
           console.log(`[Deepgram TTS] Sent ${chunkCount} audio chunks to Twilio`);
@@ -154,12 +194,9 @@ export function setupTwilioWebSocket(server: HttpServer) {
             }
           };
           ws.send(JSON.stringify(markMessage));
-        } else {
-          console.error('[Deepgram TTS] No stream returned from speak.request');
         }
       } catch (error) {
         console.error('[Deepgram TTS] Error:', error);
-        logger.error('[Deepgram TTS] Error', { error });
       }
     };
 
@@ -171,48 +208,47 @@ export function setupTwilioWebSocket(server: HttpServer) {
           streamSid = msg.start.streamSid;
           callSid = msg.start.callSid;
           console.log(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
-          logger.info(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
-          // Generate dynamic broadcast message using Gemini
+          // Generate dynamic initial greeting using Gemini
           if (chatSession) {
-             console.log(`[Twilio Stream] Asking Gemini for broadcast message...`);
-             chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.").then(async (result: any) => {
+             console.log(`[Twilio Stream] Asking Gemini for initial greeting...`);
+             chatSession.sendMessage("You are initiating the call. Begin the conversation as if you just answered the phone. Follow your system instructions strictly and introduce yourself briefly.").then(async (result: any) => {
                 const greeting = result.response.text().trim();
                 fullTranscript += `\nAI: ${greeting}`;
-                console.log(`[Twilio Stream] Sending dynamic broadcast message via TTS...`);
+                console.log(`[Twilio Stream] Sending greeting via TTS...`);
                 await sendAudioToTwilio(greeting);
              }).catch((err: any) => {
                 console.error('[Twilio Stream] Failed to get initial greeting from Gemini', err);
-                const backupGreeting = "Hello! This is the AI assistant calling. How are you today?";
-                sendAudioToTwilio(backupGreeting);
+                sendAudioToTwilio("Hello! This is the AI assistant calling. How are you today?");
              });
           }
         } 
         else if (msg.event === 'media') {
-          // We ignore user media because this is a one-way broadcast
+          // Feed Twilio audio to Deepgram STT
+          if (sttStream && sttStream.getReadyState() === 1) { // 1 = OPEN
+            const audioBuffer = Buffer.from(msg.media.payload, 'base64');
+            sttStream.send(audioBuffer);
+          }
         } 
         else if (msg.event === 'mark') {
           if (msg.mark?.name === 'tts_finished') {
-            console.log('[Twilio Stream] TTS finished playing. Hanging up.');
-            ws.close();
+            console.log('[Twilio Stream] TTS finished playing segment.');
           }
         }
         else if (msg.event === 'stop') {
           console.log(`[Twilio Stream] Stopped stream: ${streamSid}`);
-          logger.info(`[Twilio Stream] Stopped stream: ${streamSid}`);
           if (keepAlive) clearInterval(keepAlive);
+          if (sttStream) sttStream.finish();
           
           // Post-call Processing: Save Transcript & Schedule Interview
           if (callLogId) {
             handlePostCall(callLogId, fullTranscript, llmApiKey).catch(err => {
-              console.error('[Post-call] Error in post-call processing', err);
-              logger.error('Error in post-call processing', { err });
+              console.error('[Post-call] Error', err);
             });
           }
         }
       } catch (err) {
         console.error('[Twilio Stream] Message parsing error', err);
-        logger.error('[Twilio Stream] Message parsing error', { err });
       }
     };
 
@@ -221,7 +257,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     chatSession = model.startChat({
       history: [
         { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
+        { role: 'model', parts: [{ text: 'Understood. I am ready to begin the conversation.' }] }
       ]
     });
     console.log(`[Twilio Stream] Gemini chat session initialized with system prompt`);
@@ -230,7 +266,6 @@ export function setupTwilioWebSocket(server: HttpServer) {
     // FLUSH QUEUED MESSAGES
     // -----------------------------------------------------------------
     isReady = true;
-    console.log(`[Twilio Stream] Ready! Flushing ${messageQueue.length} queued messages`);
     for (const msg of messageQueue) {
       processMessage(msg);
     }

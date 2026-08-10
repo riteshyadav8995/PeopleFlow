@@ -11,92 +11,22 @@ export class VoiceAgentController extends BaseController {
   // Twilio Webhook to provide TwiML for WebSocket streaming
   twilioWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const callLogId = req.query.callLogId as string;
+    
+    // Get the base URL (e.g. from ngrok, render, etc)
+    const host = req.headers.host;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    
+    // Twilio Media Streams require a wss:// URL
+    const wsProtocol = protocol === 'https' ? 'wss' : 'ws';
+    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream?callLogId=${callLogId || ''}`;
 
-    let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold. ";
-
-    // Fetch Campaign, Candidate, and Job info directly in the webhook
-    if (callLogId) {
-      try {
-        const callLog = await prisma.voiceCallLog.findUnique({
-          where: { id: callLogId },
-          include: {
-            campaign: { include: { configurations: true } },
-            candidate: true,
-            jobOpening: true
-          }
-        });
-
-        let systemPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt || '';
-
-        // Safety check: if systemPrompt is completely empty, provide a default so Gemini doesn't crash
-        if (!systemPrompt || systemPrompt.trim() === '') {
-          systemPrompt = "You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.";
-        }
-
-        if (callLog?.candidate) {
-          const c = callLog.candidate;
-          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
-        }
-        if (callLog?.jobOpening) {
-          const j = callLog.jobOpening;
-          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
-        }
-
-        // Helper function to escape XML characters so Twilio doesn't crash on < or &
-        const escapeXml = (unsafe: string) => {
-          return unsafe.replace(/[<>&'"]/g, (c) => {
-            switch (c) {
-              case '<': return '&lt;';
-              case '>': return '&gt;';
-              case '&': return '&amp;';
-              case "'": return '&apos;';
-              case '"': return '&quot;';
-              default: return c;
-            }
-          });
-        };
-
-        const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
-        if (llmApiKey && systemPrompt) {
-          console.log(`[Twilio Webhook] Asking Gemini to generate broadcast message...`);
-          try {
-            const genAI = new GoogleGenerativeAI(llmApiKey);
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-            const chatSession = model.startChat({
-              history: [
-                { role: 'user', parts: [{ text: systemPrompt }] },
-                { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
-              ]
-            });
-
-            // Promise.race to enforce an 8-second timeout so Twilio doesn't hang up the call
-            const timeoutPromise = new Promise<string>((_, reject) =>
-              setTimeout(() => reject(new Error("Gemini API timeout (8s)")), 8000)
-            );
-
-            const geminiPromise = chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
-
-            const result: any = await Promise.race([geminiPromise, timeoutPromise]);
-            const aiMessage = result.response.text().trim();
-            greeting += escapeXml(aiMessage);
-            console.log(`[Twilio Webhook] Generated combined greeting: ${greeting}`);
-          } catch (geminiError) {
-            console.error('[Twilio Webhook] Gemini failed or timed out. Falling back to raw system prompt.', geminiError);
-            greeting += escapeXml(systemPrompt); // Fallback if LLM fails
-          }
-        } else {
-          // If no API key, just use the raw system prompt
-          greeting += escapeXml(systemPrompt);
-        }
-      } catch (error) {
-        console.error('[Twilio Webhook] Error fetching call log:', error);
-      }
-    }
-
-    // Return TwiML: Twilio will read the entire message and then automatically hang up
+    // We use <Connect><Stream> to open the WebSocket to our server
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
-        <Say voice="Polly.Aditi">${greeting}</Say>
+        <Say voice="Polly.Aditi">Please hold while I connect you to the PeopleFlow AI.</Say>
+        <Connect>
+          <Stream url="${streamUrl}" />
+        </Connect>
       </Response>`;
 
     res.set('Content-Type', 'text/xml');
