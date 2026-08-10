@@ -143,8 +143,8 @@ export function RecruitmentDashboard() {
       alert('Call initiated successfully! The AI Agent is calling the candidate.');
       setIsAICallModalOpen(false);
       setCandidateToCall(null);
-    } catch (error) {
-      alert('Failed to initiate AI call. Make sure Exotel is configured.');
+    } catch (error: any) {
+      alert(error.response?.data?.message || error.message || 'Failed to initiate AI call.');
     } finally {
       setCalling(false);
     }
