@@ -14,11 +14,9 @@ export class VoiceAgentController extends BaseController {
     
     // Get the base URL (e.g. from ngrok, render, etc)
     const host = req.headers.host;
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    
-    // Twilio Media Streams require a wss:// URL
-    const wsProtocol = protocol === 'https' ? 'wss' : 'ws';
-    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream?callLogId=${callLogId || ''}`;
+    // Twilio Media Streams STRICTLY require a wss:// URL. 
+    // If we pass ws://, Twilio will immediately hang up the call after the <Say> block.
+    const streamUrl = `wss://${host}/api/v1/voice-agent/twilio-stream?callLogId=${callLogId || ''}`;
 
     // We use <Connect><Stream> to open the WebSocket to our server
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

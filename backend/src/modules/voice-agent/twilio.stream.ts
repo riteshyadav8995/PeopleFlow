@@ -111,48 +111,58 @@ export function setupTwilioWebSocket(server: HttpServer) {
       return;
     }
 
-    const deepgram = createClient(env.DEEPGRAM_API_KEY);
+    let deepgram: any;
+    let sttStream: any;
     
-    // --- STT SETUP ---
-    const sttStream = deepgram.listen.live({
-      model: 'nova-2',
-      language: 'en',
-      encoding: 'mulaw',
-      sample_rate: 8000,
-      channels: 1,
-      interim_results: false,
-      endpointing: 300,
-    });
+    try {
+      deepgram = createClient(env.DEEPGRAM_API_KEY);
+      
+      // --- STT SETUP ---
+      sttStream = deepgram.listen.live({
+        model: 'nova-2',
+        language: 'en',
+        encoding: 'mulaw',
+        sample_rate: 8000,
+        channels: 1,
+        interim_results: false,
+        endpointing: 300,
+      });
 
-    sttStream.addListener('open', () => {
-      console.log(`[Deepgram STT] Connection opened`);
-    });
+      sttStream.addListener('open', () => {
+        console.log(`[Deepgram STT] Connection opened`);
+      });
 
-    sttStream.addListener('Results', async (data: any) => {
-      const transcript = data.channel.alternatives[0].transcript;
-      if (transcript && data.is_final) {
-        console.log(`[STT Transcript] User: ${transcript}`);
-        fullTranscript += `\nCandidate: ${transcript}`;
+      sttStream.addListener('Results', async (data: any) => {
+        const transcript = data.channel.alternatives[0].transcript;
+        if (transcript && data.is_final) {
+          console.log(`[STT Transcript] User: ${transcript}`);
+          fullTranscript += `\nCandidate: ${transcript}`;
 
-        // Send to Gemini
-        if (chatSession) {
-          try {
-            console.log(`[Twilio Stream] Sending to Gemini...`);
-            const result = await chatSession.sendMessage(transcript);
-            const aiResponse = result.response.text().trim();
-            fullTranscript += `\nAI: ${aiResponse}`;
-            console.log(`[Twilio Stream] Gemini Response: ${aiResponse}`);
-            await sendAudioToTwilio(aiResponse);
-          } catch (err) {
-            console.error('[Twilio Stream] Gemini generation failed', err);
+          // Send to Gemini
+          if (chatSession) {
+            try {
+              console.log(`[Twilio Stream] Sending to Gemini...`);
+              const result = await chatSession.sendMessage(transcript);
+              const aiResponse = result.response.text().trim();
+              fullTranscript += `\nAI: ${aiResponse}`;
+              console.log(`[Twilio Stream] Gemini Response: ${aiResponse}`);
+              await sendAudioToTwilio(aiResponse);
+            } catch (err) {
+              console.error('[Twilio Stream] Gemini generation failed', err);
+            }
           }
         }
-      }
-    });
+      });
 
-    sttStream.addListener('error', (error: any) => {
-      console.error('[Deepgram STT] Error:', error);
-    });
+      sttStream.addListener('error', (error: any) => {
+        console.error('[Deepgram STT] Error:', error);
+      });
+    } catch (err) {
+      console.error('[Twilio Stream] Failed to initialize Deepgram. Invalid API Key?', err);
+      logger.error('Failed to initialize Deepgram. Invalid API Key?', { err });
+      ws.close();
+      return;
+    }
 
     const sendAudioToTwilio = async (text: string) => {
       try {
