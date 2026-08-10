@@ -3,6 +3,7 @@ import { VoiceAgentService } from './voice-agent.service';
 import { BaseController } from '../../core/base/base.controller';
 import { AuthenticatedRequest } from '../../core/interfaces/authenticated-request.interface';
 import { prisma } from '../../core/base/base.model';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export class VoiceAgentController extends BaseController {
   private voiceService = new VoiceAgentService();
@@ -11,25 +12,58 @@ export class VoiceAgentController extends BaseController {
   twilioWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const callLogId = req.query.callLogId as string;
     
-    // Determine host and force wss:// for production environments like Render
-    const host = req.headers.host || '';
-    const isLocalhost = host.includes('localhost');
-    const wsProtocol = isLocalhost ? 'ws' : 'wss';
+    let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold. ";
     
-    // Generate absolute WebSocket URL
-    const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
+    // Fetch Campaign, Candidate, and Job info directly in the webhook
+    if (callLogId) {
+      try {
+        const callLog = await prisma.voiceCallLog.findUnique({
+          where: { id: callLogId },
+          include: { 
+            campaign: { include: { configurations: true } },
+            candidate: true,
+            jobOpening: true
+          }
+        });
+        
+        let systemPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt || '';
+        
+        if (callLog?.candidate) {
+          const c = callLog.candidate;
+          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
+        }
+        if (callLog?.jobOpening) {
+          const j = callLog.jobOpening;
+          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
+        }
+
+        const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
+        if (llmApiKey && systemPrompt) {
+          console.log(`[Twilio Webhook] Asking Gemini to generate broadcast message...`);
+          const genAI = new GoogleGenerativeAI(llmApiKey);
+          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const chatSession = model.startChat({
+            history: [
+              { role: 'user', parts: [{ text: systemPrompt }] },
+              { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
+            ]
+          });
+          
+          const result = await chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
+          const aiMessage = result.response.text().trim();
+          
+          greeting += aiMessage;
+          console.log(`[Twilio Webhook] Generated combined greeting: ${greeting}`);
+        }
+      } catch (error) {
+        console.error('[Twilio Webhook] Error fetching or generating AI response:', error);
+      }
+    }
     
-    let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold.";
-    
-    console.log(`[Twilio Webhook] Hit! callLogId=${callLogId}, host=${req.headers.host}, streamUrl=${streamUrl}`);
-    
-    // Return TwiML: brief greeting then connect to WebSocket stream for AI conversation
+    // Return TwiML: Twilio will read the entire message and then automatically hang up
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
         <Say voice="Polly.Aditi">${greeting}</Say>
-        <Connect>
-          <Stream url="${streamUrl}" />
-        </Connect>
       </Response>`;
 
     res.set('Content-Type', 'text/xml');
