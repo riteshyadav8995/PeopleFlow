@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/auth.store';
-import {
-  Briefcase, Users, Plus, Target, Building2,
+import { 
+  Briefcase, Users, Plus, Target, Building2, 
   Clock, CheckCircle2, Calendar, X, FileText,
   MoreVertical, Edit2, Trash2, PhoneCall
 } from 'lucide-react';
@@ -143,8 +143,8 @@ export function RecruitmentDashboard() {
       alert('Call initiated successfully! The AI Agent is calling the candidate.');
       setIsAICallModalOpen(false);
       setCandidateToCall(null);
-    } catch (error) {
-      alert('Failed to initiate AI call. Make sure Exotel is configured.');
+    } catch (error: any) {
+      alert(error.response?.data?.message || error.message || 'Failed to initiate AI call.');
     } finally {
       setCalling(false);
     }
@@ -384,89 +384,89 @@ export function RecruitmentDashboard() {
                   <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No jobs found.</td></tr>
                 ) : (
                   <>
-                    {jobs.map((job, jobIdx) => {
-                      const isLastRow = jobIdx >= jobs.length - 2;
-                      return (
-                        <tr key={job.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}
-                          onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-50)')}
-                          onMouseOut={e => (e.currentTarget.style.background = '')}
-                        >
-                          <td style={{ padding: '1rem 1.25rem', fontWeight: 600 }}>{job.title}</td>
-                          <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.85rem' }}>{job.jobCode}</td>
-                          <td style={{ padding: '1rem 1.25rem' }}>{job.employmentType.replace(/_/g, ' ')}</td>
-                          <td style={{ padding: '1rem 1.25rem' }}>{job.workMode}</td>
-                          <td style={{ padding: '1rem 1.25rem' }}>{job.positions}</td>
-                          <td style={{ padding: '1rem 1.25rem' }}>
-                            <span className={`badge badge-${job.status === 'PUBLISHED' ? 'success' : job.status === 'CLOSED' ? 'neutral' : 'warning'}`}>{job.status}</span>
-                          </td>
-                          <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                            {job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : '—'}
-                          </td>
-                          <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                  {jobs.map((job, jobIdx) => {
+                    const isLastRow = jobIdx >= jobs.length - 2;
+                    return (
+                    <tr key={job.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}
+                      onMouseOver={e => (e.currentTarget.style.background = 'var(--gray-50)')}
+                      onMouseOut={e => (e.currentTarget.style.background = '')}
+                    >
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 600 }}>{job.title}</td>
+                      <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.85rem' }}>{job.jobCode}</td>
+                      <td style={{ padding: '1rem 1.25rem' }}>{job.employmentType.replace(/_/g, ' ')}</td>
+                      <td style={{ padding: '1rem 1.25rem' }}>{job.workMode}</td>
+                      <td style={{ padding: '1rem 1.25rem' }}>{job.positions}</td>
+                      <td style={{ padding: '1rem 1.25rem' }}>
+                        <span className={`badge badge-${job.status === 'PUBLISHED' ? 'success' : job.status === 'CLOSED' ? 'neutral' : 'warning'}`}>{job.status}</span>
+                      </td>
+                      <td style={{ padding: '1rem 1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : '—'}
+                      </td>
+                      <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <button 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem 0.4rem', color: 'var(--text-secondary)', borderRadius: '4px' }}
+                            onClick={(e) => { e.stopPropagation(); setActiveJobMenu(activeJobMenu === job.id ? null : job.id); }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                          {activeJobMenu === job.id && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                right: 0,
+                                ...(isLastRow
+                                  ? { bottom: '100%', marginBottom: '0.25rem' }
+                                  : { top: '100%', marginTop: '0.25rem' }
+                                ),
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-md)',
+                                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                                zIndex: 9999,
+                                minWidth: '140px',
+                                overflow: 'hidden'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem 0.4rem', color: 'var(--text-secondary)', borderRadius: '4px' }}
-                                onClick={(e) => { e.stopPropagation(); setActiveJobMenu(activeJobMenu === job.id ? null : job.id); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem' }}
+                                onClick={() => {
+                                  setJobForm({
+                                    id: job.id,
+                                    title: job.title,
+                                    employmentType: job.employmentType,
+                                    workMode: job.workMode,
+                                    positions: job.positions,
+                                    experienceMin: job.experienceMin || 0,
+                                    experienceMax: job.experienceMax || 0,
+                                    publicDescription: job.publicDescription || '',
+                                    applicationDeadline: job.applicationDeadline || '',
+                                    status: job.status,
+                                  });
+                                  setIsJobModalOpen(true);
+                                  setActiveJobMenu(null);
+                                }}
                               >
-                                <MoreVertical size={16} />
+                                <Edit2 size={14} /> Edit
                               </button>
-                              {activeJobMenu === job.id && (
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    right: 0,
-                                    ...(isLastRow
-                                      ? { bottom: '100%', marginBottom: '0.25rem' }
-                                      : { top: '100%', marginTop: '0.25rem' }
-                                    ),
-                                    background: 'var(--bg-surface)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-md)',
-                                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                                    zIndex: 9999,
-                                    minWidth: '140px',
-                                    overflow: 'hidden'
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <button
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem' }}
-                                    onClick={() => {
-                                      setJobForm({
-                                        id: job.id,
-                                        title: job.title,
-                                        employmentType: job.employmentType,
-                                        workMode: job.workMode,
-                                        positions: job.positions,
-                                        experienceMin: job.experienceMin || 0,
-                                        experienceMax: job.experienceMax || 0,
-                                        publicDescription: job.publicDescription || '',
-                                        applicationDeadline: job.applicationDeadline || '',
-                                        status: job.status,
-                                      });
-                                      setIsJobModalOpen(true);
-                                      setActiveJobMenu(null);
-                                    }}
-                                  >
-                                    <Edit2 size={14} /> Edit
-                                  </button>
-                                  <button
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--danger)' }}
-                                    onClick={() => {
-                                      setJobToDelete(job);
-                                      setIsDeleteModalOpen(true);
-                                      setActiveJobMenu(null);
-                                    }}
-                                  >
-                                    <Trash2 size={14} /> Delete
-                                  </button>
-                                </div>
-                              )}
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--danger)' }}
+                                onClick={() => {
+                                  setJobToDelete(job);
+                                  setIsDeleteModalOpen(true);
+                                  setActiveJobMenu(null);
+                                }}
+                              >
+                                <Trash2 size={14} /> Delete
+                              </button>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                  })}
                   </>
                 )}
               </tbody>
@@ -509,7 +509,7 @@ export function RecruitmentDashboard() {
                       <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span>{app.candidate.firstName} {app.candidate.lastName}</span>
-                          <button
+                          <button 
                             onClick={() => {
                               setCandidateToCall(app);
                               setIsAICallModalOpen(true);
@@ -741,7 +741,7 @@ export function RecruitmentDashboard() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>Current Stage</p>
-                  <select
+                  <select 
                     style={{ marginTop: '0.25rem', width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid var(--border)' }}
                     value={selectedApp.stage}
                     onChange={(e) => updateApplicationStage(selectedApp.id, e.target.value)}
@@ -787,13 +787,13 @@ export function RecruitmentDashboard() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button
+              <button 
                 onClick={() => setIsDeleteModalOpen(false)}
                 style={{ padding: '0.5rem 1.5rem', border: '1px solid var(--border-color)', background: 'transparent', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 500 }}
               >
                 No, cancel
               </button>
-              <button
+              <button 
                 onClick={handleDeleteJob}
                 disabled={saving}
                 style={{ padding: '0.5rem 1.5rem', border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 500 }}
@@ -832,9 +832,9 @@ export function RecruitmentDashboard() {
                 <>
                   <div className="form-group" style={{ marginBottom: '1rem' }}>
                     <label className="form-label">Select Voice Campaign</label>
-                    <select
-                      className="form-select"
-                      value={selectedCampaignId}
+                    <select 
+                      className="form-select" 
+                      value={selectedCampaignId} 
                       onChange={e => setSelectedCampaignId(e.target.value)}
                     >
                       {campaigns.map(camp => (
@@ -847,15 +847,15 @@ export function RecruitmentDashboard() {
               )}
             </div>
             <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '1rem', background: 'var(--gray-50)' }}>
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={() => setIsAICallModalOpen(false)}
                 style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', background: '#fff', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500 }}
               >
                 Cancel
               </button>
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={handleCallAI}
                 disabled={calling || campaigns.length === 0}
                 style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: 'linear-gradient(135deg, #f472b6, #6366f1)', color: '#fff', cursor: calling ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: calling || campaigns.length === 0 ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
