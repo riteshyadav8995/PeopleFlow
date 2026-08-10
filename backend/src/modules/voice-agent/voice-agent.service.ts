@@ -119,6 +119,13 @@ export class VoiceAgentService extends BaseService {
        }
     }
 
+    if (!data.phoneNumber && data.employeeId) {
+       const employee = await prisma.employee.findUnique({ where: { id: data.employeeId } });
+       if (employee?.phone) {
+          data.phoneNumber = employee.phone;
+       }
+    }
+
     if (data.phoneNumber) {
        const cleaned = data.phoneNumber.replace(/\D/g, '');
        if (cleaned.length === 10) {
@@ -128,6 +135,8 @@ export class VoiceAgentService extends BaseService {
        } else if (!data.phoneNumber.startsWith('+')) {
           data.phoneNumber = '+' + cleaned; // Fallback
        }
+    } else {
+       throw new Error('Phone number is missing for this candidate/employee.');
     }
 
     const callLog = await prisma.voiceCallLog.create({
