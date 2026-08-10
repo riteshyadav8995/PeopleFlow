@@ -166,16 +166,31 @@ export class VoiceAgentService extends BaseService {
         }
 
         const client = twilio(twilioSid, twilioToken);
-        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
+        
+        // Build WebSocket stream URL for the Twilio Media Stream
+        const wsUrl = backendUrl.replace(/^https?:\/\//, 'wss://');
+        const streamUrl = `${wsUrl}/api/v1/voice-agent/twilio-stream?callLogId=${callLog.id}`;
+
+        // Use inline TwiML instead of webhook URL to avoid cold-start timeout issues.
+        // When using `url`, Twilio must hit our server via HTTP to get TwiML — if the
+        // server is cold (Render free tier), it times out and Twilio plays a default message.
+        // With inline `twiml`, Twilio gets instructions immediately.
+        const twimlPayload = `<?xml version="1.0" encoding="UTF-8"?>
+          <Response>
+            <Say voice="Polly.Aditi">Please hold while I connect you to the AI assistant.</Say>
+            <Connect>
+              <Stream url="${streamUrl}" />
+            </Connect>
+          </Response>`;
 
         console.log(`[Twilio Call] Initiating call:`);
         console.log(`  → To: ${data.phoneNumber}`);
         console.log(`  → From: ${twilioNumber}`);
-        console.log(`  → Webhook URL: ${webhookUrl}`);
+        console.log(`  → Stream URL: ${streamUrl}`);
         console.log(`  → Backend URL: ${backendUrl}`);
 
         const call = await client.calls.create({
-          url: webhookUrl,
+          twiml: twimlPayload,
           to: data.phoneNumber,
           from: twilioNumber,
         });
