@@ -131,7 +131,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
         console.log(`[Deepgram TTS] Generating audio for: "${text.substring(0, 80)}..."`);
         const response = await deepgram.speak.request(
           { text },
-          { model: 'aura-asteria-en', encoding: 'mulaw', sample_rate: 8000 }
+          { model: 'aura-asteria-en', encoding: 'mulaw', sample_rate: 8000, container: 'none' }
         );
         const stream = await response.getStream();
         if (stream) {
