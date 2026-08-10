@@ -138,6 +138,10 @@ export function setupTwilioWebSocket(server: HttpServer) {
             };
             ws.send(JSON.stringify(message));
             chunkCount++;
+            
+            // Throttle sending to Twilio to prevent buffer overrun. 
+            // Deepgram generates audio 10x faster than real-time, which overflows Twilio's ingest buffers if sent instantly.
+            await new Promise(resolve => setTimeout(resolve, 20));
           }
           console.log(`[Deepgram TTS] Sent ${chunkCount} audio chunks to Twilio`);
           
