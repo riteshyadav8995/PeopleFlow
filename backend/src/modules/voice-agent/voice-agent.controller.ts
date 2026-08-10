@@ -15,9 +15,12 @@ export class VoiceAgentController extends BaseController {
     const host = req.headers.host;
     const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
-    // Return standard TwiML to connect to stream
+    console.log(`[Twilio Webhook] Hit! callLogId=${callLogId}, host=${host}, streamUrl=${streamUrl}`);
+    
+    // Return TwiML: brief greeting then connect to WebSocket stream for AI conversation
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
+        <Say voice="Polly.Aditi">Please hold while I connect you to the AI assistant.</Say>
         <Connect>
           <Stream url="${streamUrl}" />
         </Connect>

@@ -12,6 +12,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
 
   server.on('upgrade', (request, socket, head) => {
     if (request.url?.startsWith('/api/v1/voice-agent/twilio-stream')) {
+      console.log(`[WS Upgrade] Upgrading connection for: ${request.url}`);
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
       });
@@ -19,11 +20,13 @@ export function setupTwilioWebSocket(server: HttpServer) {
   });
 
   wss.on('connection', async (ws: WebSocket, req) => {
+    console.log(`[Twilio Stream] New WebSocket connection from ${req.socket.remoteAddress}`);
     logger.info(`[Twilio Stream] New WebSocket connection from ${req.socket.remoteAddress}`);
     
     // Parse callLogId from URL query params
     const url = new URL(req.url || '', `http://${req.headers.host}`);
     const callLogId = url.searchParams.get('callLogId');
+    console.log(`[Twilio Stream] callLogId: ${callLogId}`);
     
     let streamSid: string | null = null;
     let callSid: string | null = null;
@@ -48,6 +51,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     });
 
     ws.on('close', () => {
+      console.log(`[Twilio Stream] Connection closed`);
       logger.info(`[Twilio Stream] Connection closed`);
       if (dgConnection) dgConnection.finish();
       if (keepAlive) clearInterval(keepAlive);
@@ -64,23 +68,33 @@ export function setupTwilioWebSocket(server: HttpServer) {
           where: { id: callLogId },
           include: { campaign: { include: { configurations: true } } }
         });
+        console.log(`[Twilio Stream] CallLog found: ${!!callLog}, Campaign: ${callLog?.campaign?.name}`);
         const campaignPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt;
         if (campaignPrompt) {
           systemPrompt = campaignPrompt;
+          console.log(`[Twilio Stream] Using campaign prompt: ${campaignPrompt.substring(0, 100)}...`);
+        } else {
+          console.log(`[Twilio Stream] No campaign prompt found, using default`);
         }
       } catch (err) {
+        console.error('[Twilio Stream] Error fetching campaign prompt', err);
         logger.error('Error fetching campaign prompt', { err });
       }
     }
     
     // Check API Keys
+    console.log(`[Twilio Stream] DEEPGRAM_API_KEY set: ${!!env.DEEPGRAM_API_KEY}`);
+    console.log(`[Twilio Stream] LLM API Key set: ${!!llmApiKey}`);
+    
     if (!env.DEEPGRAM_API_KEY) {
+      console.error('[Twilio Stream] DEEPGRAM_API_KEY is not set! Closing WebSocket.');
       logger.error('DEEPGRAM_API_KEY is not set. Speech-to-Text will not work.');
       ws.close();
       return;
     }
 
     if (!llmApiKey) {
+      console.error('[Twilio Stream] LLM API Key is not set! Closing WebSocket.');
       logger.error('LLM API Key (GEMINI_API_KEY or OPENAI_API_KEY) is not set.');
       ws.close();
       return;
@@ -100,6 +114,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     });
 
     dgConnection.on('open', () => {
+      console.log('[Deepgram STT] Connection opened');
       logger.info('[Deepgram STT] Connection opened');
       keepAlive = setInterval(() => {
         if (dgConnection) dgConnection.keepAlive();
@@ -107,11 +122,13 @@ export function setupTwilioWebSocket(server: HttpServer) {
     });
 
     dgConnection.on('error', (err: any) => {
+      console.error('[Deepgram STT] Error:', err);
       logger.error('[Deepgram STT] Error', { err });
     });
 
     const sendAudioToTwilio = async (text: string) => {
       try {
+        console.log(`[Deepgram TTS] Generating audio for: "${text.substring(0, 80)}..."`);
         const response = await deepgram.speak.request(
           { text },
           { model: 'aura-asteria-en', encoding: 'mulaw', sample_rate: 8000 }
@@ -119,6 +136,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
         const stream = await response.getStream();
         if (stream) {
           const reader = stream.getReader();
+          let chunkCount = 0;
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -132,9 +150,14 @@ export function setupTwilioWebSocket(server: HttpServer) {
               }
             };
             ws.send(JSON.stringify(message));
+            chunkCount++;
           }
+          console.log(`[Deepgram TTS] Sent ${chunkCount} audio chunks to Twilio`);
+        } else {
+          console.error('[Deepgram TTS] No stream returned from speak.request');
         }
       } catch (error) {
+        console.error('[Deepgram TTS] Error:', error);
         logger.error('[Deepgram TTS] Error', { error });
       }
     };
@@ -146,10 +169,12 @@ export function setupTwilioWebSocket(server: HttpServer) {
         if (msg.event === 'start') {
           streamSid = msg.start.streamSid;
           callSid = msg.start.callSid;
+          console.log(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           logger.info(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
           const greeting = "Hello! This is the PeopleFlow AI Voice Assistant. Am I speaking with the candidate?";
           fullTranscript += `\nAI: ${greeting}`;
+          console.log(`[Twilio Stream] Sending greeting via TTS...`);
           sendAudioToTwilio(greeting);
         } 
         else if (msg.event === 'media') {
@@ -159,6 +184,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
           }
         } 
         else if (msg.event === 'stop') {
+          console.log(`[Twilio Stream] Stopped stream: ${streamSid}`);
           logger.info(`[Twilio Stream] Stopped stream: ${streamSid}`);
           if (dgConnection) dgConnection.finish();
           if (keepAlive) clearInterval(keepAlive);
@@ -166,11 +192,13 @@ export function setupTwilioWebSocket(server: HttpServer) {
           // Post-call Processing: Save Transcript & Schedule Interview
           if (callLogId) {
             handlePostCall(callLogId, fullTranscript, llmApiKey).catch(err => {
+              console.error('[Post-call] Error in post-call processing', err);
               logger.error('Error in post-call processing', { err });
             });
           }
         }
       } catch (err) {
+        console.error('[Twilio Stream] Message parsing error', err);
         logger.error('[Twilio Stream] Message parsing error', { err });
       }
     };
@@ -183,10 +211,12 @@ export function setupTwilioWebSocket(server: HttpServer) {
         { role: 'model', parts: [{ text: 'Got it. I will follow those instructions and ask one question at a time.' }] }
       ]
     });
+    console.log(`[Twilio Stream] Gemini chat session initialized with system prompt`);
 
     dgConnection.on('transcript', async (data: any) => {
       const transcript = data.channel.alternatives[0].transcript;
       if (transcript && data.is_final) {
+        console.log(`[User said]: ${transcript}`);
         logger.info(`[User]: ${transcript}`);
         fullTranscript += `\nCandidate: ${transcript}`;
         
@@ -194,11 +224,13 @@ export function setupTwilioWebSocket(server: HttpServer) {
           if (chatSession) {
             const result = await chatSession.sendMessage(transcript);
             const responseText = result.response.text().trim();
+            console.log(`[AI replied]: ${responseText}`);
             logger.info(`[AI]: ${responseText}`);
             fullTranscript += `\nAI: ${responseText}`;
             await sendAudioToTwilio(responseText);
           }
         } catch (err) {
+          console.error('[LLM] Error:', err);
           logger.error('[LLM] Error', { err });
         }
       }
@@ -208,6 +240,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     // FLUSH QUEUED MESSAGES
     // -----------------------------------------------------------------
     isReady = true;
+    console.log(`[Twilio Stream] Ready! Flushing ${messageQueue.length} queued messages`);
     for (const msg of messageQueue) {
       processMessage(msg);
     }

@@ -168,13 +168,19 @@ export class VoiceAgentService extends BaseService {
         const client = twilio(twilioSid, twilioToken);
         const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
 
+        console.log(`[Twilio Call] Initiating call:`);
+        console.log(`  → To: ${data.phoneNumber}`);
+        console.log(`  → From: ${twilioNumber}`);
+        console.log(`  → Webhook URL: ${webhookUrl}`);
+        console.log(`  → Backend URL: ${backendUrl}`);
+
         const call = await client.calls.create({
           url: webhookUrl,
           to: data.phoneNumber,
           from: twilioNumber,
         });
         
-        console.log(`Twilio call initiated with SID: ${call.sid}`);
+        console.log(`[Twilio Call] Success! SID: ${call.sid}`);
       } catch (err) {
         console.error('Failed to trigger Twilio outbound call:', err);
         // We log the error but still return the callLog to frontend
