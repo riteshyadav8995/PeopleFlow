@@ -237,7 +237,7 @@ export class VoiceAgentService extends BaseService {
       } else {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
-           model: 'gemini-1.5-flash', 
+           model: 'gemini-2.5-flash', 
            systemInstruction: systemPrompt 
         });
 
@@ -357,7 +357,7 @@ export class VoiceAgentService extends BaseService {
         const transcriptText = callLog.transcripts.map(t => `${t.role}: ${t.message}`).join('\n');
         
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         
         const prompt = `You are an AI assistant. Summarize the following conversation in 2-3 short sentences highlighting the key points discussed:\n\n${transcriptText}`;
         const result = await model.generateContent(prompt);

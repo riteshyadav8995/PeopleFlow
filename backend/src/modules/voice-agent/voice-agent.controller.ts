@@ -42,7 +42,7 @@ export class VoiceAgentController extends BaseController {
           console.log(`[Twilio Webhook] Asking Gemini to generate broadcast message...`);
           try {
             const genAI = new GoogleGenerativeAI(llmApiKey);
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const chatSession = model.startChat({
               history: [
                 { role: 'user', parts: [{ text: systemPrompt }] },
