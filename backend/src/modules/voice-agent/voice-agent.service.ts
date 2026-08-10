@@ -177,7 +177,6 @@ export class VoiceAgentService extends BaseService {
           url: webhookUrl,
           to: data.phoneNumber,
           from: twilioNumber,
-          timeout: 30, // Wait 30 seconds for the recipient to answer
         });
         
         console.log(`[Twilio Call] Success! SID: ${call.sid}`);
