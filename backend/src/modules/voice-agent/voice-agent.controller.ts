@@ -28,6 +28,11 @@ export class VoiceAgentController extends BaseController {
         
         let systemPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt || '';
         
+        // Safety check: if systemPrompt is completely empty, provide a default so Gemini doesn't crash
+        if (!systemPrompt || systemPrompt.trim() === '') {
+          systemPrompt = "You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.";
+        }
+
         if (callLog?.candidate) {
           const c = callLog.candidate;
           systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
@@ -36,6 +41,20 @@ export class VoiceAgentController extends BaseController {
           const j = callLog.jobOpening;
           systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
         }
+
+        // Helper function to escape XML characters so Twilio doesn't crash on < or &
+        const escapeXml = (unsafe: string) => {
+          return unsafe.replace(/[<>&'"]/g, (c) => {
+            switch (c) {
+              case '<': return '&lt;';
+              case '>': return '&gt;';
+              case '&': return '&amp;';
+              case '\\'': return '&apos;';
+              case '"': return '&quot;';
+              default: return c;
+            }
+          });
+        };
 
         const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
         if (llmApiKey && systemPrompt) {
@@ -50,17 +69,24 @@ export class VoiceAgentController extends BaseController {
               ]
             });
             
-            const result = await chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
+            // Promise.race to enforce an 8-second timeout so Twilio doesn't hang up the call
+            const timeoutPromise = new Promise<string>((_, reject) => 
+              setTimeout(() => reject(new Error("Gemini API timeout (8s)")), 8000)
+            );
+            
+            const geminiPromise = chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
+            
+            const result: any = await Promise.race([geminiPromise, timeoutPromise]);
             const aiMessage = result.response.text().trim();
-            greeting += aiMessage;
+            greeting += escapeXml(aiMessage);
             console.log(`[Twilio Webhook] Generated combined greeting: ${greeting}`);
           } catch (geminiError) {
-            console.error('[Twilio Webhook] Gemini failed. Falling back to raw system prompt.', geminiError);
-            greeting += systemPrompt; // Fallback if LLM fails
+            console.error('[Twilio Webhook] Gemini failed or timed out. Falling back to raw system prompt.', geminiError);
+            greeting += escapeXml(systemPrompt); // Fallback if LLM fails
           }
         } else {
           // If no API key, just use the raw system prompt
-          greeting += systemPrompt;
+          greeting += escapeXml(systemPrompt);
         }
       } catch (error) {
         console.error('[Twilio Webhook] Error fetching call log:', error);
