@@ -21,7 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@deepgram/sdk": "^5.7.0",
+    "@deepgram/sdk": "^3.13.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",
