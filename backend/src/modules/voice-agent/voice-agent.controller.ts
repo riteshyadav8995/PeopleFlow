@@ -11,44 +11,35 @@ export class VoiceAgentController extends BaseController {
   // Twilio Webhook to provide TwiML for WebSocket streaming
   twilioWebhook = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const callLogId = req.query.callLogId as string;
-    
+
     let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold. ";
-    
+
     // Fetch Campaign, Candidate, and Job info directly in the webhook
     if (callLogId) {
       try {
         const callLog = await prisma.voiceCallLog.findUnique({
           where: { id: callLogId },
-          include: { 
+          include: {
             campaign: { include: { configurations: true } },
             candidate: true,
             jobOpening: true
           }
         });
-        
+
         let systemPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt || '';
-        
+
         // Safety check: if systemPrompt is completely empty, provide a default so Gemini doesn't crash
         if (!systemPrompt || systemPrompt.trim() === '') {
           systemPrompt = "You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.";
         }
 
-        let candidate = callLog?.candidate;
-        let jobOpening = callLog?.jobOpening;
-
-        // If this is a test call without a specific candidate/job, fetch a sample from DB to give the AI context
-        if (!candidate && callLog?.tenantId) {
-           candidate = await prisma.candidate.findFirst({ where: { tenantId: callLog.tenantId } });
+        if (callLog?.candidate) {
+          const c = callLog.candidate;
+          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
         }
-        if (!jobOpening && callLog?.tenantId) {
-           jobOpening = await prisma.jobOpening.findFirst({ where: { tenantId: callLog.tenantId, status: 'PUBLISHED' } }) || await prisma.jobOpening.findFirst({ where: { tenantId: callLog.tenantId } });
-        }
-
-        if (candidate) {
-          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${candidate.firstName} ${candidate.lastName}\nEmail: ${candidate.email}\nPhone: ${candidate.phone || 'N/A'}\nTotal Experience: ${candidate.totalExperience || 0} years\nCurrent Company: ${candidate.currentCompany || 'N/A'}\nExpected Salary: ${candidate.expectedSalary || 'N/A'}`;
-        }
-        if (jobOpening) {
-          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${jobOpening.title}\nEmployment Type: ${jobOpening.employmentType}\nWork Mode: ${jobOpening.workMode}\nRequired Experience: ${jobOpening.experienceMin || 0} - ${jobOpening.experienceMax || 'Any'} years\nDescription: ${jobOpening.publicDescription || 'N/A'}`;
+        if (callLog?.jobOpening) {
+          const j = callLog.jobOpening;
+          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
         }
 
         // Helper function to escape XML characters so Twilio doesn't crash on < or &
@@ -77,14 +68,14 @@ export class VoiceAgentController extends BaseController {
                 { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
               ]
             });
-            
+
             // Promise.race to enforce an 8-second timeout so Twilio doesn't hang up the call
-            const timeoutPromise = new Promise<string>((_, reject) => 
+            const timeoutPromise = new Promise<string>((_, reject) =>
               setTimeout(() => reject(new Error("Gemini API timeout (8s)")), 8000)
             );
-            
+
             const geminiPromise = chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
-            
+
             const result: any = await Promise.race([geminiPromise, timeoutPromise]);
             const aiMessage = result.response.text().trim();
             greeting += escapeXml(aiMessage);
@@ -101,7 +92,7 @@ export class VoiceAgentController extends BaseController {
         console.error('[Twilio Webhook] Error fetching call log:', error);
       }
     }
-    
+
     // Return TwiML: Twilio will read the entire message and then automatically hang up
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
