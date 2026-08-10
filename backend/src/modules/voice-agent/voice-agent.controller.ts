@@ -40,23 +40,30 @@ export class VoiceAgentController extends BaseController {
         const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
         if (llmApiKey && systemPrompt) {
           console.log(`[Twilio Webhook] Asking Gemini to generate broadcast message...`);
-          const genAI = new GoogleGenerativeAI(llmApiKey);
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-          const chatSession = model.startChat({
-            history: [
-              { role: 'user', parts: [{ text: systemPrompt }] },
-              { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
-            ]
-          });
-          
-          const result = await chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
-          const aiMessage = result.response.text().trim();
-          
-          greeting += aiMessage;
-          console.log(`[Twilio Webhook] Generated combined greeting: ${greeting}`);
+          try {
+            const genAI = new GoogleGenerativeAI(llmApiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const chatSession = model.startChat({
+              history: [
+                { role: 'user', parts: [{ text: systemPrompt }] },
+                { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
+              ]
+            });
+            
+            const result = await chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.");
+            const aiMessage = result.response.text().trim();
+            greeting += aiMessage;
+            console.log(`[Twilio Webhook] Generated combined greeting: ${greeting}`);
+          } catch (geminiError) {
+            console.error('[Twilio Webhook] Gemini failed. Falling back to raw system prompt.', geminiError);
+            greeting += systemPrompt; // Fallback if LLM fails
+          }
+        } else {
+          // If no API key, just use the raw system prompt
+          greeting += systemPrompt;
         }
       } catch (error) {
-        console.error('[Twilio Webhook] Error fetching or generating AI response:', error);
+        console.error('[Twilio Webhook] Error fetching call log:', error);
       }
     }
     
