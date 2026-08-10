@@ -216,13 +216,12 @@ export function setupTwilioWebSocket(server: HttpServer) {
 }
 
 async function handlePostCall(callLogId: string, transcript: string, apiKey: string) {
-  // 1. Update Call Log with Transcript
+  // 1. Update Call Log with Transcript (stored in 'summary' field)
   const callLog = await prisma.voiceCallLog.update({
     where: { id: callLogId },
     data: {
-      transcript,
+      summary: transcript,
       status: 'COMPLETED',
-      endTime: new Date()
     },
     include: { candidate: true }
   });

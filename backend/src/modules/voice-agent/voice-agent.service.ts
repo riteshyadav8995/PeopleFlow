@@ -155,11 +155,14 @@ export class VoiceAgentService extends BaseService {
         const twilioSid = process.env.TWILIO_ACCOUNT_SID;
         const twilioToken = process.env.TWILIO_AUTH_TOKEN;
         const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
-        // Temporary hardcoded ngrok URL for testing
-        const backendUrl = 'https://concert-vastness-smock.ngrok-free.dev';
+        const backendUrl = process.env.BACKEND_URL;
 
         if (!twilioSid || !twilioToken || !twilioNumber) {
           throw new Error('Twilio credentials not configured in .env');
+        }
+
+        if (!backendUrl) {
+          throw new Error('BACKEND_URL is not configured in .env. Twilio needs a publicly accessible webhook URL.');
         }
 
         const client = twilio(twilioSid, twilioToken);

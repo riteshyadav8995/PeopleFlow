@@ -57,6 +57,17 @@ const envSchema = z.object({
 
   // Deepgram
   DEEPGRAM_API_KEY: z.string().optional(),
+
+  // Gemini
+  GEMINI_API_KEY: z.string().optional(),
+
+  // Twilio
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_PHONE_NUMBER: z.string().optional(),
+
+  // Backend URL (public URL for webhooks)
+  BACKEND_URL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
