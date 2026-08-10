@@ -166,39 +166,25 @@ export class VoiceAgentService extends BaseService {
         }
 
         const client = twilio(twilioSid, twilioToken);
-        
-        // Build WebSocket stream URL for the Twilio Media Stream
-        const wsUrl = backendUrl.replace(/^https?:\/\//, 'wss://');
-        const streamUrl = `${wsUrl}/api/v1/voice-agent/twilio-stream?callLogId=${callLog.id}`;
-
-        // Use inline TwiML instead of webhook URL to avoid cold-start timeout issues.
-        // When using `url`, Twilio must hit our server via HTTP to get TwiML — if the
-        // server is cold (Render free tier), it times out and Twilio plays a default message.
-        // With inline `twiml`, Twilio gets instructions immediately.
-        const twimlPayload = `<?xml version="1.0" encoding="UTF-8"?>
-          <Response>
-            <Say voice="Polly.Aditi">Please hold while I connect you to the AI assistant.</Say>
-            <Connect>
-              <Stream url="${streamUrl}" />
-            </Connect>
-          </Response>`;
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
 
         console.log(`[Twilio Call] Initiating call:`);
         console.log(`  → To: ${data.phoneNumber}`);
         console.log(`  → From: ${twilioNumber}`);
-        console.log(`  → Stream URL: ${streamUrl}`);
-        console.log(`  → Backend URL: ${backendUrl}`);
+        console.log(`  → Webhook URL: ${webhookUrl}`);
 
         const call = await client.calls.create({
-          twiml: twimlPayload,
+          url: webhookUrl,
           to: data.phoneNumber,
           from: twilioNumber,
+          timeout: 30, // Wait 30 seconds for the recipient to answer
         });
         
         console.log(`[Twilio Call] Success! SID: ${call.sid}`);
-      } catch (err) {
-        console.error('Failed to trigger Twilio outbound call:', err);
-        // We log the error but still return the callLog to frontend
+      } catch (err: any) {
+        console.error('Failed to trigger Twilio outbound call:', err?.message || err);
+        // Propagate error to the caller so the frontend knows the call failed
+        throw new AppError(err?.message || 'Failed to initiate Twilio call', 500);
       }
     }
 
