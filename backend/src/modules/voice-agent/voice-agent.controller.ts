@@ -18,7 +18,7 @@ export class VoiceAgentController extends BaseController {
     
     let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold.";
     
-    console.log(`[Twilio Webhook] Hit! callLogId=${callLogId}, host=${host}, streamUrl=${streamUrl}`);
+    console.log(`[Twilio Webhook] Hit! callLogId=${callLogId}, host=${req.headers.host}, streamUrl=${streamUrl}`);
     
     // Return TwiML: brief greeting then connect to WebSocket stream for AI conversation
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
