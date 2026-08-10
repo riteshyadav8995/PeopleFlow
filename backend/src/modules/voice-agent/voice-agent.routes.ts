@@ -16,6 +16,8 @@ router.get('/public/calls/:id', controller.getPublicCallInfo);
 router.post('/public/calls/:id/interact', controller.publicInteract);
 router.post('/public/calls/:id/end', controller.endCallPublic);
 
+router.get('/debug', controller.debugKeys);
+
 router.use(authenticationMiddleware, tenantMiddleware);
 
 // Campaigns

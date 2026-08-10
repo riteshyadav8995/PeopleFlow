@@ -12,8 +12,8 @@ export class VoiceAgentController extends BaseController {
     const callLogId = req.query.callLogId as string;
     // Generate absolute WebSocket URL based on the incoming request host
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const wsProtocol = protocol === 'https' ? 'wss' : 'ws';
-    const host = req.headers.host;
+    const host = req.headers.host || '';
+    const wsProtocol = host.includes('localhost') ? 'ws' : 'wss';
     const streamUrl = `${wsProtocol}://${host}/api/v1/voice-agent/twilio-stream${callLogId ? `?callLogId=${callLogId}` : ''}`;
     
     let greeting = "Connecting you to the PeopleFlow AI Agent. Please hold.";
@@ -106,5 +106,13 @@ export class VoiceAgentController extends BaseController {
   endCallPublic = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const log = await this.voiceService.endCallPublic(req.params.id as string);
     res.json({ data: log, message: 'Call ended and summarized successfully' });
+  });
+
+  debugKeys = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    res.json({
+      deepgram: !!(process.env.DEEPGRAM_API_KEY),
+      gemini: !!(process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY),
+      env_keys: Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('TOKEN'))
+    });
   });
 }
