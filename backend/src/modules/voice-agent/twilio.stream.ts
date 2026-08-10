@@ -66,7 +66,11 @@ export function setupTwilioWebSocket(server: HttpServer) {
       try {
         const callLog = await prisma.voiceCallLog.findUnique({
           where: { id: callLogId },
-          include: { campaign: { include: { configurations: true } } }
+          include: { 
+            campaign: { include: { configurations: true } },
+            candidate: true,
+            jobOpening: true
+          }
         });
         console.log(`[Twilio Stream] CallLog found: ${!!callLog}, Campaign: ${callLog?.campaign?.name}`);
         const campaignPrompt = callLog?.campaign?.configurations?.[0]?.systemPrompt;
@@ -75,6 +79,16 @@ export function setupTwilioWebSocket(server: HttpServer) {
           console.log(`[Twilio Stream] Using campaign prompt: ${campaignPrompt.substring(0, 100)}...`);
         } else {
           console.log(`[Twilio Stream] No campaign prompt found, using default`);
+        }
+        
+        // Append Candidate and Job info to system prompt so the AI can answer contextually
+        if (callLog?.candidate) {
+          const c = callLog.candidate;
+          systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone}\nExperience: ${c.experience} years\nSkills: ${JSON.stringify(c.skills || [])}\nResume Text: ${c.resumeText || 'Not available'}`;
+        }
+        if (callLog?.jobOpening) {
+          const j = callLog.jobOpening;
+          systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nDepartment: ${j.departmentId || 'N/A'}\nDescription: ${j.description}\nRequirements: ${j.requirements}`;
         }
       } catch (err) {
         console.error('[Twilio Stream] Error fetching campaign prompt', err);
