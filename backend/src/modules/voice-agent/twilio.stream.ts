@@ -36,7 +36,6 @@ export function setupTwilioWebSocket(server: HttpServer) {
     const messageQueue: string[] = [];
     
     // Declare these variables so they can be accessed inside processMessage and close handlers
-    let dgConnection: any = null;
     let keepAlive: NodeJS.Timeout | null = null;
     let chatSession: any = null;
     const llmApiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || env.OPENAI_API_KEY || '';
@@ -51,9 +50,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     });
 
     ws.on('close', () => {
-      console.log(`[Twilio Stream] Connection closed`);
-      logger.info(`[Twilio Stream] Connection closed`);
-      if (dgConnection) dgConnection.finish();
+      console.log(`[Twilio Stream] WebSocket closed for ${streamSid || 'unknown'}`);
       if (keepAlive) clearInterval(keepAlive);
     });
 
@@ -116,30 +113,6 @@ export function setupTwilioWebSocket(server: HttpServer) {
 
     const deepgram = createClient(env.DEEPGRAM_API_KEY);
 
-    // --- Setup Deepgram STT ---
-    dgConnection = deepgram.listen.live({
-      model: 'nova-2',
-      language: 'en-IN',
-      smart_format: true,
-      encoding: 'mulaw',
-      sample_rate: 8000,
-      channels: 1,
-      endpointing: 300,
-    });
-
-    dgConnection.on('open', () => {
-      console.log('[Deepgram STT] Connection opened');
-      logger.info('[Deepgram STT] Connection opened');
-      keepAlive = setInterval(() => {
-        if (dgConnection) dgConnection.keepAlive();
-      }, 10 * 1000);
-    });
-
-    dgConnection.on('error', (err: any) => {
-      console.error('[Deepgram STT] Error:', err);
-      logger.error('[Deepgram STT] Error', { err });
-    });
-
     const sendAudioToTwilio = async (text: string) => {
       try {
         console.log(`[Deepgram TTS] Generating audio for: "${text.substring(0, 80)}..."`);
@@ -167,6 +140,16 @@ export function setupTwilioWebSocket(server: HttpServer) {
             chunkCount++;
           }
           console.log(`[Deepgram TTS] Sent ${chunkCount} audio chunks to Twilio`);
+          
+          // Send mark event so we know when audio finishes playing
+          const markMessage = {
+            event: 'mark',
+            streamSid: streamSid,
+            mark: {
+              name: 'tts_finished'
+            }
+          };
+          ws.send(JSON.stringify(markMessage));
         } else {
           console.error('[Deepgram TTS] No stream returned from speak.request');
         }
@@ -186,13 +169,13 @@ export function setupTwilioWebSocket(server: HttpServer) {
           console.log(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           logger.info(`[Twilio Stream] Started stream: ${streamSid} for call: ${callSid}`);
           
-          // Generate dynamic first greeting using Gemini instead of hardcoded text
+          // Generate dynamic broadcast message using Gemini
           if (chatSession) {
-             console.log(`[Twilio Stream] Asking Gemini for initial greeting...`);
-             chatSession.sendMessage("Hello! Please introduce yourself to the candidate and ask your first question based on the system prompt.").then(async (result: any) => {
+             console.log(`[Twilio Stream] Asking Gemini for broadcast message...`);
+             chatSession.sendMessage("Generate the one-way broadcast message based on the system prompt and candidate details. Do not ask questions, just deliver the message.").then(async (result: any) => {
                 const greeting = result.response.text().trim();
                 fullTranscript += `\nAI: ${greeting}`;
-                console.log(`[Twilio Stream] Sending dynamic greeting via TTS: ${greeting}`);
+                console.log(`[Twilio Stream] Sending dynamic broadcast message via TTS...`);
                 await sendAudioToTwilio(greeting);
              }).catch((err: any) => {
                 console.error('[Twilio Stream] Failed to get initial greeting from Gemini', err);
@@ -202,15 +185,17 @@ export function setupTwilioWebSocket(server: HttpServer) {
           }
         } 
         else if (msg.event === 'media') {
-          const buffer = Buffer.from(msg.media.payload, 'base64');
-          if (dgConnection && dgConnection.getReadyState() === 1) { 
-            dgConnection.send(buffer);
-          }
+          // We ignore user media because this is a one-way broadcast
         } 
+        else if (msg.event === 'mark') {
+          if (msg.mark?.name === 'tts_finished') {
+            console.log('[Twilio Stream] TTS finished playing. Hanging up.');
+            ws.close();
+          }
+        }
         else if (msg.event === 'stop') {
           console.log(`[Twilio Stream] Stopped stream: ${streamSid}`);
           logger.info(`[Twilio Stream] Stopped stream: ${streamSid}`);
-          if (dgConnection) dgConnection.finish();
           if (keepAlive) clearInterval(keepAlive);
           
           // Post-call Processing: Save Transcript & Schedule Interview
@@ -232,36 +217,10 @@ export function setupTwilioWebSocket(server: HttpServer) {
     chatSession = model.startChat({
       history: [
         { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'Got it. I will follow those instructions and ask one question at a time.' }] }
+        { role: 'model', parts: [{ text: 'Got it. I will deliver the message based on the context provided.' }] }
       ]
     });
     console.log(`[Twilio Stream] Gemini chat session initialized with system prompt`);
-
-    dgConnection.on('transcript', async (data: any) => {
-      const transcript = data.channel.alternatives[0].transcript;
-      if (transcript && data.is_final) {
-        console.log(`[User said]: ${transcript}`);
-        logger.info(`[User]: ${transcript}`);
-        fullTranscript += `\nCandidate: ${transcript}`;
-        
-        try {
-          if (chatSession) {
-            // Play a filler message so the user knows the AI is thinking (simulates human pause)
-            await sendAudioToTwilio("Hmm... just a second.");
-            
-            const result = await chatSession.sendMessage(transcript);
-            const responseText = result.response.text().trim();
-            console.log(`[AI replied]: ${responseText}`);
-            logger.info(`[AI]: ${responseText}`);
-            fullTranscript += `\nAI: ${responseText}`;
-            await sendAudioToTwilio(responseText);
-          }
-        } catch (err) {
-          console.error('[LLM] Error:', err);
-          logger.error('[LLM] Error', { err });
-        }
-      }
-    });
 
     // -----------------------------------------------------------------
     // FLUSH QUEUED MESSAGES
