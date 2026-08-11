@@ -167,15 +167,19 @@ export class VoiceAgentService extends BaseService {
         const campaignDesc = fullCallLog?.campaign?.description || '';
 
         // Build a campaign-specific greeting
-        let greeting = '';
-        if (jobTitle && campaignDesc) {
-          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role. ${campaignDesc}. You are a strong candidate for this position. Do you have a few minutes to discuss this further?`;
-        } else if (jobTitle) {
-          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role and we are calling regarding the next steps in your application process. You are a strong candidate for this position. Do you have a few minutes to chat?`;
-        } else if (campaignName) {
-          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding ${campaignName}. Do you have a few minutes to discuss this?`;
-        } else {
-          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding your job application and the next steps in the process. Do you have a few minutes?`;
+        let greeting = fullCallLog?.campaign?.configurations?.[0]?.systemPrompt?.trim() || '';
+
+        // Fallback to data-driven greeting if the campaign prompt is empty
+        if (!greeting) {
+          if (jobTitle && campaignDesc) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role. ${campaignDesc}. You are a strong candidate for this position. Do you have a few minutes to discuss this further?`;
+          } else if (jobTitle) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role and we are calling regarding the next steps in your application process. You are a strong candidate for this position. Do you have a few minutes to chat?`;
+          } else if (campaignName) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding ${campaignName}. Do you have a few minutes to discuss this?`;
+          } else {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding your job application and the next steps in the process. Do you have a few minutes?`;
+          }
         }
 
         console.log(`[Twilio Call] Built data-driven greeting: ${greeting}`);

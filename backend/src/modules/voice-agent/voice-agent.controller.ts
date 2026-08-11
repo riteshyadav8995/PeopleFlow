@@ -103,7 +103,7 @@ export class VoiceAgentController extends BaseController {
           const callLog = await prisma.voiceCallLog.findUnique({
             where: { id: callLogId },
             include: {
-              campaign: true,
+              campaign: { include: { configurations: true } },
               candidate: true,
               jobOpening: true
             }
@@ -115,7 +115,11 @@ export class VoiceAgentController extends BaseController {
           const campaignName = callLog?.campaign?.name || '';
           const campaignDesc = callLog?.campaign?.description || '';
 
-          if (jobTitle && campaignDesc) {
+          const systemPromptConfig = callLog?.campaign?.configurations?.[0]?.systemPrompt?.trim();
+
+          if (systemPromptConfig) {
+            greeting = systemPromptConfig;
+          } else if (jobTitle && campaignDesc) {
             greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role. ${campaignDesc}. You are a strong candidate for this position. Do you have a few minutes to discuss this further?`;
           } else if (jobTitle) {
             greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role and we are calling regarding the next steps in your application process. You are a strong candidate for this position. Do you have a few minutes to chat?`;
