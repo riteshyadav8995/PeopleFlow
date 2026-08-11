@@ -220,12 +220,16 @@ export class VoiceAgentService extends BaseService {
   <Say voice="Polly.Aditi">I did not hear a response. Thank you for your time. Goodbye.</Say>
 </Response>`;
 
-        console.log(`[Twilio Call] Using inline TwiML (no webhook needed)`);
+        console.log(`[Twilio Call] Using url parameter with pre-generated greeting`);
         console.log(`[Twilio Call] Gather callback: ${gatherUrl}`);
 
         const client = twilio(twilioSid, twilioToken);
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
+        
+        console.log(`[Twilio Call] Webhook URL: ${webhookUrl}`);
+        
         const call = await client.calls.create({
-          twiml: twiml,
+          url: webhookUrl,
           to: data.phoneNumber,
           from: twilioNumber,
         });
