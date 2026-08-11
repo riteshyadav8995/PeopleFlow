@@ -78,6 +78,7 @@ import { PreJoiningPortal } from './pages/dashboard/PreJoiningPortal';
 import { Projects } from './pages/dashboard/Projects';
 import { ProjectDetails } from './pages/dashboard/ProjectDetails';
 import { VoiceAgentDashboard } from './pages/dashboard/VoiceAgentDashboard';
+import { VoiceAgentHistory } from './pages/dashboard/VoiceAgentHistory';
 import { CallTranscriptView } from './pages/dashboard/CallTranscriptView';
 import { SuperAdminDashboard } from './pages/superadmin/SuperAdminDashboard';
 import { Organizations } from './pages/superadmin/Organizations';
@@ -189,6 +190,7 @@ export default function App() {
           <Route path="/organization/projects/:id" element={<ProjectDetails />} />
           <Route path="/organization/timesheets" element={<div className="p-8 text-heading">Timesheets Module</div>} />
           <Route path="/organization/voice-agent" element={<VoiceAgentDashboard />} />
+          <Route path="/organization/voice-agent/history" element={<VoiceAgentHistory />} />
           <Route path="/organization/voice-agent/:id" element={<CallTranscriptView />} />
             <Route path="/organization/setup" element={<Organization />} />
             <Route path="/organization/team-approvals" element={<TeamApprovals />} />
