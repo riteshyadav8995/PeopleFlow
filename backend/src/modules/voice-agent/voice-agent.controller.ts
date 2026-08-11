@@ -85,7 +85,7 @@ export class VoiceAgentController extends BaseController {
     const backendUrl = process.env.BACKEND_URL || `https://${req.headers.host}`;
     const gatherUrl = `${backendUrl}/api/v1/voice-agent/twilio/gather?callLogId=${callLogId || ''}`;
 
-    let greeting = 'Hello, this is the PeopleFlow AI Assistant calling. I am calling regarding your job application.';
+    let greeting = '';
 
     // Read the pre-generated greeting from DB (saved by voice-agent.service.ts before the call was placed)
     if (callLogId) {
@@ -98,17 +98,41 @@ export class VoiceAgentController extends BaseController {
           greeting = existingGreeting.message;
           console.log(`[Twilio Webhook] Found pre-generated greeting: ${greeting.substring(0, 80)}...`);
         } else {
-          console.log(`[Twilio Webhook] Greeting not found in DB! Generating on the fly as fallback...`);
-          const systemPrompt = await this.buildSystemPrompt(callLogId);
-          greeting = await this.askGemini(
-            systemPrompt,
-            [],
-            'You are initiating the call now. Greet the candidate by name, introduce yourself, and clearly state the purpose of this call based on the campaign details. End your greeting by asking them a question to start the conversation. Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'
-          );
+          // Fallback: Build greeting directly from campaign/job/candidate data
+          console.log(`[Twilio Webhook] Greeting not found in DB! Building from data...`);
+          const callLog = await prisma.voiceCallLog.findUnique({
+            where: { id: callLogId },
+            include: {
+              campaign: true,
+              candidate: true,
+              jobOpening: true
+            }
+          });
+          const candidateName = callLog?.candidate
+            ? `${callLog.candidate.firstName} ${callLog.candidate.lastName}`.trim()
+            : 'there';
+          const jobTitle = callLog?.jobOpening?.title || '';
+          const campaignName = callLog?.campaign?.name || '';
+          const campaignDesc = callLog?.campaign?.description || '';
+
+          if (jobTitle && campaignDesc) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role. ${campaignDesc}. You are a strong candidate for this position. Do you have a few minutes to discuss this further?`;
+          } else if (jobTitle) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role and we are calling regarding the next steps in your application process. You are a strong candidate for this position. Do you have a few minutes to chat?`;
+          } else if (campaignName) {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding ${campaignName}. Do you have a few minutes to discuss this?`;
+          } else {
+            greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding your job application and the next steps in the process. Do you have a few minutes?`;
+          }
         }
       } catch (err) {
         console.error('[Twilio Webhook] Error reading/generating greeting:', err);
       }
+    }
+
+    // If greeting is still empty, use a basic fallback
+    if (!greeting) {
+      greeting = 'Hello, this is PeopleFlow AI calling agent. We are calling regarding your job application. Do you have a few minutes?';
     }
 
     // TwiML: Say the greeting, then listen for candidate's speech response

@@ -148,62 +148,37 @@ export class VoiceAgentService extends BaseService {
           throw new Error('BACKEND_URL is not configured in .env.');
         }
 
-        // --- GENERATE AI GREETING BEFORE MAKING THE CALL ---
-        let greeting = 'Hello, this is the PeopleFlow AI Assistant calling regarding your job application. How are you today?';
+        // --- BUILD GREETING DIRECTLY FROM CAMPAIGN/JOB/CANDIDATE DATA ---
+        // No LLM call needed — we build a specific, relevant greeting from the actual data
+        const fullCallLog = await prisma.voiceCallLog.findUnique({
+          where: { id: callLog.id },
+          include: {
+            campaign: { include: { configurations: true } },
+            candidate: true,
+            jobOpening: true
+          }
+        });
 
-        try {
-          // Build system prompt from campaign + candidate + job data
-          const fullCallLog = await prisma.voiceCallLog.findUnique({
-            where: { id: callLog.id },
-            include: {
-              campaign: { include: { configurations: true } },
-              candidate: true,
-              jobOpening: true
-            }
-          });
+        const candidateName = fullCallLog?.candidate
+          ? `${fullCallLog.candidate.firstName} ${fullCallLog.candidate.lastName}`.trim()
+          : 'there';
+        const jobTitle = fullCallLog?.jobOpening?.title || '';
+        const campaignName = fullCallLog?.campaign?.name || '';
+        const campaignDesc = fullCallLog?.campaign?.description || '';
 
-          let systemPrompt = fullCallLog?.campaign?.configurations?.[0]?.systemPrompt || '';
-          if (!systemPrompt || systemPrompt.trim() === '') {
-            systemPrompt = 'You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.';
-          }
-          
-          if (fullCallLog?.campaign) {
-            systemPrompt += `\n\n### CAMPAIGN DETAILS ###\nName: ${fullCallLog.campaign.name}\nDescription: ${fullCallLog.campaign.description || 'N/A'}\nType: ${fullCallLog.campaign.type}`;
-          }
-
-          if (fullCallLog?.candidate) {
-            const c = fullCallLog.candidate;
-            systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
-          }
-          if (fullCallLog?.jobOpening) {
-            const j = fullCallLog.jobOpening;
-            systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
-          }
-
-          // Ask Gemini for the greeting
-          const llmApiKey = (process.env.GEMINI_API_KEY || '').trim();
-          if (llmApiKey) {
-            const genAI = new GoogleGenerativeAI(llmApiKey);
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-            const chat = model.startChat({
-              history: [
-                { role: 'user', parts: [{ text: systemPrompt }] },
-                { role: 'model', parts: [{ text: 'Understood. I am ready to follow these instructions.' }] }
-              ]
-            });
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Gemini timeout')), 10000)
-            );
-            const geminiResult: any = await Promise.race([
-              chat.sendMessage('You are initiating the call now. Greet the candidate by name, introduce yourself, and clearly state the purpose of this call based on the campaign details. End your greeting by asking them a question to start the conversation, such as "Do you have a few minutes to chat?" or "Is there anything you want to ask?". Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'),
-              timeoutPromise
-            ]);
-            greeting = geminiResult.response.text().trim();
-            console.log(`[Twilio Call] Generated AI greeting: ${greeting}`);
-          }
-        } catch (greetingErr: any) {
-          console.error('[Twilio Call] Failed to generate AI greeting, using default:', greetingErr?.message);
+        // Build a campaign-specific greeting
+        let greeting = '';
+        if (jobTitle && campaignDesc) {
+          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role. ${campaignDesc}. You are a strong candidate for this position. Do you have a few minutes to discuss this further?`;
+        } else if (jobTitle) {
+          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. You have applied for the ${jobTitle} role and we are calling regarding the next steps in your application process. You are a strong candidate for this position. Do you have a few minutes to chat?`;
+        } else if (campaignName) {
+          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding ${campaignName}. Do you have a few minutes to discuss this?`;
+        } else {
+          greeting = `Hello ${candidateName}, this is PeopleFlow AI calling agent. We are calling regarding your job application and the next steps in the process. Do you have a few minutes?`;
         }
+
+        console.log(`[Twilio Call] Built data-driven greeting: ${greeting}`);
 
         // Save AI greeting to transcript
         await prisma.callTranscript.create({
