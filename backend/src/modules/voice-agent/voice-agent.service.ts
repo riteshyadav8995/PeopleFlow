@@ -128,7 +128,7 @@ export class VoiceAgentService extends BaseService {
         campaignId: data.campaignId,
         candidateId: resolvedCandidateId,
         employeeId: data.employeeId,
-        status: 'IN_PROGRESS'
+        status: 'INITIATED'
       },
       include: { campaign: { include: { configurations: true } } }
     });
@@ -216,6 +216,8 @@ export class VoiceAgentService extends BaseService {
           url: webhookUrl,
           to: data.phoneNumber,
           from: twilioNumber,
+          statusCallback: `${backendUrl}/api/v1/voice-agent/twilio/status?callLogId=${callLog.id}`,
+          statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
         });
         
         console.log(`[Twilio Call] Success! SID: ${call.sid}`);

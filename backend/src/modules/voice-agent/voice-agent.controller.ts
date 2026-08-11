@@ -241,6 +241,51 @@ export class VoiceAgentController extends BaseController {
     res.send(xml);
   });
 
+  // 3) STATUS CALLBACK: Twilio calls this when call status changes (ringing, answered, completed, failed, etc.)
+  twilioStatusCallback = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const callLogId = req.query.callLogId as string;
+    const callStatus = req.body.CallStatus; // 'queued', 'initiated', 'ringing', 'in-progress', 'completed', 'busy', 'no-answer', 'canceled', 'failed'
+
+    console.log(`[Twilio Status] Call ${callLogId} status changed to: ${callStatus}`);
+
+    if (callLogId && callStatus) {
+      let mappedStatus = 'IN_PROGRESS';
+      
+      switch (callStatus.toLowerCase()) {
+        case 'in-progress':
+        case 'answered':
+          mappedStatus = 'ANSWERED'; // We'll use ANSWERED to mean it was received
+          break;
+        case 'completed':
+          mappedStatus = 'COMPLETED';
+          break;
+        case 'busy':
+        case 'no-answer':
+        case 'canceled':
+        case 'failed':
+          mappedStatus = 'NO_ANSWER'; // User didn't pick up
+          break;
+        default:
+          mappedStatus = 'INITIATED'; // queued, initiated, ringing
+      }
+
+      // If it's already completed in our DB, we don't want to revert it to answered just because of a delayed webhook
+      try {
+        const existingCall = await prisma.voiceCallLog.findUnique({ where: { id: callLogId } });
+        if (existingCall && existingCall.status !== 'COMPLETED') {
+           await prisma.voiceCallLog.update({
+             where: { id: callLogId },
+             data: { status: mappedStatus }
+           });
+        }
+      } catch (err) {
+        console.error('[Twilio Status] Error updating call log status:', err);
+      }
+    }
+
+    res.sendStatus(200);
+  });
+
   getCampaigns = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);

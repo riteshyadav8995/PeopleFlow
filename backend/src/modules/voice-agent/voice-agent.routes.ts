@@ -10,6 +10,7 @@ const controller = new VoiceAgentController();
 // --- Public Webhooks (Twilio hits these, no auth required) ---
 router.post('/twilio/webhook', controller.twilioWebhook);
 router.post('/twilio/gather', controller.twilioGather);
+router.post('/twilio/status', controller.twilioStatusCallback);
 
 // --- Public Browser Call Endpoints ---
 router.get('/public/calls/:id', controller.getPublicCallInfo);
