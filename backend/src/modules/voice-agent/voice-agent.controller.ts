@@ -38,6 +38,10 @@ export class VoiceAgentController extends BaseController {
       systemPrompt = 'You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.';
     }
 
+    if (callLog?.campaign) {
+      systemPrompt += `\n\n### CAMPAIGN DETAILS ###\nName: ${callLog.campaign.name}\nDescription: ${callLog.campaign.description || 'N/A'}\nType: ${callLog.campaign.type}`;
+    }
+
     if (callLog?.candidate) {
       const c = callLog.candidate;
       systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;

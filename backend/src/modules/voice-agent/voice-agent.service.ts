@@ -166,6 +166,11 @@ export class VoiceAgentService extends BaseService {
           if (!systemPrompt || systemPrompt.trim() === '') {
             systemPrompt = 'You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.';
           }
+          
+          if (fullCallLog?.campaign) {
+            systemPrompt += `\n\n### CAMPAIGN DETAILS ###\nName: ${fullCallLog.campaign.name}\nDescription: ${fullCallLog.campaign.description || 'N/A'}\nType: ${fullCallLog.campaign.type}`;
+          }
+
           if (fullCallLog?.candidate) {
             const c = fullCallLog.candidate;
             systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
@@ -190,7 +195,7 @@ export class VoiceAgentService extends BaseService {
               setTimeout(() => reject(new Error('Gemini timeout')), 10000)
             );
             const geminiResult: any = await Promise.race([
-              chat.sendMessage('You are initiating the call now. Greet the candidate by name, introduce yourself, and briefly state why you are calling. Follow your system instructions. Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'),
+              chat.sendMessage('You are initiating the call now. Greet the candidate by name, introduce yourself, and clearly state the purpose of this call based on the campaign details. End your greeting by asking them a question to start the conversation, such as "Do you have a few minutes to chat?" or "Is there anything you want to ask?". Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'),
               timeoutPromise
             ]);
             greeting = geminiResult.response.text().trim();
