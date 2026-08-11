@@ -85,7 +85,7 @@ export class VoiceAgentController extends BaseController {
     const backendUrl = process.env.BACKEND_URL || `https://${req.headers.host}`;
     const gatherUrl = `${backendUrl}/api/v1/voice-agent/twilio/gather?callLogId=${callLogId || ''}`;
 
-    let greeting = 'Hello, this is the PeopleFlow AI Assistant calling. How are you doing today?';
+    let greeting = 'Hello, this is the PeopleFlow AI Assistant calling. I am calling regarding your job application.';
 
     // Read the pre-generated greeting from DB (saved by voice-agent.service.ts before the call was placed)
     if (callLogId) {
@@ -97,9 +97,17 @@ export class VoiceAgentController extends BaseController {
         if (existingGreeting?.message) {
           greeting = existingGreeting.message;
           console.log(`[Twilio Webhook] Found pre-generated greeting: ${greeting.substring(0, 80)}...`);
+        } else {
+          console.log(`[Twilio Webhook] Greeting not found in DB! Generating on the fly as fallback...`);
+          const systemPrompt = await this.buildSystemPrompt(callLogId);
+          greeting = await this.askGemini(
+            systemPrompt,
+            [],
+            'You are initiating the call now. Greet the candidate by name, introduce yourself, and clearly state the purpose of this call based on the campaign details. End your greeting by asking them a question to start the conversation. Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'
+          );
         }
       } catch (err) {
-        console.error('[Twilio Webhook] Error reading greeting from DB:', err);
+        console.error('[Twilio Webhook] Error reading/generating greeting:', err);
       }
     }
 
@@ -107,7 +115,7 @@ export class VoiceAgentController extends BaseController {
     const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLogId || ''}`;
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN" speechModel="phone_call" enhanced="true">
+  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="3" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(greeting)}</Say>
   </Gather>
   <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
@@ -193,7 +201,7 @@ export class VoiceAgentController extends BaseController {
       const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLogId || ''}`;
       xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN" speechModel="phone_call" enhanced="true">
+  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="3" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(aiResponse)}</Say>
   </Gather>
   <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
