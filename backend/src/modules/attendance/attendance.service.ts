@@ -226,18 +226,26 @@ export class AttendanceService extends BaseService {
       select: { date: true, status: true }
     });
 
-    const trends = records.reduce((acc: any, curr) => {
-      const dateStr = curr.date.toISOString().split('T')[0];
-      if (!acc[dateStr]) acc[dateStr] = { present: 0, absent: 0, late: 0, leave: 0 };
-      if (curr.status === 'present' || curr.status === 'half_day') acc[dateStr].present++;
-      else if (curr.status === 'late') acc[dateStr].late++;
-      else if (curr.status === 'absent') acc[dateStr].absent++;
-      return acc;
-    }, {});
+    const trendsMap: Record<string, any> = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      trendsMap[dateStr] = { present: 0, absent: 0, late: 0, leave: 0 };
+    }
 
-    return Object.keys(trends).sort().map(date => ({
+    records.forEach(curr => {
+      const dateStr = curr.date.toISOString().split('T')[0];
+      if (trendsMap[dateStr]) {
+        if (curr.status === 'present' || curr.status === 'half_day') trendsMap[dateStr].present++;
+        else if (curr.status === 'late') trendsMap[dateStr].late++;
+        else if (curr.status === 'absent') trendsMap[dateStr].absent++;
+      }
+    });
+
+    return Object.keys(trendsMap).sort().map(date => ({
       date,
-      ...trends[date]
+      ...trendsMap[date]
     }));
   }
 
