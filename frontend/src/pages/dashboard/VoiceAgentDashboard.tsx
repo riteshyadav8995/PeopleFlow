@@ -213,6 +213,8 @@ export function VoiceAgentDashboard() {
                Create First Campaign
             </Button>
           </div>
+        )}
+      </div>
     </div>
   );
 }
