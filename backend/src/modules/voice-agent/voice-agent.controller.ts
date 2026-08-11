@@ -146,7 +146,8 @@ export class VoiceAgentController extends BaseController {
   <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(greeting)}</Say>
   </Gather>
-  <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
+  <Say voice="Polly.Aditi">Thank you for your time. Goodbye.</Say>
+  <Hangup/>
 </Response>`;
 
     console.log(`[Twilio Webhook] Returning TwiML with Gather action: ${gatherUrl}`);
@@ -226,13 +227,13 @@ export class VoiceAgentController extends BaseController {
       }
     } else {
       // Continue the conversation loop
-      const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLogId || ''}`;
       xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(aiResponse)}</Say>
   </Gather>
-  <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
+  <Say voice="Polly.Aditi">Thank you for your time. Goodbye.</Say>
+  <Hangup/>
 </Response>`;
     }
 
