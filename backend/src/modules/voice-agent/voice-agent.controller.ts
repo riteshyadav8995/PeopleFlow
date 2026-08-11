@@ -60,7 +60,7 @@ export class VoiceAgentController extends BaseController {
     if (!llmApiKey) return 'I apologize, but I am unable to process your request at this time. Goodbye.';
 
     const genAI = new GoogleGenerativeAI(llmApiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const chat = model.startChat({
       history: [
         { role: 'user', parts: [{ text: systemPrompt }] },

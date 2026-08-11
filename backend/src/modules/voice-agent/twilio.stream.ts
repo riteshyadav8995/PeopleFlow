@@ -263,7 +263,7 @@ export function setupTwilioWebSocket(server: HttpServer) {
     };
 
     const genAI = new GoogleGenerativeAI(llmApiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     chatSession = model.startChat({
       history: [
         { role: 'user', parts: [{ text: systemPrompt }] },
@@ -296,7 +296,7 @@ async function handlePostCall(callLogId: string, transcript: string, apiKey: str
 
   // 2. Analyze Transcript to see if Interview should be scheduled
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   const result = await model.generateContent(`Analyze the following phone screening transcript. Did the AI and the Candidate agree to schedule an interview? Reply ONLY with YES or NO.\n\nTranscript:\n${transcript}`);
   
   const isInterviewScheduled = result.response.text().trim().toUpperCase().includes('YES');
