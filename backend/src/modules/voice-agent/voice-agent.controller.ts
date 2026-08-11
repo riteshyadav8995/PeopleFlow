@@ -55,7 +55,7 @@ export class VoiceAgentController extends BaseController {
   }
 
   // Generate a response from Gemini given a system prompt and conversation history
-  private async askGemini(systemPrompt: string, conversationHistory: {role: string, parts: {text: string}[]}[], userMessage: string): Promise<string> {
+  private async askGemini(systemPrompt: string, conversationHistory: { role: string, parts: { text: string }[] }[], userMessage: string): Promise<string> {
     const llmApiKey = process.env.GEMINI_API_KEY || '';
     if (!llmApiKey) return 'I apologize, but I am unable to process your request at this time. Goodbye.';
 
@@ -115,7 +115,7 @@ export class VoiceAgentController extends BaseController {
     const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLogId || ''}`;
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="3" language="en-IN">
+  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(greeting)}</Say>
   </Gather>
   <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
@@ -194,14 +194,14 @@ export class VoiceAgentController extends BaseController {
 
       // Update call log status
       if (callLogId) {
-        await prisma.voiceCallLog.update({ where: { id: callLogId }, data: { status: 'COMPLETED' } }).catch(() => {});
+        await prisma.voiceCallLog.update({ where: { id: callLogId }, data: { status: 'COMPLETED' } }).catch(() => { });
       }
     } else {
       // Continue the conversation loop
       const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLogId || ''}`;
       xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="3" language="en-IN">
+  <Gather input="speech" action="${this.escapeXml(gatherUrl)}" method="POST" timeout="10" speechTimeout="auto" language="en-IN">
     <Say voice="Polly.Aditi">${this.escapeXml(aiResponse)}</Say>
   </Gather>
   <Redirect method="POST">${this.escapeXml(webhookUrl)}</Redirect>
