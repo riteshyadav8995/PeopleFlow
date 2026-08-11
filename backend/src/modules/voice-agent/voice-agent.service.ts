@@ -145,19 +145,87 @@ export class VoiceAgentService extends BaseService {
         }
 
         if (!backendUrl) {
-          throw new Error('BACKEND_URL is not configured in .env. Twilio needs a publicly accessible webhook URL.');
+          throw new Error('BACKEND_URL is not configured in .env.');
         }
 
+        // --- GENERATE AI GREETING BEFORE MAKING THE CALL ---
+        let greeting = 'Hello, this is the PeopleFlow AI Assistant calling regarding your job application. How are you today?';
+
+        try {
+          // Build system prompt from campaign + candidate + job data
+          const fullCallLog = await prisma.voiceCallLog.findUnique({
+            where: { id: callLog.id },
+            include: {
+              campaign: { include: { configurations: true } },
+              candidate: true,
+              jobOpening: true
+            }
+          });
+
+          let systemPrompt = fullCallLog?.campaign?.configurations?.[0]?.systemPrompt || '';
+          if (!systemPrompt || systemPrompt.trim() === '') {
+            systemPrompt = 'You are a helpful HR Assistant for PeopleFlow calling a candidate about a job application.';
+          }
+          if (fullCallLog?.candidate) {
+            const c = fullCallLog.candidate;
+            systemPrompt += `\n\n### CANDIDATE INFORMATION ###\nName: ${c.firstName} ${c.lastName}\nEmail: ${c.email}\nPhone: ${c.phone || 'N/A'}\nTotal Experience: ${c.totalExperience || 0} years\nCurrent Company: ${c.currentCompany || 'N/A'}\nExpected Salary: ${c.expectedSalary || 'N/A'}`;
+          }
+          if (fullCallLog?.jobOpening) {
+            const j = fullCallLog.jobOpening;
+            systemPrompt += `\n\n### JOB OPENING DETAILS ###\nTitle: ${j.title}\nEmployment Type: ${j.employmentType}\nWork Mode: ${j.workMode}\nRequired Experience: ${j.experienceMin || 0} - ${j.experienceMax || 'Any'} years\nDescription: ${j.publicDescription || 'N/A'}`;
+          }
+
+          // Ask Gemini for the greeting
+          const llmApiKey = (process.env.GEMINI_API_KEY || '').trim();
+          if (llmApiKey) {
+            const genAI = new GoogleGenerativeAI(llmApiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const chat = model.startChat({
+              history: [
+                { role: 'user', parts: [{ text: systemPrompt }] },
+                { role: 'model', parts: [{ text: 'Understood. I am ready to follow these instructions.' }] }
+              ]
+            });
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Gemini timeout')), 10000)
+            );
+            const geminiResult: any = await Promise.race([
+              chat.sendMessage('You are initiating the call now. Greet the candidate by name, introduce yourself, and briefly state why you are calling. Follow your system instructions. Keep it to 2-3 sentences. Do NOT use any markdown, asterisks, or special characters.'),
+              timeoutPromise
+            ]);
+            greeting = geminiResult.response.text().trim();
+            console.log(`[Twilio Call] Generated AI greeting: ${greeting}`);
+          }
+        } catch (greetingErr: any) {
+          console.error('[Twilio Call] Failed to generate AI greeting, using default:', greetingErr?.message);
+        }
+
+        // Save AI greeting to transcript
+        await prisma.callTranscript.create({
+          data: { callLogId: callLog.id, role: 'AI', message: greeting, tenantId: context.tenantId }
+        }).catch(() => {});
+
+        // Escape XML special chars
+        const escapeXml = (unsafe: string) => unsafe.replace(/[<>&'"]/g, (c) => {
+          switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; default: return c; }
+        });
+
+        // Build the TwiML INLINE — no webhook needed for the initial call
+        const gatherUrl = `${backendUrl}/api/v1/voice-agent/twilio/gather?callLogId=${callLog.id}`;
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="${escapeXml(gatherUrl)}" method="POST" speechTimeout="3" language="en-IN">
+    <Say voice="Polly.Aditi">${escapeXml(greeting)}</Say>
+  </Gather>
+  <Say voice="Polly.Aditi">I did not hear a response. Thank you for your time. Goodbye.</Say>
+</Response>`;
+
+        console.log(`[Twilio Call] Using inline TwiML (no webhook needed)`);
+        console.log(`[Twilio Call] Gather callback: ${gatherUrl}`);
+
         const client = twilio(twilioSid, twilioToken);
-        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
-
-        console.log(`[Twilio Call] Initiating call:`);
-        console.log(`  → To: ${data.phoneNumber}`);
-        console.log(`  → From: ${twilioNumber}`);
-        console.log(`  → Webhook URL: ${webhookUrl}`);
-
         const call = await client.calls.create({
-          url: webhookUrl,
+          twiml: twiml,
           to: data.phoneNumber,
           from: twilioNumber,
         });
@@ -165,7 +233,6 @@ export class VoiceAgentService extends BaseService {
         console.log(`[Twilio Call] Success! SID: ${call.sid}`);
       } catch (err: any) {
         console.error('Failed to trigger Twilio outbound call:', err?.message || err);
-        // Propagate error to the caller so the frontend knows the call failed
         throw new AppError(err?.message || 'Failed to initiate Twilio call', 500);
       }
     }
