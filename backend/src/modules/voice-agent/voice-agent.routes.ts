@@ -7,9 +7,9 @@ import { authorize } from '../../middleware/authorization.middleware';
 const router = Router();
 const controller = new VoiceAgentController();
 
-// --- Public Webhooks ---
-// Twilio hits this to get the TwiML to connect to our WebSocket
+// --- Public Webhooks (Twilio hits these, no auth required) ---
 router.post('/twilio/webhook', controller.twilioWebhook);
+router.post('/twilio/gather', controller.twilioGather);
 
 // --- Public Browser Call Endpoints ---
 router.get('/public/calls/:id', controller.getPublicCallInfo);
