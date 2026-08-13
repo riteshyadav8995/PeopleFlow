@@ -5,7 +5,6 @@ import { prisma } from '../../core/base/base.model';
 import { appConfig } from '../../config';
 import { emailService } from '../../integrations/email/email.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import twilio from 'twilio';
 // @ts-ignore
 import { RestClient } from '@signalwire/compatibility-api';
 export class VoiceAgentService extends BaseService {
@@ -135,14 +134,7 @@ export class VoiceAgentService extends BaseService {
 
     if (data.phoneNumber) {
       try {
-        const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-        const twilioToken = process.env.TWILIO_AUTH_TOKEN;
-        const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
         const backendUrl = process.env.BACKEND_URL;
-
-        if (!twilioSid || !twilioToken || !twilioNumber) {
-          throw new Error('Twilio credentials not configured in .env');
-        }
 
         if (!backendUrl) {
           throw new Error('BACKEND_URL is not configured in .env.');
@@ -199,7 +191,7 @@ export class VoiceAgentService extends BaseService {
           throw new AppError('Veytrix credentials missing from environment variables', 500);
         }
 
-        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/status?callLogId=${callLog.id}`; // Reusing existing status webhook
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/veytrix/webhook?callLogId=${callLog.id}`;
 
         console.log(`[Veytrix Call] Initiating call to ${data.phoneNumber}`);
 

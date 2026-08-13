@@ -7,10 +7,8 @@ import { authorize } from '../../middleware/authorization.middleware';
 const router = Router();
 const controller = new VoiceAgentController();
 
-// --- Public Webhooks (Twilio hits these, no auth required) ---
-router.post('/twilio/webhook', controller.twilioWebhook);
-router.post('/twilio/gather', controller.twilioGather);
-router.post('/twilio/status', controller.twilioStatusCallback);
+// --- Public Webhooks (Veytrix hits these, no auth required) ---
+router.post('/veytrix/webhook', controller.veytrixWebhook);
 
 // --- Public Browser Call Endpoints ---
 router.get('/public/calls/:id', controller.getPublicCallInfo);
