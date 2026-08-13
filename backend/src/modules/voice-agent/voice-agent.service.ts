@@ -189,41 +189,53 @@ export class VoiceAgentService extends BaseService {
           data: { callLogId: callLog.id, role: 'AI', message: greeting, tenantId: context.tenantId }
         }).catch(() => {});
 
-        // Escape XML special chars
-        const escapeXml = (unsafe: string) => unsafe.replace(/[<>&'"]/g, (c) => {
-          switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; default: return c; }
+        // --- Veytrix Integration ---
+        const veytrixApiKey = process.env.VEYTRIX_API_KEY;
+        const veytrixAgentId = process.env.VEYTRIX_AGENT_ID;
+        const veytrixPhoneNumber = process.env.VEYTRIX_VERIFIED_MOBILE_NUMBER;
+
+        if (!veytrixApiKey || !veytrixAgentId) {
+          console.warn('Veytrix credentials missing. Please set VEYTRIX_API_KEY and VEYTRIX_AGENT_ID in .env');
+          throw new AppError('Veytrix credentials missing from environment variables', 500);
+        }
+
+        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/status?callLogId=${callLog.id}`; // Reusing existing status webhook
+
+        console.log(`[Veytrix Call] Initiating call to ${data.phoneNumber}`);
+
+        const veytrixBaseUrl = process.env.VEYTRIX_BASE_URL || 'https://nxtwave-screening.fly.dev';
+        const response = await fetch(`${veytrixBaseUrl}/api/alert`, { 
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${veytrixApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            agentId: veytrixAgentId,
+            fromNumber: veytrixPhoneNumber,
+            phones: [
+              { name: candidateName, phone: data.phoneNumber }
+            ],
+            variables: {
+              candidate_name: candidateName,
+              campaign_name: campaignName,
+              webhook_url: webhookUrl
+            }
+          })
         });
 
-        // Build the TwiML INLINE — no webhook needed for the initial call
-        const gatherUrl = `${backendUrl}/api/v1/voice-agent/twilio/gather?callLogId=${callLog.id}`;
-        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Gather input="speech" action="${escapeXml(gatherUrl)}" method="POST" speechTimeout="3" language="en-IN">
-    <Say voice="Polly.Aditi">${escapeXml(greeting)}</Say>
-  </Gather>
-  <Say voice="Polly.Aditi">I did not hear a response. Thank you for your time. Goodbye.</Say>
-</Response>`;
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Veytrix API Error: ${response.status} - ${errorText}`);
+        }
 
-        console.log(`[Twilio Call] Using url parameter with pre-generated greeting`);
-        console.log(`[Twilio Call] Gather callback: ${gatherUrl}`);
+        const veytrixData = (await response.json()) as any;
+        console.log(`[Veytrix Call] Success! Call ID: ${veytrixData.id || veytrixData.call_id}`);
+        // ---------------------------
 
-        const client = twilio(twilioSid, twilioToken);
-        const webhookUrl = `${backendUrl}/api/v1/voice-agent/twilio/webhook?callLogId=${callLog.id}`;
-        
-        console.log(`[Twilio Call] Webhook URL: ${webhookUrl}`);
-        
-        const call = await client.calls.create({
-          url: webhookUrl,
-          to: data.phoneNumber,
-          from: twilioNumber,
-          statusCallback: `${backendUrl}/api/v1/voice-agent/twilio/status?callLogId=${callLog.id}`,
-          statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
-        });
-        
-        console.log(`[Twilio Call] Success! SID: ${call.sid}`);
       } catch (err: any) {
-        console.error('Failed to trigger Twilio outbound call:', err?.message || err);
-        throw new AppError(err?.message || 'Failed to initiate Twilio call', 500);
+        console.error('Failed to trigger Veytrix outbound call:', err?.message || err);
+        throw new AppError(err?.message || 'Failed to initiate AI call', 500);
       }
     }
 
