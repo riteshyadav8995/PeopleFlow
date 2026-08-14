@@ -177,7 +177,6 @@ export class VoiceAgentService extends BaseService {
           },
           body: JSON.stringify({
             agentId: veytrixAgentId,
-            fromNumber: veytrixPhoneNumber,
             phones: [
               { name: candidateName, phone: data.phoneNumber }
             ],
