@@ -118,8 +118,6 @@ export class VoiceAgentService extends BaseService {
        }
     }
 
-    // Hardcoded phone number for all candidates (testing)
-    data.phoneNumber = '+919798800286';
 
     const callLog = await prisma.voiceCallLog.create({
       data: {
