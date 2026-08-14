@@ -247,6 +247,45 @@ router.post('/jobs/:jobId/apply', async (req, res) => {
 
 // ─── CANDIDATE DASHBOARD ────────────────────
 
+router.get('/candidate/profile', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+  try {
+    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as any;
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { firstName: true, lastName: true, email: true, phone: true }
+    });
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, data: user });
+  } catch (error) {
+    logger.error('Get candidate profile error', { error });
+    res.status(401).json({ success: false, message: 'Invalid or expired token' });
+  }
+});
+
+router.put('/candidate/profile', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+  try {
+    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as any;
+    const { firstName, lastName, phone } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: decoded.id },
+      data: { firstName, lastName, phone }
+    });
+
+    res.json({ success: true, data: { firstName: user.firstName, lastName: user.lastName, phone: user.phone } });
+  } catch (error) {
+    logger.error('Update candidate profile error', { error });
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
+  }
+});
+
 router.get('/candidate/applications', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PUBLIC_API_URL } from '@/lib/api';
 import { format } from 'date-fns';
-import { Briefcase, Building2, Calendar, FileText } from 'lucide-react';
+import { Briefcase, Building2, Calendar, FileText, UserCircle, Save } from 'lucide-react';
 
 interface Application {
   id: string;
@@ -23,10 +23,53 @@ interface Application {
 export default function CandidateDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [activeTab, setActiveTab] = useState<'applications' | 'profile'>('applications');
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', phone: '', email: '' });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetchApplications();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchApplications(), fetchProfile()]);
+    setLoading(false);
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('candidateToken');
+      if (!token) return;
+      const res = await axios.get(`${PUBLIC_API_URL}/candidate/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProfile(res.data.data);
+    } catch (error) {
+      console.error('Failed to fetch profile', error);
+    }
+  };
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('candidateToken');
+      const res = await axios.put(`${PUBLIC_API_URL}/candidate/profile`, profile, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProfile(prev => ({ ...prev, ...res.data.data }));
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage('Failed to update profile.');
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const fetchApplications = async () => {
     try {
@@ -44,8 +87,6 @@ export default function CandidateDashboard() {
       // Auto logout if token invalid
       localStorage.removeItem('candidateToken');
       window.location.href = '/candidate/login';
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -65,10 +106,104 @@ export default function CandidateDashboard() {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>Your Applications</h1>
-      <p style={{ color: '#64748b', marginBottom: '2rem' }}>Track the status of your job applications across all companies.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>Candidate Portal</h1>
+          <p style={{ color: '#64748b' }}>Manage your applications and profile.</p>
+        </div>
+      </div>
 
-      {applications.length === 0 ? (
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+        <button
+          onClick={() => setActiveTab('applications')}
+          style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: activeTab === 'applications' ? '#4f46e5' : '#64748b', borderBottom: activeTab === 'applications' ? '2px solid #4f46e5' : '2px solid transparent' }}
+        >
+          My Applications
+        </button>
+        <button
+          onClick={() => setActiveTab('profile')}
+          style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: activeTab === 'profile' ? '#4f46e5' : '#64748b', borderBottom: activeTab === 'profile' ? '2px solid #4f46e5' : '2px solid transparent' }}
+        >
+          My Profile
+        </button>
+      </div>
+
+      {activeTab === 'profile' ? (
+        <div style={{ background: '#fff', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '2rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <UserCircle size={48} color="#4f46e5" />
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>Personal Information</h2>
+              <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Update your contact details so recruiters can reach you.</p>
+            </div>
+          </div>
+          
+          {message && (
+            <div style={{ padding: '1rem', marginBottom: '1.5rem', borderRadius: '0.5rem', background: message.includes('Failed') ? '#fef2f2' : '#ecfdf5', color: message.includes('Failed') ? '#b91c1c' : '#059669', fontSize: '0.875rem', fontWeight: 500 }}>
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>First Name</label>
+                <input
+                  type="text"
+                  required
+                  value={profile.firstName}
+                  onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>Last Name</label>
+                <input
+                  type="text"
+                  required
+                  value={profile.lastName}
+                  onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', outline: 'none' }}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>Email Address</label>
+              <input
+                type="email"
+                disabled
+                value={profile.email}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#94a3b8', outline: 'none' }}
+              />
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>Email cannot be changed.</p>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>Mobile Number (with country code)</label>
+              <input
+                type="tel"
+                placeholder="+919876543210"
+                value={profile.phone || ''}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', outline: 'none' }}
+              />
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Recruiters will use this number to contact you via our AI calling agent.</p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                type="submit"
+                disabled={saving}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
+              >
+                <Save size={18} />
+                {saving ? 'Saving...' : 'Save Profile'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : applications.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '4rem 2rem', textAlign: 'center' }}>
           <Briefcase size={48} color="#94a3b8" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#334155' }}>No applications yet</h2>
