@@ -195,7 +195,8 @@ export class VoiceAgentService extends BaseService {
         }
 
         const veytrixData = (await response.json()) as any;
-        console.log(`[Veytrix Call] Success! Call ID: ${veytrixData.id || veytrixData.call_id}`);
+        const returnedCallId = veytrixData.calls?.[0]?.callId || veytrixData.id || veytrixData.call_id || 'unknown';
+        console.log(`[Veytrix Call] Success! Call ID: ${returnedCallId}`);
         // ---------------------------
 
       } catch (err: any) {
