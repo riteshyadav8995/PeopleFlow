@@ -14,18 +14,18 @@ export const attendanceService = {
     return res.data.data;
   },
 
-  async getOrgDashboardStats(orgId: string) {
-    const res = await api.get(`/attendance/dashboard?organizationId=${orgId}`);
+  async getOrgDashboardStats(orgId: string, params?: { dateRange?: string; departmentId?: string }) {
+    const res = await api.get(`/attendance/dashboard`, { params: { organizationId: orgId, ...params }});
     return res.data.data;
   },
 
-  async getOrgTrends(orgId: string) {
-    const res = await api.get(`/attendance/trends?organizationId=${orgId}`);
+  async getOrgTrends(orgId: string, params?: { dateRange?: string; departmentId?: string }) {
+    const res = await api.get(`/attendance/trends`, { params: { organizationId: orgId, ...params }});
     return res.data.data;
   },
 
-  async getOrgExceptions(orgId: string) {
-    const res = await api.get(`/attendance/exceptions?organizationId=${orgId}`);
+  async getOrgExceptions(orgId: string, params?: { dateRange?: string; departmentId?: string }) {
+    const res = await api.get(`/attendance/exceptions`, { params: { organizationId: orgId, ...params }});
     return res.data.data;
   },
 

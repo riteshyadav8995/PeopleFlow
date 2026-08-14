@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { attendanceService } from '@/services/attendance.service';
+import { organizationService } from '@/services/organization.service';
 import { UserCheck, ChevronDown, Calendar, Download, Filter, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -10,21 +11,26 @@ import './Attendance.css';
 export function Attendance() {
   const { user } = useAuthStore();
   const orgId = user?.tenantId || 'demo-org-id';
-  const [dateRange] = useState('Last 30 Days');
+  const [dateRange, setDateRange] = useState('Last 30 Days');
+  const [departmentId, setDepartmentId] = useState('ALL');
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
+
+  const { data: departments } = useQuery({ queryKey: ['departments', orgId], queryFn: () => organizationService.getDepartments(orgId) });
 
   const { data: stats, isLoading: loadingStats } = useQuery({
-    queryKey: ['orgAttendanceStats', orgId],
-    queryFn: () => attendanceService.getOrgDashboardStats(orgId)
+    queryKey: ['orgAttendanceStats', orgId, dateRange, departmentId],
+    queryFn: () => attendanceService.getOrgDashboardStats(orgId, { dateRange, departmentId })
   });
 
   const { data: trends, isLoading: loadingTrends } = useQuery({
-    queryKey: ['orgAttendanceTrends', orgId],
-    queryFn: () => attendanceService.getOrgTrends(orgId)
+    queryKey: ['orgAttendanceTrends', orgId, dateRange, departmentId],
+    queryFn: () => attendanceService.getOrgTrends(orgId, { dateRange, departmentId })
   });
 
   const { data: exceptionsData, isLoading: loadingExceptions } = useQuery({
-    queryKey: ['orgAttendanceExceptions', orgId],
-    queryFn: () => attendanceService.getOrgExceptions(orgId)
+    queryKey: ['orgAttendanceExceptions', orgId, dateRange, departmentId],
+    queryFn: () => attendanceService.getOrgExceptions(orgId, { dateRange, departmentId })
   });
 
   const queryClient = useQueryClient();
@@ -54,12 +60,35 @@ export function Attendance() {
           <p className="attendance-subtitle">Analyze organization-wide attendance trends and resolve exceptions.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">
-            <Calendar size={16} /> {dateRange} <ChevronDown size={16} />
-          </button>
-          <button className="btn-secondary">
-            <Filter size={16} /> Departments
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="btn-secondary" onClick={() => setShowDateDropdown(!showDateDropdown)}>
+              <Calendar size={16} /> {dateRange} <ChevronDown size={16} />
+            </button>
+            {showDateDropdown && (
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem', zIndex: 10, boxShadow: 'var(--shadow-md)', minWidth: '150px' }}>
+                {['Today', 'Last 7 Days', 'Last 30 Days', 'This Month'].map(range => (
+                  <div key={range} onClick={() => { setDateRange(range); setShowDateDropdown(false); }} style={{ padding: '0.5rem', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }}>
+                    {range}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ position: 'relative' }}>
+            <button className="btn-secondary" onClick={() => setShowDeptDropdown(!showDeptDropdown)}>
+              <Filter size={16} /> {departmentId === 'ALL' ? 'All Departments' : departments?.find((d: any) => d.id === departmentId)?.name || 'Department'} <ChevronDown size={16} />
+            </button>
+            {showDeptDropdown && (
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem', zIndex: 10, boxShadow: 'var(--shadow-md)', minWidth: '200px' }}>
+                <div onClick={() => { setDepartmentId('ALL'); setShowDeptDropdown(false); }} style={{ padding: '0.5rem', cursor: 'pointer' }}>All Departments</div>
+                {departments?.map((dept: any) => (
+                  <div key={dept.id} onClick={() => { setDepartmentId(dept.id); setShowDeptDropdown(false); }} style={{ padding: '0.5rem', cursor: 'pointer' }}>
+                    {dept.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button className="btn-primary">
             <Download size={16} /> Export CSV
           </button>
@@ -85,7 +114,7 @@ export function Attendance() {
         {/* Chart */}
         <div className="chart-card">
           <div className="chart-card-header">
-            <h3 className="chart-card-title">Attendance Trends (30 Days)</h3>
+            <h3 className="chart-card-title">Attendance Trends ({dateRange})</h3>
           </div>
           <div style={{ width: '100%', height: '350px' }}>
             {loadingTrends ? (

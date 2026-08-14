@@ -78,7 +78,11 @@ export class AttendanceController extends BaseController {
 
     if (!organizationId) throw new Error('organizationId query parameter is required');
 
-    const stats = await this.attendanceService.getOrgDashboardStats(context, organizationId);
+    const filters = {
+      dateRange: req.query.dateRange as string,
+      departmentId: req.query.departmentId as string
+    };
+    const stats = await this.attendanceService.getOrgDashboardStats(context, organizationId, filters);
     ApiResponse.success(res, stats);
   });
 
@@ -89,7 +93,11 @@ export class AttendanceController extends BaseController {
 
     if (!organizationId) throw new Error('organizationId query parameter is required');
 
-    const trends = await this.attendanceService.getOrgAttendanceTrends(context, organizationId);
+    const filters = {
+      dateRange: req.query.dateRange as string,
+      departmentId: req.query.departmentId as string
+    };
+    const trends = await this.attendanceService.getOrgAttendanceTrends(context, organizationId, filters);
     ApiResponse.success(res, trends);
   });
 
@@ -100,7 +108,11 @@ export class AttendanceController extends BaseController {
 
     if (!organizationId) throw new Error('organizationId query parameter is required');
 
-    const exceptions = await this.attendanceService.getOrgExceptions(context, organizationId);
+    const filters = {
+      dateRange: req.query.dateRange as string,
+      departmentId: req.query.departmentId as string
+    };
+    const exceptions = await this.attendanceService.getOrgExceptions(context, organizationId, filters);
     ApiResponse.success(res, exceptions);
   });
 

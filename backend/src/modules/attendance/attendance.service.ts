@@ -182,23 +182,33 @@ export class AttendanceService extends BaseService {
 
   // --- Organization Admin APIs ---
 
-  async getOrgDashboardStats(context: ServiceContext, organizationId: string) {
+  async getOrgDashboardStats(context: ServiceContext, organizationId: string, filters?: { dateRange?: string; departmentId?: string }) {
     const tenantId = this.getTenantId(context);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    if (filters?.dateRange === 'Last 7 Days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (filters?.dateRange === 'Last 30 Days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (filters?.dateRange === 'This Month') {
+      startDate.setDate(1);
+    }
+
+    const employeeWhere: any = { tenantId, status: 'active' };
+    const recordWhere: any = { tenantId, date: { gte: startDate } };
+    const leaveWhere: any = { tenantId, status: 'approved', startDate: { lte: new Date() }, endDate: { gte: startDate } };
+
+    if (filters?.departmentId && filters.departmentId !== 'ALL') {
+      employeeWhere.departmentId = filters.departmentId;
+      recordWhere.employee = { departmentId: filters.departmentId };
+      leaveWhere.employee = { departmentId: filters.departmentId };
+    }
 
     const [totalEmployees, todayRecords, employeesOnLeave] = await Promise.all([
-      prisma.employee.count({ where: { tenantId, status: 'active' } }),
-      prisma.attendanceRecord.findMany({
-        where: { tenantId, date: { gte: today } }
-      }),
-      prisma.leaveRequest.count({
-        where: { 
-          tenantId, status: 'approved',
-          startDate: { lte: today },
-          endDate: { gte: today }
-        }
-      })
+      prisma.employee.count({ where: employeeWhere }),
+      prisma.attendanceRecord.findMany({ where: recordWhere }),
+      prisma.leaveRequest.count({ where: leaveWhere })
     ]);
 
     const present = todayRecords.filter(r => r.status === 'present').length;
@@ -216,18 +226,28 @@ export class AttendanceService extends BaseService {
     };
   }
 
-  async getOrgAttendanceTrends(context: ServiceContext, organizationId: string) {
+  async getOrgAttendanceTrends(context: ServiceContext, organizationId: string, filters?: { dateRange?: string; departmentId?: string }) {
     const tenantId = this.getTenantId(context);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    let daysToFetch = 30;
+    if (filters?.dateRange === 'Last 7 Days') daysToFetch = 7;
+    else if (filters?.dateRange === 'This Month') daysToFetch = new Date().getDate();
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysToFetch);
+
+    const recordWhere: any = { tenantId, date: { gte: startDate } };
+    if (filters?.departmentId && filters.departmentId !== 'ALL') {
+      recordWhere.employee = { departmentId: filters.departmentId };
+    }
 
     const records = await prisma.attendanceRecord.findMany({
-      where: { tenantId, date: { gte: thirtyDaysAgo } },
+      where: recordWhere,
       select: { date: true, status: true }
     });
 
     const trendsMap: Record<string, any> = {};
-    for (let i = 29; i >= 0; i--) {
+    for (let i = daysToFetch - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
@@ -249,7 +269,7 @@ export class AttendanceService extends BaseService {
     }));
   }
 
-  async getOrgExceptions(context: ServiceContext, organizationId: string) {
+  async getOrgExceptions(context: ServiceContext, organizationId: string, filters?: { dateRange?: string; departmentId?: string }) {
     const tenantId = this.getTenantId(context);
     
     // Missing punches (clocked in but not out from previous days)
@@ -257,12 +277,17 @@ export class AttendanceService extends BaseService {
     yesterday.setHours(0,0,0,0);
     yesterday.setDate(yesterday.getDate() - 1);
 
+    const recordWhere: any = {
+      tenantId,
+      date: { lte: yesterday },
+      clockOutTime: null,
+    };
+    if (filters?.departmentId && filters.departmentId !== 'ALL') {
+      recordWhere.employee = { departmentId: filters.departmentId };
+    }
+
     return prisma.attendanceRecord.findMany({
-      where: {
-        tenantId,
-        date: { lte: yesterday },
-        clockOutTime: null,
-      },
+      where: recordWhere,
       include: {
         employee: { select: { firstName: true, lastName: true, employeeCode: true } }
       },
