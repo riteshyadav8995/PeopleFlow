@@ -96,17 +96,19 @@ export function Attendance() {
       </div>
 
       {/* Stats */}
-      {loadingStats ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-          <Spinner />
-        </div>
-      ) : (
-        <div className="attendance-stats-grid">
-          <StatCard title="Total Employees" value={stats?.totalEmployees || 0} change={stats?.employeeChange || '+0%'} trend={stats?.employeeTrend || 'up'} icon={Users} color="#818cf8" />
-          <StatCard title="Present Today" value={stats?.presentToday || 0} change={stats?.presentChange || '+0%'} trend={stats?.presentTrend || 'up'} icon={CheckCircle} color="#34d399" />
-          <StatCard title="Absent" value={stats?.absent || 0} change={stats?.absentChange || '+0%'} trend={stats?.absentTrend || 'down'} icon={XCircle} color="#f87171" />
-          <StatCard title="Late Arrivals" value={stats?.lateArrivals || 0} change={stats?.lateChange || '+0%'} trend={stats?.lateTrend || 'up'} icon={Clock} color="#fbbf24" />
-        </div>
+      {dateRange === 'Today' && (
+        loadingStats ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+            <Spinner />
+          </div>
+        ) : (
+          <div className="attendance-stats-grid">
+            <StatCard title="Total Employees" value={stats?.totalEmployees || 0} change={stats?.employeeChange || '+0%'} trend={stats?.employeeTrend || 'up'} icon={Users} color="#818cf8" />
+            <StatCard title="Present Today" value={stats?.presentToday || 0} change={stats?.presentChange || '+0%'} trend={stats?.presentTrend || 'up'} icon={CheckCircle} color="#34d399" />
+            <StatCard title="Absent" value={stats?.absent || 0} change={stats?.absentChange || '+0%'} trend={stats?.absentTrend || 'down'} icon={XCircle} color="#f87171" />
+            <StatCard title="Late Arrivals" value={stats?.lateArrivals || 0} change={stats?.lateChange || '+0%'} trend={stats?.lateTrend || 'up'} icon={Clock} color="#fbbf24" />
+          </div>
+        )
       )}
 
       {/* Content Grid */}
