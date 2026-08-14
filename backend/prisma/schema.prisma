@@ -1100,16 +1100,18 @@ model AgentConfiguration {
 }
 
 model VoiceCallLog {
-  id          String   @id @default(uuid())
-  tenantId    String   @map("tenant_id")
-  campaignId  String   @map("campaign_id")
-  candidateId String?  @map("candidate_id")
-  employeeId  String?  @map("employee_id")
-  status      String   @default("COMPLETED") // IN_PROGRESS | COMPLETED | FAILED
-  callMethod  String   @default("MOBILE") // MOBILE | BROWSER
-  duration    Int      @default(0) // seconds
-  summary     String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  campaignId    String   @map("campaign_id")
+  candidateId   String?  @map("candidate_id")
+  employeeId    String?  @map("employee_id")
+  phoneNumber   String?  @map("phone_number")
+  candidateName String?  @map("candidate_name")
+  status        String   @default("COMPLETED") // IN_PROGRESS | COMPLETED | FAILED
+  callMethod    String   @default("MOBILE") // MOBILE | BROWSER
+  duration      Int      @default(0) // seconds
+  summary       String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
 
   campaign     VoiceCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   candidate    Candidate?       @relation(fields: [candidateId], references: [id])

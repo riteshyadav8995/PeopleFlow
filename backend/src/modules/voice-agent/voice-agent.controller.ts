@@ -192,8 +192,10 @@ export class VoiceAgentController extends BaseController {
   getCallLogs = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);
-    const logs = await this.voiceService.getCallLogs(context, req.query.campaignId as string);
-    res.json({ data: logs });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 15;
+    const logs = await this.voiceService.getCallLogs(context, req.query.campaignId as string, page, limit);
+    res.json(logs); // { data, pagination }
   });
 
   getCallTranscript = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {

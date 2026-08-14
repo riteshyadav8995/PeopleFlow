@@ -125,6 +125,8 @@ export class VoiceAgentService extends BaseService {
         campaignId: data.campaignId,
         candidateId: resolvedCandidateId,
         employeeId: data.employeeId,
+        phoneNumber: data.phoneNumber,
+        candidateName: data.candidateName,
         status: 'INITIATED'
       },
       include: { campaign: { include: { configurations: true } } }
@@ -297,20 +299,39 @@ export class VoiceAgentService extends BaseService {
     return { response: aiResponseText };
   }
 
-  async getCallLogs(context: ServiceContext, campaignId?: string) {
-    return await prisma.voiceCallLog.findMany({
-      where: {
-        tenantId: context.tenantId,
-        ...(campaignId && { campaignId })
-      },
-      include: {
-        candidate: true,
-        employee: true,
-        campaign: true,
-        _count: { select: { transcripts: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  async getCallLogs(context: ServiceContext, campaignId?: string, page: number = 1, limit: number = 15) {
+    const skip = (page - 1) * limit;
+
+    const where = {
+      tenantId: context.tenantId,
+      ...(campaignId && { campaignId })
+    };
+
+    const [data, total] = await Promise.all([
+      prisma.voiceCallLog.findMany({
+        where,
+        include: {
+          candidate: true,
+          employee: true,
+          campaign: true,
+          _count: { select: { transcripts: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.voiceCallLog.count({ where })
+    ]);
+
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
   
   async getCallTranscript(context: ServiceContext, callLogId: string) {
