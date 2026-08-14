@@ -187,41 +187,93 @@ export class AttendanceService extends BaseService {
     let startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
 
+    let daysToFetch = 1;
     if (filters?.dateRange === 'Last 7 Days') {
       startDate.setDate(startDate.getDate() - 7);
+      daysToFetch = 7;
     } else if (filters?.dateRange === 'Last 30 Days') {
       startDate.setDate(startDate.getDate() - 30);
+      daysToFetch = 30;
     } else if (filters?.dateRange === 'This Month') {
       startDate.setDate(1);
+      daysToFetch = new Date().getDate();
     }
+
+    const prevEndDate = new Date(startDate);
+    prevEndDate.setMilliseconds(prevEndDate.getMilliseconds() - 1);
+    
+    const prevStartDate = new Date(prevEndDate);
+    prevStartDate.setDate(prevStartDate.getDate() - daysToFetch + 1);
+    prevStartDate.setHours(0, 0, 0, 0);
 
     const employeeWhere: any = { tenantId, status: 'active' };
     const recordWhere: any = { tenantId, date: { gte: startDate } };
     const leaveWhere: any = { tenantId, status: 'approved', startDate: { lte: new Date() }, endDate: { gte: startDate } };
 
+    const prevRecordWhere: any = { tenantId, date: { gte: prevStartDate, lte: prevEndDate } };
+    const prevLeaveWhere: any = { tenantId, status: 'approved', startDate: { lte: prevEndDate }, endDate: { gte: prevStartDate } };
+    
     if (filters?.departmentId && filters.departmentId !== 'ALL') {
       employeeWhere.departmentId = filters.departmentId;
       recordWhere.employee = { departmentId: filters.departmentId };
       leaveWhere.employee = { departmentId: filters.departmentId };
+      prevRecordWhere.employee = { departmentId: filters.departmentId };
+      prevLeaveWhere.employee = { departmentId: filters.departmentId };
     }
 
-    const [totalEmployees, todayRecords, employeesOnLeave] = await Promise.all([
+    const [totalEmployees, todayRecords, employeesOnLeave, prevRecords, prevEmployeesOnLeave] = await Promise.all([
       prisma.employee.count({ where: employeeWhere }),
       prisma.attendanceRecord.findMany({ where: recordWhere }),
-      prisma.leaveRequest.count({ where: leaveWhere })
+      prisma.leaveRequest.count({ where: leaveWhere }),
+      prisma.attendanceRecord.findMany({ where: prevRecordWhere }),
+      prisma.leaveRequest.count({ where: prevLeaveWhere })
     ]);
 
     const present = todayRecords.filter(r => r.status === 'present').length;
     const late = todayRecords.filter(r => r.status === 'late').length;
     const halfDay = todayRecords.filter(r => r.status === 'half_day').length;
-    const absent = totalEmployees - (present + late + halfDay) - employeesOnLeave;
+    const absent = Math.max(0, (totalEmployees * daysToFetch) - (present + late + halfDay) - employeesOnLeave);
+    const presentTotal = present + late + halfDay;
+
+    const prevPresent = prevRecords.filter(r => r.status === 'present').length;
+    const prevLate = prevRecords.filter(r => r.status === 'late').length;
+    const prevHalfDay = prevRecords.filter(r => r.status === 'half_day').length;
+    const prevAbsent = Math.max(0, (totalEmployees * daysToFetch) - (prevPresent + prevLate + prevHalfDay) - prevEmployeesOnLeave);
+    const prevPresentTotal = prevPresent + prevLate + prevHalfDay;
+
+    const calculateChange = (current: number, prev: number) => {
+      if (prev === 0 && current === 0) return { change: '0%', trend: 'up' };
+      if (prev === 0) return { change: '+100%', trend: 'up' };
+      const percentage = ((current - prev) / prev) * 100;
+      return {
+        change: `${percentage > 0 ? '+' : ''}${percentage.toFixed(1)}%`,
+        trend: percentage >= 0 ? 'up' : 'down'
+      };
+    };
+
+    const presentStats = calculateChange(presentTotal, prevPresentTotal);
+    const absentStats = calculateChange(absent, prevAbsent);
+    const lateStats = calculateChange(late, prevLate);
 
     return {
       totalEmployees,
-      presentToday: present + late + halfDay,
-      absent: Math.max(0, absent),
+      employeeChange: '+0%', // Static since we don't have historical employee counts easily
+      employeeTrend: 'up',
+      
+      presentToday: presentTotal,
+      presentChange: presentStats.change,
+      presentTrend: presentStats.trend,
+      
+      absent: absent,
+      absentChange: absentStats.change,
+      absentTrend: absentStats.trend,
+      
       onLeave: employeesOnLeave,
+      
       lateArrivals: late,
+      lateChange: lateStats.change,
+      lateTrend: lateStats.trend,
+      
       missingPunches: todayRecords.filter(r => r.clockInTime && !r.clockOutTime).length
     };
   }
