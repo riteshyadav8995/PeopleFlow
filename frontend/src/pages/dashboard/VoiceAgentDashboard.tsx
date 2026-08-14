@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Plus, PhoneCall, History, Sparkles, Activity, Clock, Users } from 'lucide-react';
+import { Mic, Plus, PhoneCall, History, Sparkles, Clock, Users, Upload } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { api } from '../../lib/api';
 import './VoiceAgentDashboard.css';
@@ -20,6 +20,8 @@ export function VoiceAgentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [testModal, setTestModal] = useState<{isOpen: boolean, campaignId: string | null}>({ isOpen: false, campaignId: null });
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCampaignForBulk, setSelectedCampaignForBulk] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCampaigns();
@@ -68,6 +70,65 @@ export function VoiceAgentDashboard() {
       console.error('Failed to start call', error);
       alert('Failed to start call');
     }
+  };
+
+  const triggerBulkCall = (campaignId: string) => {
+    setSelectedCampaignForBulk(campaignId);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedCampaignForBulk) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+        if (lines.length < 2) {
+          alert('CSV must contain headers and at least one row');
+          return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const candidates = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj: any = {};
+          headers.forEach((h, i) => { obj[h] = values[i]; });
+          return {
+            name: obj.name || '',
+            phone: obj.phone || obj['mobile phone'] || obj.mobile || '',
+            role: obj.role || ''
+          };
+        }).filter(c => c.phone); // Phone is mandatory
+
+        if (candidates.length === 0) {
+          alert('No valid candidates found with a phone number.');
+          return;
+        }
+
+        if (window.confirm(`Found ${candidates.length} candidates. Do you want to initiate bulk calls?`)) {
+          setIsLoading(true);
+          await api.post('/voice-agent/calls/bulk', {
+            campaignId: selectedCampaignForBulk,
+            candidates
+          });
+          alert('Bulk calls initiated successfully!');
+          fetchCampaigns();
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Failed to parse CSV or initiate bulk calls');
+      } finally {
+        setIsLoading(false);
+        setSelectedCampaignForBulk(null);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const editCampaign = async (campaign: Campaign) => {
@@ -187,17 +248,20 @@ export function VoiceAgentDashboard() {
                </div>
             </div>
 
-            <div className="campaign-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button variant="secondary" onClick={() => editCampaign(campaign)} style={{ flex: 1, justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
+            <div className="campaign-actions" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <Button variant="secondary" onClick={() => editCampaign(campaign)} style={{ flex: '1 1 40%', justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
                  Edit
               </Button>
-              <Button variant="danger" onClick={() => deleteCampaign(campaign.id)} style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
+              <Button variant="danger" onClick={() => deleteCampaign(campaign.id)} style={{ flex: '1 1 40%', justifyContent: 'center', backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
                  Delete
+              </Button>
+              <Button variant="secondary" onClick={() => triggerBulkCall(campaign.id)} style={{ flex: '1 1 40%', justifyContent: 'center', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
+                <Upload size={14} style={{ marginRight: '0.25rem' }} /> Bulk (CSV)
               </Button>
               <Button variant="primary" className="btn-test-call" onClick={() => {
                 const phone = prompt('Enter mobile number with country code (e.g. +919876543210):');
                 if (phone) executeTestCall(campaign.id, phone);
-              }} style={{ flex: 1.5, justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
+              }} style={{ flex: '1 1 40%', justifyContent: 'center', padding: '0.4rem 0.5rem', fontSize: '0.85rem', borderRadius: '1.5rem' }}>
                 <Mic size={14} style={{ marginRight: '0.25rem' }} /> Test Call
               </Button>
             </div>
@@ -215,6 +279,14 @@ export function VoiceAgentDashboard() {
           </div>
         )}
       </div>
+
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }

@@ -151,6 +151,36 @@ export class VoiceAgentController extends BaseController {
     res.status(201).json({ data: callLog, message: 'Call started' });
   });
 
+  startBulkCalls = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const authReq = req as AuthenticatedRequest;
+    const context = this.getServiceContext(authReq);
+    const { campaignId, candidates } = req.body;
+    
+    if (!campaignId || !Array.isArray(candidates)) {
+      res.status(400).json({ success: false, message: 'campaignId and candidates array are required' });
+      return;
+    }
+
+    const results = [];
+    for (const candidate of candidates) {
+      try {
+        const callLog = await this.voiceService.startCall(context, {
+          campaignId,
+          phoneNumber: candidate.phone || candidate.phoneNumber,
+          candidateName: candidate.name,
+          candidateRole: candidate.role
+        });
+        results.push({ success: true, candidate, callLogId: callLog.id });
+        // Optional delay to prevent rate-limiting from external API
+        await new Promise(r => setTimeout(r, 500));
+      } catch (error: any) {
+        results.push({ success: false, candidate, error: error.message });
+      }
+    }
+
+    res.status(201).json({ data: results, message: `Processed ${candidates.length} bulk calls` });
+  });
+
   generateAIResponse = this.asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
     const context = this.getServiceContext(authReq);

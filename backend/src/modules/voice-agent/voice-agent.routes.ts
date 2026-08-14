@@ -28,6 +28,7 @@ router.delete('/campaigns/:id', authorize('voice.campaign.delete'), controller.d
 // Calls
 router.get('/calls', authorize('voice.call.read'), controller.getCallLogs);
 router.post('/calls', authorize('voice.call.create'), controller.startCall);
+router.post('/calls/bulk', authorize('voice.call.create'), controller.startBulkCalls);
 router.get('/calls/:id', authorize('voice.call.read'), controller.getCallTranscript);
 router.post('/calls/:id/interact', authorize('voice.call.create'), controller.generateAIResponse);
 

@@ -69,7 +69,7 @@ export class VoiceAgentService extends BaseService {
     return { success: true };
   }
 
-  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string }) {
+  async startCall(context: ServiceContext, data: { campaignId: string, candidateId?: string, employeeId?: string, phoneNumber?: string, candidateName?: string, candidateRole?: string }) {
     const campaign = await prisma.voiceCampaign.findUnique({
       where: { id: data.campaignId, tenantId: context.tenantId },
       include: { configurations: true }
@@ -149,10 +149,10 @@ export class VoiceAgentService extends BaseService {
           }
         });
 
-        const candidateName = fullCallLog?.candidate
+        const candidateName = data.candidateName || (fullCallLog?.candidate
           ? `${fullCallLog.candidate.firstName} ${fullCallLog.candidate.lastName}`.trim()
-          : 'there';
-        const campaignName = fullCallLog?.campaign?.name || '';
+          : 'there');
+        const campaignName = data.candidateRole || fullCallLog?.campaign?.name || '';
 
         // --- Veytrix Integration ---
         const veytrixApiKey = process.env.VEYTRIX_API_KEY;
