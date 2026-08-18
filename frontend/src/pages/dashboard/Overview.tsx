@@ -17,6 +17,8 @@ export function Overview() {
   const navigate = useNavigate();
   const [successMsg, setSuccessMsg] = useState('');
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [dateRange, setDateRange] = useState('Last 30 Days');
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
   
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['org-dashboard-stats'],
@@ -62,9 +64,20 @@ export function Overview() {
           <p className="overview-subtitle">Here's your organization overview for today.</p>
         </div>
         <div className="overview-actions">
-          <Button variant="secondary" style={{ display: 'flex', gap: '0.5rem' }} onClick={() => alert("Date range filter opened!")}>
-            <Calendar size={16} /> Last 30 Days
-          </Button>
+          <div style={{ position: 'relative' }}>
+            <Button variant="secondary" style={{ display: 'flex', gap: '0.5rem' }} onClick={() => setShowDateDropdown(!showDateDropdown)}>
+              <Calendar size={16} /> {dateRange}
+            </Button>
+            {showDateDropdown && (
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem', zIndex: 10, boxShadow: 'var(--shadow-md)', minWidth: '150px' }}>
+                {['Today', 'Last 7 Days', 'Last 30 Days', 'This Month'].map(range => (
+                  <div key={range} onClick={() => { setDateRange(range); setShowDateDropdown(false); }} style={{ padding: '0.5rem', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }}>
+                    {range}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <Button 
             style={{ background: 'var(--brand-600)', color: '#fff', boxShadow: '0 0 15px rgba(99,102,241,0.3)' }} 
             onClick={() => generateReportMutation.mutate()}
