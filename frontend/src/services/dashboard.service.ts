@@ -13,8 +13,10 @@ export const dashboardService = {
     return response.data.data;
   },
 
-  getOrganizationDashboardStats: async () => {
-    const response = await api.get('/organization-admin/dashboard');
+  getOrganizationDashboardStats: async (dateRange?: string) => {
+    const response = await api.get('/organization-admin/dashboard', {
+      params: { dateRange }
+    });
     return response.data.data;
   },
 

@@ -21,8 +21,8 @@ export function Overview() {
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['org-dashboard-stats'],
-    queryFn: () => dashboardService.getOrganizationDashboardStats()
+    queryKey: ['org-dashboard-stats', dateRange],
+    queryFn: () => dashboardService.getOrganizationDashboardStats(dateRange)
   });
 
   const { data: approvalsData, isLoading: approvalsLoading } = useQuery({

@@ -14,7 +14,8 @@ export class OrganizationAdminController {
   getDashboardStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const authReq = req as AuthenticatedRequest;
-      const stats = await this.service.getDashboardStats(authReq.tenantId);
+      const dateRange = (req.query.dateRange as string) || 'Last 30 Days';
+      const stats = await this.service.getDashboardStats(authReq.tenantId, dateRange);
       ApiResponse.success(res, stats);
     } catch (error) {
       next(error);

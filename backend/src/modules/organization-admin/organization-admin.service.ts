@@ -2,16 +2,16 @@ import { prisma } from '../../core/base/base.model';
 import { cacheService } from '../../core/cache/cache.service';
 
 export class OrganizationAdminService {
-  async getDashboardStats(tenantId: string) {
-    const cacheKey = `org:stats:${tenantId}`;
+  async getDashboardStats(tenantId: string, dateRange: string = 'Last 30 Days') {
+    const cacheKey = `org:stats:${tenantId}:${dateRange.replace(/\s+/g, '_')}`;
     const cachedStats = await cacheService.get(cacheKey);
     
     if (cachedStats) {
-      console.log(`[Cache Hit] org:stats:${tenantId}`);
+      console.log(`[Cache Hit] ${cacheKey}`);
       return JSON.parse(cachedStats);
     }
     
-    console.log(`[Cache Miss] org:stats:${tenantId}`);
+    console.log(`[Cache Miss] ${cacheKey}`);
 
     const totalStaff = await prisma.employee.count({ where: { tenantId } });
     const activeEmployees = await prisma.employee.count({ where: { tenantId, status: 'active' } });
@@ -73,7 +73,11 @@ export class OrganizationAdminService {
       offer: pipelineData.find(p => p.stage === 'OFFER')?._count.stage || 0,
     };
 
-    const trendDays = 7;
+    let trendDays = 30;
+    if (dateRange === 'Last 7 Days') trendDays = 7;
+    else if (dateRange === 'Today') trendDays = 1;
+    else if (dateRange === 'This Month') trendDays = new Date().getDate();
+
     const trendStartDate = new Date(today);
     trendStartDate.setDate(trendStartDate.getDate() - (trendDays - 1));
 
